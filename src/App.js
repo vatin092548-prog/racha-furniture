@@ -12,14 +12,32 @@ import {
   ArrowLeft,
   Box,
   MapPin,
-  CheckCircle2
+  CheckCircle2,
+  Edit,
+  X
 } from 'lucide-react';
 
 export default function App() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(null);
 
-  // ข้อมูลหมวดหมู่
+  // Modal States
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
+
+  // Form States
+  const [formData, setFormData] = useState({
+    id: '',
+    name: '',
+    category: 'ห้องนอน',
+    price: '',
+    size: '',
+    location: '',
+    status: 'มีสินค้าพร้อมส่ง',
+    image: ''
+  });
+
+  // หมวดหมู่
   const categories = [
     { name: 'ห้องนอน', icon: Bed },
     { name: 'ห้องนั่งเล่น', icon: Sofa },
@@ -30,8 +48,8 @@ export default function App() {
     { name: 'ของตกแต่ง', icon: Flower2 },
   ];
 
-  // ข้อมูลตัวอย่างสินค้า
-  const [products] = useState([
+  // ข้อมูลสินค้า
+  const [products, setProducts] = useState([
     {
       id: 'P003',
       name: 'เตียงนอนไม้สัก 6 ฟุต',
@@ -44,7 +62,42 @@ export default function App() {
     }
   ]);
 
-  // กรองสินค้าตามหมวดหมู่และช่องค้นหา
+  // เปิด Pop-up เพิ่มสินค้า
+  const handleOpenAddModal = () => {
+    setFormData({
+      id: `P00${products.length + 1}`,
+      name: '',
+      category: selectedCategory || 'ห้องนอน',
+      price: '',
+      size: '',
+      location: '',
+      status: 'มีสินค้าพร้อมส่ง',
+      image: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=500&auto=format&fit=crop&q=60'
+    });
+    setIsAddModalOpen(true);
+  };
+
+  // เปิด Pop-up แก้ไขสินค้า
+  const handleOpenEditModal = (product) => {
+    setEditingProduct(product);
+    setFormData(product);
+  };
+
+  // บันทึกการเพิ่ม/แก้ไข
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (editingProduct) {
+      // แก้ไขสินค้าเดิม
+      setProducts(products.map(p => p.id === editingProduct.id ? { ...formData, price: Number(formData.price) } : p));
+      setEditingProduct(null);
+    } else {
+      // เพิ่มสินค้าใหม่
+      setProducts([...products, { ...formData, price: Number(formData.price) }]);
+      setIsAddModalOpen(false);
+    }
+  };
+
+  // กรองสินค้า
   const filteredProducts = products.filter(product => {
     const matchesCategory = selectedCategory ? product.category === selectedCategory : true;
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -53,16 +106,12 @@ export default function App() {
   });
 
   return (
-    <div className="min-h-screen bg-[#F8F6F0] text-gray-800 font-sans">
-      {/* Header Bar - Theme Navy & Gold */}
+    <div className="min-h-screen bg-[#F8F6F0] text-gray-800 font-sans pb-10">
+      {/* Header Bar */}
       <header className="bg-[#1B2A3A] text-white shadow-md px-6 py-4">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           
-          {/* Logo Zone */}
-          <div 
-            className="flex items-center gap-3 cursor-pointer"
-            onClick={() => setSelectedCategory(null)}
-          >
+          <div className="flex items-center gap-3 cursor-pointer" onClick={() => setSelectedCategory(null)}>
             <div className="text-[#D4AF37]">
               <svg width="42" height="42" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M15 70 L25 35 L40 55 L50 25 L60 55 L75 35 L85 70 Z" fill="none" />
@@ -83,7 +132,6 @@ export default function App() {
             </div>
           </div>
 
-          {/* Search & Actions */}
           <div className="flex items-center gap-3 w-full md:w-auto">
             <div className="relative w-full md:w-80">
               <input
@@ -96,7 +144,10 @@ export default function App() {
               <Search className="absolute right-3 top-2.5 text-gray-400 w-4 h-4" />
             </div>
 
-            <button className="flex items-center gap-1.5 bg-[#2E7D32] hover:bg-[#25632A] text-white px-4 py-2 rounded-lg text-sm font-medium shadow-md transition-all whitespace-nowrap">
+            <button 
+              onClick={handleOpenAddModal}
+              className="flex items-center gap-1.5 bg-[#2E7D32] hover:bg-[#25632A] text-white px-4 py-2 rounded-lg text-sm font-medium shadow-md transition-all whitespace-nowrap cursor-pointer"
+            >
               <Plus className="w-4 h-4" />
               <span>เพิ่มสินค้าใหม่</span>
             </button>
@@ -105,10 +156,8 @@ export default function App() {
         </div>
       </header>
 
-      {/* Main Content Area */}
+      {/* Main Content */}
       <main className="max-w-7xl mx-auto p-6">
-        
-        {/* หน้าแรก: เลือกหมวดหมู่ */}
         {!selectedCategory && !searchTerm && (
           <>
             <div className="mb-6">
@@ -124,7 +173,7 @@ export default function App() {
                   <button
                     key={index}
                     onClick={() => setSelectedCategory(cat.name)}
-                    className="flex items-center gap-4 p-4 bg-white rounded-xl border border-amber-100 shadow-sm hover:shadow-md hover:border-[#D4AF37] transition-all group text-left"
+                    className="flex items-center gap-4 p-4 bg-white rounded-xl border border-amber-100 shadow-sm hover:shadow-md hover:border-[#D4AF37] transition-all group text-left cursor-pointer"
                   >
                     <div className="p-3 bg-[#F4E8C1] text-[#1B2A3A] rounded-lg group-hover:bg-[#1B2A3A] group-hover:text-[#D4AF37] transition-colors">
                       <IconComponent className="w-6 h-6" />
@@ -139,16 +188,12 @@ export default function App() {
           </>
         )}
 
-        {/* หน้าแสดงรายการสินค้า (เมื่อเลือกหมวดหมู่ หรือพิมพ์ค้นหา) */}
         {(selectedCategory || searchTerm) && (
           <div>
             <div className="flex items-center justify-between mb-6">
               <button
-                onClick={() => {
-                  setSelectedCategory(null);
-                  setSearchTerm('');
-                }}
-                className="flex items-center gap-2 bg-white text-[#1B2A3A] border border-gray-300 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-colors shadow-sm"
+                onClick={() => { setSelectedCategory(null); setSearchTerm(''); }}
+                className="flex items-center gap-2 bg-white text-[#1B2A3A] border border-gray-300 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-colors shadow-sm cursor-pointer"
               >
                 <ArrowLeft className="w-4 h-4" />
                 <span>ย้อนกลับไปหน้าหมวดหมู่</span>
@@ -161,21 +206,26 @@ export default function App() {
               )}
             </div>
 
-            {/* Product Grid */}
             {filteredProducts.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {filteredProducts.map((product) => (
-                  <div key={product.id} className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300">
+                  <div key={product.id} className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 relative group">
+                    
+                    {/* ปุ่มแก้ไขสินค้า */}
+                    <button 
+                      onClick={() => handleOpenEditModal(product)}
+                      className="absolute top-3 right-3 bg-white/90 hover:bg-white text-gray-700 p-2 rounded-full shadow-md transition-all cursor-pointer z-10"
+                      title="แก้ไขข้อมูลสินค้า"
+                    >
+                      <Edit className="w-4 h-4 text-[#1B2A3A]" />
+                    </button>
+
                     <div className="relative h-48 bg-gray-100">
-                      <img 
-                        src={product.image} 
-                        alt={product.name} 
-                        className="w-full h-full object-cover"
-                      />
+                      <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
                     </div>
                     
                     <div className="p-4">
-                      <div className="flex items-start justify-between gap-2 mb-2">
+                      <div className="flex items-start justify-between gap-2 mb-2 pr-6">
                         <h3 className="font-bold text-gray-800 text-lg">{product.name}</h3>
                         <span className="bg-gray-100 text-gray-500 text-[10px] font-mono px-2 py-0.5 rounded">
                           {product.id}
@@ -183,17 +233,17 @@ export default function App() {
                       </div>
 
                       <p className="text-2xl font-black text-[#1D4ED8] mb-3">
-                        ฿{product.price.toLocaleString()}
+                        ฿{Number(product.price).toLocaleString()}
                       </p>
 
                       <div className="space-y-1.5 text-xs text-gray-500 mb-4 border-t border-gray-100 pt-3">
                         <div className="flex items-center gap-2">
                           <Box className="w-3.5 h-3.5 text-gray-400" />
-                          <span>ขนาด: {product.size}</span>
+                          <span>ขนาด: {product.size || '-'}</span>
                         </div>
                         <div className="flex items-center gap-2">
                           <MapPin className="w-3.5 h-3.5 text-gray-400" />
-                          <span>วางหน้าร้าน: {product.location}</span>
+                          <span>วางหน้าร้าน: {product.location || '-'}</span>
                         </div>
                       </div>
 
@@ -212,8 +262,122 @@ export default function App() {
             )}
           </div>
         )}
-
       </main>
+
+      {/* Modal ป๊อปอัพ เพิ่ม/แก้ไข สินค้า */}
+      {(isAddModalOpen || editingProduct) && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
+            <button 
+              onClick={() => { setIsAddModalOpen(false); setEditingProduct(null); }}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 p-1"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <h3 className="text-lg font-bold text-[#1B2A3A] mb-4 border-b pb-2">
+              {editingProduct ? 'แก้ไขข้อมูลสินค้า / เปลี่ยนราคา' : 'เพิ่มสินค้าใหม่'}
+            </h3>
+
+            <form onSubmit={handleSubmit} className="space-y-3 text-sm">
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">รหัสสินค้า</label>
+                <input 
+                  type="text" 
+                  value={formData.id} 
+                  onChange={e => setFormData({...formData, id: e.target.value})}
+                  className="w-full border rounded-lg p-2 bg-gray-50" 
+                  required 
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">ชื่อสินค้า</label>
+                <input 
+                  type="text" 
+                  value={formData.name} 
+                  onChange={e => setFormData({...formData, name: e.target.value})}
+                  className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-[#D4AF37] outline-none" 
+                  required 
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1">ราคา (บาท)</label>
+                  <input 
+                    type="number" 
+                    value={formData.price} 
+                    onChange={e => setFormData({...formData, price: e.target.value})}
+                    className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-[#D4AF37] outline-none font-bold text-blue-600" 
+                    required 
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1">หมวดหมู่</label>
+                  <select 
+                    value={formData.category} 
+                    onChange={e => setFormData({...formData, category: e.target.value})}
+                    className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-[#D4AF37] outline-none"
+                  >
+                    {categories.map((c, i) => (
+                      <option key={i} value={c.name}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">ขนาดสินค้า</label>
+                <input 
+                  type="text" 
+                  placeholder="เช่น 200 x 215 x 110 ซม." 
+                  value={formData.size} 
+                  onChange={e => setFormData({...formData, size: e.target.value})}
+                  className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-[#D4AF37] outline-none" 
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">ตำแหน่งวางหน้าร้าน</label>
+                <input 
+                  type="text" 
+                  placeholder="เช่น โซน B ชั้น 2" 
+                  value={formData.location} 
+                  onChange={e => setFormData({...formData, location: e.target.value})}
+                  className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-[#D4AF37] outline-none" 
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">ลิงก์รูปภาพ (URL)</label>
+                <input 
+                  type="text" 
+                  value={formData.image} 
+                  onChange={e => setFormData({...formData, image: e.target.value})}
+                  className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-[#D4AF37] outline-none" 
+                />
+              </div>
+
+              <div className="pt-3 flex gap-2">
+                <button 
+                  type="button" 
+                  onClick={() => { setIsAddModalOpen(false); setEditingProduct(null); }}
+                  className="w-1/2 border border-gray-300 text-gray-600 py-2 rounded-lg font-semibold hover:bg-gray-50"
+                >
+                  ยกเลิก
+                </button>
+                <button 
+                  type="submit" 
+                  className="w-1/2 bg-[#1B2A3A] text-[#D4AF37] font-bold py-2 rounded-lg hover:bg-[#111B25] shadow-md"
+                >
+                  บันทึกข้อมูล
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
