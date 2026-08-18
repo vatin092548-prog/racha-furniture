@@ -14,9 +14,11 @@ import {
   MapPin,
   CheckCircle2,
   Edit,
+  Trash2,
   X,
   Upload,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Share2
 } from 'lucide-react';
 
 export default function App() {
@@ -95,6 +97,14 @@ export default function App() {
   const handleOpenEditModal = (product) => {
     setEditingProduct(product);
     setFormData(product);
+  };
+
+  // ลบสินค้า
+  const handleDeleteProduct = (id) => {
+    if (window.confirm('คุณต้องการลบสินค้านี้ใช่หรือไม่?')) {
+      setProducts(products.filter(p => p.id !== id));
+      if (editingProduct) setEditingProduct(null);
+    }
   };
 
   // บันทึกการเพิ่ม/แก้ไข
@@ -221,13 +231,24 @@ export default function App() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {filteredProducts.map((product) => (
                   <div key={product.id} className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 relative group">
-                    <button 
-                      onClick={() => handleOpenEditModal(product)}
-                      className="absolute top-3 right-3 bg-white/90 hover:bg-white text-gray-700 p-2 rounded-full shadow-md transition-all cursor-pointer z-10"
-                      title="แก้ไขข้อมูลสินค้า"
-                    >
-                      <Edit className="w-4 h-4 text-[#1B2A3A]" />
-                    </button>
+                    
+                    {/* Action Buttons บนการ์ด */}
+                    <div className="absolute top-3 right-3 flex gap-1.5 z-10">
+                      <button 
+                        onClick={() => handleOpenEditModal(product)}
+                        className="bg-white/90 hover:bg-white text-gray-700 p-2 rounded-full shadow-md transition-all cursor-pointer"
+                        title="แก้ไขสินค้า"
+                      >
+                        <Edit className="w-4 h-4 text-[#1B2A3A]" />
+                      </button>
+                      <button 
+                        onClick={() => handleDeleteProduct(product.id)}
+                        className="bg-white/90 hover:bg-white text-red-600 p-2 rounded-full shadow-md transition-all cursor-pointer"
+                        title="ลบสินค้า"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
 
                     <div className="relative h-48 bg-gray-100 flex items-center justify-center overflow-hidden">
                       {product.image ? (
@@ -238,7 +259,7 @@ export default function App() {
                     </div>
                     
                     <div className="p-4">
-                      <div className="flex items-start justify-between gap-2 mb-2 pr-6">
+                      <div className="flex items-start justify-between gap-2 mb-2 pr-12">
                         <h3 className="font-bold text-gray-800 text-lg">{product.name}</h3>
                         <span className="bg-gray-100 text-gray-500 text-[10px] font-mono px-2 py-0.5 rounded">
                           {product.id}
@@ -260,7 +281,11 @@ export default function App() {
                         </div>
                       </div>
 
-                      <div className="bg-green-50 text-green-700 text-xs font-semibold py-1.5 px-3 rounded-lg flex items-center justify-center gap-1.5 border border-green-200">
+                      <div className={`text-xs font-semibold py-1.5 px-3 rounded-lg flex items-center justify-center gap-1.5 border ${
+                        product.status === 'สินค้าหมด' 
+                          ? 'bg-red-50 text-red-600 border-red-200' 
+                          : 'bg-green-50 text-green-700 border-green-200'
+                      }`}>
                         <CheckCircle2 className="w-3.5 h-3.5" />
                         <span>{product.status}</span>
                       </div>
@@ -280,19 +305,23 @@ export default function App() {
       {/* Modal ป๊อปอัพ เพิ่ม/แก้ไข สินค้า */}
       {(isAddModalOpen || editingProduct) && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
-            <button 
-              onClick={() => { setIsAddModalOpen(false); setEditingProduct(null); }}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 p-1 cursor-pointer"
-            >
-              <X className="w-5 h-5" />
-            </button>
+          <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl flex flex-col max-h-[90vh]">
+            
+            {/* Modal Header */}
+            <div className="p-4 border-b flex justify-between items-center bg-[#1B2A3A] text-white rounded-t-2xl">
+              <h3 className="font-bold text-base text-[#D4AF37]">
+                {editingProduct ? 'แก้ไขข้อมูลสินค้า / เปลี่ยนราคา' : 'เพิ่มสินค้าใหม่'}
+              </h3>
+              <button 
+                onClick={() => { setIsAddModalOpen(false); setEditingProduct(null); }}
+                className="text-gray-300 hover:text-white cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
 
-            <h3 className="text-lg font-bold text-[#1B2A3A] mb-4 border-b pb-2">
-              {editingProduct ? 'แก้ไขข้อมูลสินค้า / เปลี่ยนราคา' : 'เพิ่มสินค้าใหม่'}
-            </h3>
-
-            <form onSubmit={handleSubmit} className="space-y-3 text-sm">
+            {/* Modal Form Body */}
+            <form onSubmit={handleSubmit} className="p-4 space-y-3 text-sm overflow-y-auto flex-1">
               <div>
                 <label className="block text-xs font-semibold text-gray-600 mb-1">รหัสสินค้า</label>
                 <input 
@@ -340,6 +369,31 @@ export default function App() {
                 </div>
               </div>
 
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1">สถานะสินค้า</label>
+                  <select 
+                    value={formData.status} 
+                    onChange={e => setFormData({...formData, status: e.target.value})}
+                    className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-[#D4AF37] outline-none text-xs font-medium"
+                  >
+                    <option value="มีสินค้าพร้อมส่ง">มีสินค้าพร้อมส่ง</option>
+                    <option value="สินค้าตัวโชว์">สินค้าตัวโชว์</option>
+                    <option value="สินค้าหมด">สินค้าหมด</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1">ตำแหน่งวางหน้าร้าน</label>
+                  <input 
+                    type="text" 
+                    placeholder="เช่น โซน B ชั้น 2" 
+                    value={formData.location} 
+                    onChange={e => setFormData({...formData, location: e.target.value})}
+                    className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-[#D4AF37] outline-none" 
+                  />
+                </div>
+              </div>
+
               <div>
                 <label className="block text-xs font-semibold text-gray-600 mb-1">ขนาดสินค้า</label>
                 <input 
@@ -352,35 +406,21 @@ export default function App() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1">ตำแหน่งวางหน้าร้าน</label>
-                <input 
-                  type="text" 
-                  placeholder="เช่น โซน B ชั้น 2" 
-                  value={formData.location} 
-                  onChange={e => setFormData({...formData, location: e.target.value})}
-                  className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-[#D4AF37] outline-none" 
-                />
-              </div>
-
-              {/* ส่วนแนบรูปภาพใหม่ */}
-              <div>
                 <label className="block text-xs font-semibold text-gray-600 mb-1">รูปภาพสินค้า</label>
-                
-                {/* แสดงภาพตัวอย่าง (Preview) ถ้ามี */}
                 {formData.image && (
-                  <div className="relative mb-2 h-32 rounded-lg overflow-hidden border border-gray-200">
+                  <div className="relative mb-2 h-28 rounded-lg overflow-hidden border border-gray-200">
                     <img src={formData.image} alt="Preview" className="w-full h-full object-cover" />
                     <button
                       type="button"
                       onClick={() => setFormData({ ...formData, image: '' })}
-                      className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full text-xs shadow-md"
+                      className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full text-xs shadow-md cursor-pointer"
                     >
                       <X className="w-3 h-3" />
                     </button>
                   </div>
                 )}
 
-                <label className="flex items-center justify-center gap-2 w-full p-3 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-[#D4AF37] hover:bg-amber-50/50 transition-colors">
+                <label className="flex items-center justify-center gap-2 w-full p-2.5 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-[#D4AF37] hover:bg-amber-50/50 transition-colors">
                   <Upload className="w-4 h-4 text-gray-500" />
                   <span className="text-xs text-gray-600 font-medium">
                     {formData.image ? 'เปลี่ยนรูปภาพ...' : 'แนบรูปภาพจากเครื่อง'}
@@ -394,7 +434,8 @@ export default function App() {
                 </label>
               </div>
 
-              <div className="pt-3 flex gap-2">
+              {/* Modal Footer Buttons Fix */}
+              <div className="pt-3 border-t flex gap-2">
                 <button 
                   type="button" 
                   onClick={() => { setIsAddModalOpen(false); setEditingProduct(null); }}
@@ -410,6 +451,7 @@ export default function App() {
                 </button>
               </div>
             </form>
+
           </div>
         </div>
       )}
