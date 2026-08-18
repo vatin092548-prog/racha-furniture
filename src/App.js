@@ -14,7 +14,9 @@ import {
   MapPin,
   CheckCircle2,
   Edit,
-  X
+  X,
+  Upload,
+  Image as ImageIcon
 } from 'lucide-react';
 
 export default function App() {
@@ -51,7 +53,7 @@ export default function App() {
   // ข้อมูลสินค้า
   const [products, setProducts] = useState([
     {
-      id: 'P003',
+      id: 'P001',
       name: 'เตียงนอนไม้สัก 6 ฟุต',
       category: 'ห้องนอน',
       price: 24500,
@@ -61,6 +63,18 @@ export default function App() {
       image: 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=500&auto=format&fit=crop&q=60'
     }
   ]);
+
+  // ฟังก์ชันแปลงไฟล์รูปภาพเป็น Base64
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData(prev => ({ ...prev, image: reader.result }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   // เปิด Pop-up เพิ่มสินค้า
   const handleOpenAddModal = () => {
@@ -72,7 +86,7 @@ export default function App() {
       size: '',
       location: '',
       status: 'มีสินค้าพร้อมส่ง',
-      image: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=500&auto=format&fit=crop&q=60'
+      image: ''
     });
     setIsAddModalOpen(true);
   };
@@ -87,17 +101,14 @@ export default function App() {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (editingProduct) {
-      // แก้ไขสินค้าเดิม
       setProducts(products.map(p => p.id === editingProduct.id ? { ...formData, price: Number(formData.price) } : p));
       setEditingProduct(null);
     } else {
-      // เพิ่มสินค้าใหม่
       setProducts([...products, { ...formData, price: Number(formData.price) }]);
       setIsAddModalOpen(false);
     }
   };
 
-  // กรองสินค้า
   const filteredProducts = products.filter(product => {
     const matchesCategory = selectedCategory ? product.category === selectedCategory : true;
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -210,8 +221,6 @@ export default function App() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {filteredProducts.map((product) => (
                   <div key={product.id} className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 relative group">
-                    
-                    {/* ปุ่มแก้ไขสินค้า */}
                     <button 
                       onClick={() => handleOpenEditModal(product)}
                       className="absolute top-3 right-3 bg-white/90 hover:bg-white text-gray-700 p-2 rounded-full shadow-md transition-all cursor-pointer z-10"
@@ -220,8 +229,12 @@ export default function App() {
                       <Edit className="w-4 h-4 text-[#1B2A3A]" />
                     </button>
 
-                    <div className="relative h-48 bg-gray-100">
-                      <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+                    <div className="relative h-48 bg-gray-100 flex items-center justify-center overflow-hidden">
+                      {product.image ? (
+                        <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <ImageIcon className="w-12 h-12 text-gray-300" />
+                      )}
                     </div>
                     
                     <div className="p-4">
@@ -267,10 +280,10 @@ export default function App() {
       {/* Modal ป๊อปอัพ เพิ่ม/แก้ไข สินค้า */}
       {(isAddModalOpen || editingProduct) && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
             <button 
               onClick={() => { setIsAddModalOpen(false); setEditingProduct(null); }}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 p-1"
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 p-1 cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
@@ -349,27 +362,49 @@ export default function App() {
                 />
               </div>
 
+              {/* ส่วนแนบรูปภาพใหม่ */}
               <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1">ลิงก์รูปภาพ (URL)</label>
-                <input 
-                  type="text" 
-                  value={formData.image} 
-                  onChange={e => setFormData({...formData, image: e.target.value})}
-                  className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-[#D4AF37] outline-none" 
-                />
+                <label className="block text-xs font-semibold text-gray-600 mb-1">รูปภาพสินค้า</label>
+                
+                {/* แสดงภาพตัวอย่าง (Preview) ถ้ามี */}
+                {formData.image && (
+                  <div className="relative mb-2 h-32 rounded-lg overflow-hidden border border-gray-200">
+                    <img src={formData.image} alt="Preview" className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, image: '' })}
+                      className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full text-xs shadow-md"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                )}
+
+                <label className="flex items-center justify-center gap-2 w-full p-3 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-[#D4AF37] hover:bg-amber-50/50 transition-colors">
+                  <Upload className="w-4 h-4 text-gray-500" />
+                  <span className="text-xs text-gray-600 font-medium">
+                    {formData.image ? 'เปลี่ยนรูปภาพ...' : 'แนบรูปภาพจากเครื่อง'}
+                  </span>
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    onChange={handleImageUpload} 
+                    className="hidden" 
+                  />
+                </label>
               </div>
 
               <div className="pt-3 flex gap-2">
                 <button 
                   type="button" 
                   onClick={() => { setIsAddModalOpen(false); setEditingProduct(null); }}
-                  className="w-1/2 border border-gray-300 text-gray-600 py-2 rounded-lg font-semibold hover:bg-gray-50"
+                  className="w-1/2 border border-gray-300 text-gray-600 py-2 rounded-lg font-semibold hover:bg-gray-50 cursor-pointer"
                 >
                   ยกเลิก
                 </button>
                 <button 
                   type="submit" 
-                  className="w-1/2 bg-[#1B2A3A] text-[#D4AF37] font-bold py-2 rounded-lg hover:bg-[#111B25] shadow-md"
+                  className="w-1/2 bg-[#1B2A3A] text-[#D4AF37] font-bold py-2 rounded-lg hover:bg-[#111B25] shadow-md cursor-pointer"
                 >
                   บันทึกข้อมูล
                 </button>
