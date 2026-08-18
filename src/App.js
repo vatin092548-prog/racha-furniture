@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Bed, 
   Sofa, 
@@ -18,16 +18,58 @@ import {
   X,
   Upload,
   Image as ImageIcon,
-  Share2
+  Lock,
+  LogOut,
+  KeyRound
 } from 'lucide-react';
 
 export default function App() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(null);
 
+  // Authentication States
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [pinInput, setPinInput] = useState('');
+  const [loginError, setLoginError] = useState('');
+
+  const ADMIN_PIN = '1234';
+
   // Modal States
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
+
+  // ข้อมูลเริ่มต้นเผื่อยังไม่มีข้อมูลใน localStorage
+  const initialProducts = [
+    {
+      id: 'P001',
+      name: 'เตียงนอนไม้สัก 6 ฟุต',
+      category: 'ห้องนอน',
+      price: 24500,
+      size: '200 x 215 x 110 ซม.',
+      location: 'โซน B ชั้น 2',
+      status: 'มีสินค้าพร้อมส่ง',
+      image: 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=500&auto=format&fit=crop&q=60'
+    }
+  ];
+
+  // โหลดข้อมูลจาก localStorage เมื่อเปิดเว็บ
+  const [products, setProducts] = useState(() => {
+    const savedProducts = localStorage.getItem('racha_products');
+    if (savedProducts) {
+      try {
+        return JSON.parse(savedProducts);
+      } catch (e) {
+        return initialProducts;
+      }
+    }
+    return initialProducts;
+  });
+
+  // บันทึกข้อมูลลง localStorage ทุกครั้งที่ข้อมูล products เปลี่ยนแปลง
+  useEffect(() => {
+    localStorage.setItem('racha_products', JSON.stringify(products));
+  }, [products]);
 
   // Form States
   const [formData, setFormData] = useState({
@@ -41,7 +83,6 @@ export default function App() {
     image: ''
   });
 
-  // หมวดหมู่
   const categories = [
     { name: 'ห้องนอน', icon: Bed },
     { name: 'ห้องนั่งเล่น', icon: Sofa },
@@ -52,21 +93,22 @@ export default function App() {
     { name: 'ของตกแต่ง', icon: Flower2 },
   ];
 
-  // ข้อมูลสินค้า
-  const [products, setProducts] = useState([
-    {
-      id: 'P001',
-      name: 'เตียงนอนไม้สัก 6 ฟุต',
-      category: 'ห้องนอน',
-      price: 24500,
-      size: '200 x 215 x 110 ซม.',
-      location: 'โซน B ชั้น 2',
-      status: 'มีสินค้าพร้อมส่ง',
-      image: 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=500&auto=format&fit=crop&q=60'
+  const handleLoginSubmit = (e) => {
+    e.preventDefault();
+    if (pinInput === ADMIN_PIN) {
+      setIsLoggedIn(true);
+      setIsLoginModalOpen(false);
+      setPinInput('');
+      setLoginError('');
+    } else {
+      setLoginError('รหัส PIN ไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง');
     }
-  ]);
+  };
 
-  // ฟังก์ชันแปลงไฟล์รูปภาพเป็น Base64
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+  };
+
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -78,7 +120,6 @@ export default function App() {
     }
   };
 
-  // เปิด Pop-up เพิ่มสินค้า
   const handleOpenAddModal = () => {
     setFormData({
       id: `P00${products.length + 1}`,
@@ -93,13 +134,11 @@ export default function App() {
     setIsAddModalOpen(true);
   };
 
-  // เปิด Pop-up แก้ไขสินค้า
   const handleOpenEditModal = (product) => {
     setEditingProduct(product);
     setFormData(product);
   };
 
-  // ลบสินค้า
   const handleDeleteProduct = (id) => {
     if (window.confirm('คุณต้องการลบสินค้านี้ใช่หรือไม่?')) {
       setProducts(products.filter(p => p.id !== id));
@@ -107,7 +146,6 @@ export default function App() {
     }
   };
 
-  // บันทึกการเพิ่ม/แก้ไข
   const handleSubmit = (e) => {
     e.preventDefault();
     if (editingProduct) {
@@ -131,7 +169,6 @@ export default function App() {
       {/* Header Bar */}
       <header className="bg-[#1B2A3A] text-white shadow-md px-6 py-4">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          
           <div className="flex items-center gap-3 cursor-pointer" onClick={() => setSelectedCategory(null)}>
             <div className="text-[#D4AF37]">
               <svg width="42" height="42" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round">
@@ -145,8 +182,10 @@ export default function App() {
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-2xl font-bold tracking-wide text-white">ราชาเฟอร์นิเจอร์</h1>
-                <span className="text-[10px] bg-[#D4AF37] text-[#1B2A3A] font-bold px-2 py-0.5 rounded-full">
-                  สำหรับพนักงาน
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                  isLoggedIn ? 'bg-green-500 text-white' : 'bg-[#D4AF37] text-[#1B2A3A]'
+                }`}>
+                  {isLoggedIn ? 'ผู้ดูแลระบบ' : 'โหมดดูสินค้า'}
                 </span>
               </div>
               <p className="text-xs text-[#D4AF37] tracking-widest font-semibold uppercase">RACHA FURNITURE</p>
@@ -165,15 +204,35 @@ export default function App() {
               <Search className="absolute right-3 top-2.5 text-gray-400 w-4 h-4" />
             </div>
 
-            <button 
-              onClick={handleOpenAddModal}
-              className="flex items-center gap-1.5 bg-[#2E7D32] hover:bg-[#25632A] text-white px-4 py-2 rounded-lg text-sm font-medium shadow-md transition-all whitespace-nowrap cursor-pointer"
-            >
-              <Plus className="w-4 h-4" />
-              <span>เพิ่มสินค้าใหม่</span>
-            </button>
-          </div>
+            {isLoggedIn && (
+              <button 
+                onClick={handleOpenAddModal}
+                className="flex items-center gap-1.5 bg-[#2E7D32] hover:bg-[#25632A] text-white px-4 py-2 rounded-lg text-sm font-medium shadow-md transition-all whitespace-nowrap cursor-pointer"
+              >
+                <Plus className="w-4 h-4" />
+                <span>เพิ่มสินค้าใหม่</span>
+              </button>
+            )}
 
+            {isLoggedIn ? (
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-1.5 bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg text-sm font-medium shadow-md transition-all whitespace-nowrap cursor-pointer"
+                title="ออกจากระบบจัดการ"
+              >
+                <LogOut className="w-4 h-4" />
+                <span className="hidden sm:inline">ออกจากระบบ</span>
+              </button>
+            ) : (
+              <button
+                onClick={() => { setIsLoginModalOpen(true); setLoginError(''); }}
+                className="flex items-center gap-1.5 bg-[#D4AF37] hover:bg-[#B5922B] text-[#1B2A3A] font-bold px-3 py-2 rounded-lg text-sm shadow-md transition-all whitespace-nowrap cursor-pointer"
+              >
+                <Lock className="w-4 h-4" />
+                <span>จัดการสินค้า</span>
+              </button>
+            )}
+          </div>
         </div>
       </header>
 
@@ -231,24 +290,24 @@ export default function App() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {filteredProducts.map((product) => (
                   <div key={product.id} className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 relative group">
-                    
-                    {/* Action Buttons บนการ์ด */}
-                    <div className="absolute top-3 right-3 flex gap-1.5 z-10">
-                      <button 
-                        onClick={() => handleOpenEditModal(product)}
-                        className="bg-white/90 hover:bg-white text-gray-700 p-2 rounded-full shadow-md transition-all cursor-pointer"
-                        title="แก้ไขสินค้า"
-                      >
-                        <Edit className="w-4 h-4 text-[#1B2A3A]" />
-                      </button>
-                      <button 
-                        onClick={() => handleDeleteProduct(product.id)}
-                        className="bg-white/90 hover:bg-white text-red-600 p-2 rounded-full shadow-md transition-all cursor-pointer"
-                        title="ลบสินค้า"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
+                    {isLoggedIn && (
+                      <div className="absolute top-3 right-3 flex gap-1.5 z-10">
+                        <button 
+                          onClick={() => handleOpenEditModal(product)}
+                          className="bg-white/90 hover:bg-white text-gray-700 p-2 rounded-full shadow-md transition-all cursor-pointer"
+                          title="แก้ไขสินค้า"
+                        >
+                          <Edit className="w-4 h-4 text-[#1B2A3A]" />
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteProduct(product.id)}
+                          className="bg-white/90 hover:bg-white text-red-600 p-2 rounded-full shadow-md transition-all cursor-pointer"
+                          title="ลบสินค้า"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    )}
 
                     <div className="relative h-48 bg-gray-100 flex items-center justify-center overflow-hidden">
                       {product.image ? (
@@ -259,7 +318,7 @@ export default function App() {
                     </div>
                     
                     <div className="p-4">
-                      <div className="flex items-start justify-between gap-2 mb-2 pr-12">
+                      <div className="flex items-start justify-between gap-2 mb-2 pr-6">
                         <h3 className="font-bold text-gray-800 text-lg">{product.name}</h3>
                         <span className="bg-gray-100 text-gray-500 text-[10px] font-mono px-2 py-0.5 rounded">
                           {product.id}
@@ -302,12 +361,60 @@ export default function App() {
         )}
       </main>
 
+      {/* Modal ป๊อปอัพ เข้าสู่ระบบด้วย PIN */}
+      {isLoginModalOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl relative">
+            <button 
+              onClick={() => setIsLoginModalOpen(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 p-1 cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="text-center mb-6">
+              <div className="w-12 h-12 bg-[#1B2A3A] text-[#D4AF37] rounded-full flex items-center justify-center mx-auto mb-3 shadow-md">
+                <KeyRound className="w-6 h-6" />
+              </div>
+              <h3 className="text-lg font-bold text-[#1B2A3A]">เข้าสู่ระบบจัดการสินค้า</h3>
+              <p className="text-xs text-gray-500 mt-1">กรอกรหัส PIN 4 หลักเพื่อปลดล็อกสิทธิ์การแก้ไข</p>
+            </div>
+
+            <form onSubmit={handleLoginSubmit} className="space-y-4">
+              <div>
+                <input 
+                  type="password" 
+                  maxLength={4}
+                  placeholder="กรอกรหัส PIN (เช่น 1234)" 
+                  value={pinInput}
+                  onChange={(e) => setPinInput(e.target.value)}
+                  className="w-full text-center text-2xl tracking-[0.5em] font-bold border-2 border-gray-300 rounded-xl py-3 focus:ring-2 focus:ring-[#D4AF37] focus:border-[#D4AF37] outline-none"
+                  autoFocus
+                  required
+                />
+              </div>
+
+              {loginError && (
+                <p className="text-xs text-red-600 font-semibold text-center bg-red-50 py-1.5 rounded-lg border border-red-200">
+                  {loginError}
+                </p>
+              )}
+
+              <button 
+                type="submit" 
+                className="w-full bg-[#1B2A3A] hover:bg-[#111B25] text-[#D4AF37] font-bold py-3 rounded-xl shadow-md cursor-pointer transition-colors"
+              >
+                ยืนยันรหัส PIN
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Modal ป๊อปอัพ เพิ่ม/แก้ไข สินค้า */}
       {(isAddModalOpen || editingProduct) && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl flex flex-col max-h-[90vh]">
-            
-            {/* Modal Header */}
             <div className="p-4 border-b flex justify-between items-center bg-[#1B2A3A] text-white rounded-t-2xl">
               <h3 className="font-bold text-base text-[#D4AF37]">
                 {editingProduct ? 'แก้ไขข้อมูลสินค้า / เปลี่ยนราคา' : 'เพิ่มสินค้าใหม่'}
@@ -320,7 +427,6 @@ export default function App() {
               </button>
             </div>
 
-            {/* Modal Form Body */}
             <form onSubmit={handleSubmit} className="p-4 space-y-3 text-sm overflow-y-auto flex-1">
               <div>
                 <label className="block text-xs font-semibold text-gray-600 mb-1">รหัสสินค้า</label>
@@ -434,7 +540,6 @@ export default function App() {
                 </label>
               </div>
 
-              {/* Modal Footer Buttons Fix */}
               <div className="pt-3 border-t flex gap-2">
                 <button 
                   type="button" 
@@ -451,7 +556,6 @@ export default function App() {
                 </button>
               </div>
             </form>
-
           </div>
         </div>
       )}
