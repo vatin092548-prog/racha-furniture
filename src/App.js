@@ -81,7 +81,6 @@ export default function App() {
   const [phone, setPhone] = useState("");
   const [loginError, setLoginError] = useState("");
 
-  // เบอร์พนักงานสำหรับทดสอบ
   const STAFF_PHONE = "0822810874";
 
 
@@ -102,11 +101,36 @@ export default function App() {
 
 
   /* =======================================================
+     CATEGORIES & PREFIX MAP
+  ======================================================= */
+
+  const categoryPrefixMap = {
+    "ห้องนอน": "A",
+    "ห้องนั่งเล่น": "T",
+    "โซฟา & เก้าอี้พักผ่อน": "S",
+    "ห้องอาหาร/ห้องครัว": "E",
+    "ห้องสำนักงาน": "I",
+    "สินค้าพิเศษ": "P",
+    "ห้องทั่วไป": "B",
+  };
+
+  const categories = [
+    { name: "ห้องนอน", icon: Bed, prefix: "A" },
+    { name: "ห้องนั่งเล่น", icon: Sofa, prefix: "T" },
+    { name: "โซฟา & เก้าอี้พักผ่อน", icon: Armchair, prefix: "S" },
+    { name: "ห้องอาหาร/ห้องครัว", icon: Utensils, prefix: "E" },
+    { name: "ห้องสำนักงาน", icon: Briefcase, prefix: "I" },
+    { name: "สินค้าพิเศษ", icon: Sparkles, prefix: "P" },
+    { name: "ห้องทั่วไป", icon: LayoutGrid, prefix: "B" },
+  ];
+
+
+  /* =======================================================
      FORM
   ======================================================= */
 
   const emptyForm = {
-    id: "",
+    id: "A",
     name: "",
     category: "ห้องนอน",
     price: "",
@@ -119,21 +143,6 @@ export default function App() {
   };
 
   const [formData, setFormData] = useState(emptyForm);
-
-
-  /* =======================================================
-     CATEGORIES
-  ======================================================= */
-
-  const categories = [
-    { name: "ห้องนอน", icon: Bed },
-    { name: "ห้องนั่งเล่น", icon: Sofa },
-    { name: "โซฟา & เก้าอี้พักผ่อน", icon: Armchair },
-    { name: "ห้องอาหาร/ห้องครัว", icon: Utensils },
-    { name: "ห้องสำนักงาน", icon: Briefcase },
-    { name: "สินค้าพิเศษ", icon: Sparkles },
-    { name: "ห้องทั่วไป", icon: LayoutGrid },
-  ];
 
 
   /* =======================================================
@@ -210,10 +219,13 @@ export default function App() {
 
   const openAddProduct = () => {
     setEditingProduct(null);
+    const targetCategory = selectedCategory || "ห้องนอน";
+    const code = categoryPrefixMap[targetCategory] || "A";
+
     setFormData({
       ...emptyForm,
-      id: `P${String(products.length + 1).padStart(3, "0")}`,
-      category: selectedCategory || "ห้องนอน",
+      id: code,
+      category: targetCategory,
     });
     setShowProductModal(true);
   };
@@ -244,10 +256,9 @@ export default function App() {
 
 
   /* =======================================================
-     IMAGE COMPRESSOR & UPLOAD (ปรับปรุงแก้ไข)
+     IMAGE COMPRESSOR & UPLOAD
   ======================================================= */
 
-  // ฟังก์ชันย่อขนาดรูปภาพให้เหลือไม่เกิน ~300KB
   const compressImage = (file, maxWidth = 800, quality = 0.7) => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -271,7 +282,6 @@ export default function App() {
           const ctx = canvas.getContext("2d");
           ctx.drawImage(img, 0, 0, width, height);
 
-          // แปลงเป็น Base64 แบบบีบอัดไฟล์
           const compressedBase64 = canvas.toDataURL("image/jpeg", quality);
           resolve(compressedBase64);
         };
@@ -287,7 +297,6 @@ export default function App() {
 
     try {
       showToast("กำลังประมวลผลรูปภาพ...");
-      // ย่อขนาดรูปภาพให้อยู่ในสัดส่วนไม่เกิน 800px ความชัด 70%
       const compressedImage = await compressImage(file, 800, 0.7);
       setFormData((previous) => ({
         ...previous,
@@ -342,7 +351,8 @@ export default function App() {
       }
     }
 
-    let productId = editingProduct ? editingProduct.id : formData.id?.trim() || `P${Date.now()}`;
+    // กำหนด Document ID ตามรหัสตัวอักษร
+    const newProductId = formData.id?.trim() || "A";
 
     const productData = {
       name: formData.name.trim(),
@@ -358,7 +368,12 @@ export default function App() {
     };
 
     try {
-      await setDoc(doc(db, PRODUCTS_COLLECTION, productId), productData);
+      await setDoc(doc(db, PRODUCTS_COLLECTION, newProductId), productData);
+
+      if (editingProduct && editingProduct.id !== newProductId) {
+        await deleteDoc(doc(db, PRODUCTS_COLLECTION, editingProduct.id));
+      }
+
       closeProductModal();
       showToast(editingProduct ? "แก้ไขสินค้าสำเร็จ" : "เพิ่มสินค้าสำเร็จ");
     } catch (error) {
@@ -598,12 +613,17 @@ export default function App() {
                   <button
                     key={category.name}
                     onClick={() => setSelectedCategory(category.name)}
-                    className="bg-white border border-amber-100 hover:border-[#D4AF37] hover:shadow-md rounded-xl p-4 flex items-center gap-4 text-left transition"
+                    className="bg-white border border-amber-100 hover:border-[#D4AF37] hover:shadow-md rounded-xl p-4 flex items-center justify-between text-left transition"
                   >
-                    <div className="p-3 bg-[#F4E8C1] text-[#1B2A3A] rounded-lg">
-                      <Icon className="w-6 h-6" />
+                    <div className="flex items-center gap-4">
+                      <div className="p-3 bg-[#F4E8C1] text-[#1B2A3A] rounded-lg">
+                        <Icon className="w-6 h-6" />
+                      </div>
+                      <span className="font-bold">{category.name}</span>
                     </div>
-                    <span className="font-bold">{category.name}</span>
+                    <span className="font-mono font-bold text-lg text-red-600 bg-red-50 border border-red-200 px-3 py-1 rounded-lg">
+                      {category.prefix}
+                    </span>
                   </button>
                 );
               })}
@@ -626,7 +646,7 @@ export default function App() {
               </button>
               {selectedCategory && (
                 <span className="bg-amber-100 text-amber-900 px-3 py-1.5 rounded-full text-xs font-bold">
-                  หมวด: {selectedCategory}
+                  หมวด: {selectedCategory} ({categoryPrefixMap[selectedCategory]})
                 </span>
               )}
             </div>
@@ -821,15 +841,14 @@ export default function App() {
             </div>
 
             <form onSubmit={handleSaveProduct} className="p-5 overflow-y-auto space-y-4">
+              {/* ID (แสดงเฉพาะรหัสตัวอักษร) */}
               <div>
                 <label className="block text-xs font-bold text-gray-600 mb-1">รหัสสินค้า</label>
                 <input
                   type="text"
                   value={formData.id}
-                  onChange={(e) => setFormData({ ...formData, id: e.target.value })}
-                  disabled={Boolean(editingProduct)}
-                  placeholder="เช่น P001"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 bg-gray-50"
+                  readOnly
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 bg-gray-100 font-bold text-red-600 cursor-not-allowed"
                 />
               </div>
 
@@ -845,11 +864,20 @@ export default function App() {
                 />
               </div>
 
+              {/* เปลี่ยนหมวดหมู่ ➔ เปลี่ยนรหัสตัวอักษรให้อัตโนมัติ */}
               <div>
                 <label className="block text-xs font-bold text-gray-600 mb-1">หมวดหมู่</label>
                 <select
                   value={formData.category}
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  onChange={(e) => {
+                    const newCat = e.target.value;
+                    const newPrefix = categoryPrefixMap[newCat] || "A";
+                    setFormData({
+                      ...formData,
+                      category: newCat,
+                      id: newPrefix,
+                    });
+                  }}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2.5"
                 >
                   {categories.map((category) => (
@@ -931,7 +959,6 @@ export default function App() {
                     <img src={formData.image} alt="Preview" className="w-14 h-14 object-cover rounded-lg border" />
                   )}
                 </div>
-                <p className="text-[10px] text-gray-400 mt-1">ระบบจะบีบอัดรูปให้อัตโนมัติ ป้องกันปัญหาการบันทึกไม่ได้</p>
               </div>
 
               <div>
