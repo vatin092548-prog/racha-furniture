@@ -25,12 +25,19 @@ import {
   Package,
   CheckCircle,
   Tag,
-  LayoutDashboard
+  LayoutDashboard,
+  Flame,
+  ArrowUpDown
 } from 'lucide-react';
 
 export default function App() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(null);
+
+  // Filter & Sort States
+  const [filterPromoOnly, setFilterPromoOnly] = useState(false);
+  const [filterInStockOnly, setFilterInStockOnly] = useState(false);
+  const [sortByPrice, setSortByPrice] = useState('none'); // 'none', 'asc', 'desc'
 
   // Authentication States
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -132,7 +139,7 @@ export default function App() {
     if (e) e.stopPropagation();
     const shareUrl = `${window.location.origin}${window.location.pathname}?product=${product.id}`;
     const displayPrice = product.promoPrice ? `฿${Number(product.promoPrice).toLocaleString()} (จากปกติ ฿${Number(product.price).toLocaleString()})` : `฿${Number(product.price).toLocaleString()}`;
-    const shareText = `🪑 ${product.name}\n💰 ราคา: ${displayPrice}\n📍 สถานะ: ${product.status}\n\nดูรายละเอียดสินค้าได้ที่นี่:\n${shareUrl}`;
+    const shareText = `🪑 ${product.name}\n💰 ราคา: ${displayPrice}\n📍 สาขาหาดใหญ่ (ถ.สามสิบเมตร) - วางหน้าโซน: ${product.location || '-'}\n\nดูรายละเอียดเพิ่มเติม:\n${shareUrl}`;
 
     if (navigator.clipboard) {
       navigator.clipboard.writeText(shareText);
@@ -224,11 +231,20 @@ export default function App() {
     }
   };
 
+  // การกรองและเรียงลำดับสินค้า
   const filteredProducts = products.filter(product => {
     const matchesCategory = selectedCategory ? product.category === selectedCategory : true;
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           product.id.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesCategory && matchesSearch;
+    const matchesPromo = filterPromoOnly ? Boolean(product.promoPrice) : true;
+    const matchesStock = filterInStockOnly ? product.status !== 'สินค้าหมด' : true;
+
+    return matchesCategory && matchesSearch && matchesPromo && matchesStock;
+  }).sort((a, b) => {
+    const getEffectivePrice = (p) => p.promoPrice ? Number(p.promoPrice) : Number(p.price);
+    if (sortByPrice === 'asc') return getEffectivePrice(a) - getEffectivePrice(b);
+    if (sortByPrice === 'desc') return getEffectivePrice(b) - getEffectivePrice(a);
+    return 0;
   });
 
   return (
@@ -246,6 +262,7 @@ export default function App() {
       <header className="bg-[#1B2A3A] text-white shadow-md px-6 py-4 sticky top-0 z-30">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           
+          {/* Logo & Branch Name */}
           <div className="flex items-center gap-3 cursor-pointer" onClick={() => { setSelectedCategory(null); setSearchTerm(''); }}>
             <div className="text-[#D4AF37]">
               <svg width="42" height="42" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round">
@@ -257,7 +274,7 @@ export default function App() {
               </svg>
             </div>
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <h1 className="text-2xl font-bold tracking-wide text-white">ราชาเฟอร์นิเจอร์</h1>
                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                   isLoggedIn ? 'bg-green-500 text-white' : 'bg-[#D4AF37] text-[#1B2A3A]'
@@ -265,10 +282,14 @@ export default function App() {
                   {isLoggedIn ? 'ผู้ดูแลระบบ' : 'แคตตาล็อกออนไลน์'}
                 </span>
               </div>
-              <p className="text-xs text-[#D4AF37] tracking-widest font-semibold uppercase">RACHA FURNITURE</p>
+              <div className="flex items-center gap-1.5 text-xs text-[#D4AF37]">
+                <MapPin className="w-3.5 h-3.5" />
+                <span className="font-semibold">สาขาหาดใหญ่ (ถ.สามสิบเมตร)</span>
+              </div>
             </div>
           </div>
 
+          {/* Search & Actions */}
           <div className="flex items-center gap-3 w-full md:w-auto">
             <div className="relative w-full md:w-80">
               <input
@@ -317,12 +338,17 @@ export default function App() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto p-6">
 
-        {/* Dashboard สำหรับ แอดมิน */}
+        {/* Admin Dashboard */}
         {isLoggedIn && (
           <div className="mb-8 bg-white p-5 rounded-2xl border border-amber-200 shadow-sm">
-            <div className="flex items-center gap-2 mb-4 border-b border-gray-100 pb-2">
-              <LayoutDashboard className="w-5 h-5 text-[#D4AF37]" />
-              <h2 className="font-bold text-[#1B2A3A] text-lg">ภาพรวมระบบจัดการสินค้า (Admin Dashboard)</h2>
+            <div className="flex items-center justify-between mb-4 border-b border-gray-100 pb-2">
+              <div className="flex items-center gap-2">
+                <LayoutDashboard className="w-5 h-5 text-[#D4AF37]" />
+                <h2 className="font-bold text-[#1B2A3A] text-lg">ภาพรวมระบบจัดการสินค้า (Admin Dashboard)</h2>
+              </div>
+              <span className="text-xs bg-amber-100 text-amber-900 font-bold px-2.5 py-1 rounded-full border border-amber-200">
+                📍 สาขาหาดใหญ่ (ถ.สามสิบเมตร)
+              </span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -360,10 +386,13 @@ export default function App() {
         {/* หมวดหมู่สินค้า */}
         {!selectedCategory && !searchTerm && (
           <>
-            <div className="mb-6">
-              <h2 className="text-xl font-bold text-[#1B2A3A] border-b-2 border-[#D4AF37] inline-block pb-1">
-                หมวดหมู่สินค้าเฟอร์นิเจอร์
-              </h2>
+            <div className="mb-6 flex justify-between items-end">
+              <div>
+                <h2 className="text-xl font-bold text-[#1B2A3A] border-b-2 border-[#D4AF37] inline-block pb-1">
+                  หมวดหมู่สินค้าเฟอร์นิเจอร์
+                </h2>
+                <p className="text-xs text-gray-500 mt-1">เลือกหมวดหมู่เพื่อดูสินค้าที่วางหน้าร้าน สาขาหาดใหญ่ (ถ.สามสิบเมตร)</p>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
@@ -388,10 +417,10 @@ export default function App() {
           </>
         )}
 
-        {/* รายการสินค้า */}
+        {/* แถบ Quick Filters & รายการสินค้า */}
         {(selectedCategory || searchTerm) && (
           <div>
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
               <button
                 onClick={() => { setSelectedCategory(null); setSearchTerm(''); }}
                 className="flex items-center gap-2 bg-white text-[#1B2A3A] border border-gray-300 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-colors shadow-sm cursor-pointer"
@@ -402,11 +431,59 @@ export default function App() {
 
               {selectedCategory && (
                 <span className="bg-amber-100 text-[#1B2A3A] font-semibold text-sm px-3 py-1 rounded-full border border-amber-200">
-                  {selectedCategory}
+                  หมวด: {selectedCategory}
                 </span>
               )}
             </div>
 
+            {/* แถบ Quick Filters ด้านบนรายการสินค้า */}
+            <div className="bg-white p-3 rounded-xl border border-gray-200 shadow-sm mb-6 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs font-bold text-gray-500 mr-1">ตัวกรองด่วน:</span>
+                
+                {/* ปุ่ม Filter โปรโมชั่น */}
+                <button
+                  onClick={() => setFilterPromoOnly(!filterPromoOnly)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    filterPromoOnly 
+                      ? 'bg-red-600 text-white shadow-md' 
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  <Flame className="w-3.5 h-3.5" />
+                  <span>🔥 ลดพิเศษเฉพาะโปร</span>
+                </button>
+
+                {/* ปุ่ม Filter พร้อมส่ง */}
+                <button
+                  onClick={() => setFilterInStockOnly(!filterInStockOnly)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    filterInStockOnly 
+                      ? 'bg-green-600 text-white shadow-md' 
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>📦 พร้อมส่ง/ตัวโชว์</span>
+                </button>
+              </div>
+
+              {/* ปุ่ม เรียงตามราคา */}
+              <div className="flex items-center gap-2">
+                <ArrowUpDown className="w-3.5 h-3.5 text-gray-400" />
+                <select
+                  value={sortByPrice}
+                  onChange={(e) => setSortByPrice(e.target.value)}
+                  className="bg-gray-50 border border-gray-300 text-gray-700 text-xs font-semibold rounded-lg p-1.5 outline-none cursor-pointer"
+                >
+                  <option value="none">เรียงตามมาตรฐาน</option>
+                  <option value="asc">ราคา: ต่ำ ➔ สูง</option>
+                  <option value="desc">ราคา: สูง ➔ ต่ำ</option>
+                </select>
+              </div>
+            </div>
+
+            {/* สินค้า Grid */}
             {filteredProducts.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {filteredProducts.map((product) => (
@@ -416,7 +493,7 @@ export default function App() {
                     className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 relative group cursor-pointer flex flex-col justify-between"
                   >
                     
-                    {/* ป้าย Promo Badge (มุมซ้ายบน) */}
+                    {/* ป้าย Promo Badge */}
                     {product.promoPrice && (
                       <div className="absolute top-3 left-3 z-10 bg-red-600 text-white font-bold text-[11px] px-2.5 py-1 rounded-md shadow-md flex items-center gap-1">
                         <Tag className="w-3 h-3" />
@@ -424,7 +501,7 @@ export default function App() {
                       </div>
                     )}
 
-                    {/* ปุ่มจัดการสำหรับ Admin (มุมขวาบน - ไม่ซ้อนกับป้ายโปรโมชั่น) */}
+                    {/* ปุ่ม Admin */}
                     {isLoggedIn && (
                       <div className="absolute top-3 right-3 flex gap-1.5 z-20">
                         <button 
@@ -444,7 +521,7 @@ export default function App() {
                       </div>
                     )}
 
-                    {/* รูปภาพสินค้า & ปุ่มแชร์ (ย้ายแชร์มาไว้มุมขวาล่างของรูป) */}
+                    {/* รูปภาพสินค้า */}
                     <div className="relative h-56 bg-slate-900/5 p-2 flex items-center justify-center overflow-hidden">
                       {product.image ? (
                         <img 
@@ -456,7 +533,7 @@ export default function App() {
                         <ImageIcon className="w-12 h-12 text-gray-300" />
                       )}
 
-                      {/* ปุ่มแชร์สินค้า (มุมขวาล่างของรูปภาพ) */}
+                      {/* ปุ่มแชร์ */}
                       <button
                         onClick={(e) => handleShareProduct(product, e)}
                         className="absolute bottom-3 right-3 bg-[#06C755] hover:bg-[#05b34c] text-white px-2.5 py-1.5 rounded-full shadow-md transition-all cursor-pointer flex items-center gap-1 z-10 text-xs font-bold"
@@ -475,7 +552,7 @@ export default function App() {
                         </span>
                       </div>
 
-                      {/* แสดงราคาโปรโมชั่น vs ราคาจริง */}
+                      {/* แสดงราคา */}
                       <div className="mb-3 flex items-baseline gap-2">
                         {product.promoPrice ? (
                           <>
@@ -498,12 +575,10 @@ export default function App() {
                           <Box className="w-3.5 h-3.5 text-gray-400 shrink-0" />
                           <span className="truncate">ขนาด: {product.size || '-'}</span>
                         </div>
-                        {isLoggedIn && (
-                          <div className="flex items-center gap-2">
-                            <MapPin className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                            <span className="font-semibold text-amber-800">วางหน้าร้าน: {product.location || '-'}</span>
-                          </div>
-                        )}
+                        <div className="flex items-center gap-2">
+                          <MapPin className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                          <span className="font-semibold text-amber-900 truncate">วางหน้าร้าน: {product.location || '-'}</span>
+                        </div>
                       </div>
                     </div>
 
@@ -523,7 +598,13 @@ export default function App() {
               </div>
             ) : (
               <div className="text-center py-12 bg-white rounded-xl border border-dashed border-gray-300">
-                <p className="text-gray-500">ไม่พบข้อมูลสินค้าที่ค้นหา</p>
+                <p className="text-gray-500 font-semibold">ไม่พบข้อมูลสินค้าตรงตามตัวกรองที่เลือก</p>
+                <button 
+                  onClick={() => { setFilterPromoOnly(false); setFilterInStockOnly(false); setSearchTerm(''); }}
+                  className="mt-3 text-xs text-amber-700 font-bold underline cursor-pointer"
+                >
+                  ล้างตัวกรองทั้งหมด
+                </button>
               </div>
             )}
           </div>
@@ -604,12 +685,10 @@ export default function App() {
                     <CheckCircle2 className="w-4 h-4 text-green-600 shrink-0" />
                     <span><strong>สถานะ:</strong> {viewingProduct.status}</span>
                   </div>
-                  {isLoggedIn && (
-                    <div className="p-3 bg-amber-50 rounded-lg flex items-center gap-2 col-span-1 sm:col-span-2 border border-amber-200">
-                      <MapPin className="w-4 h-4 text-amber-600 shrink-0" />
-                      <span className="text-amber-900"><strong>ตำแหน่งวางหน้าร้าน:</strong> {viewingProduct.location || '-'}</span>
-                    </div>
-                  )}
+                  <div className="p-3 bg-amber-50 rounded-lg flex items-center gap-2 col-span-1 sm:col-span-2 border border-amber-200">
+                    <MapPin className="w-4 h-4 text-amber-600 shrink-0" />
+                    <span className="text-amber-900"><strong>สถานที่ตั้ง:</strong> สาขาหาดใหญ่ (ถ.สามสิบเมตร) - โซนวาง: {viewingProduct.location || '-'}</span>
+                  </div>
                 </div>
 
                 <div className="pt-4 border-t border-gray-100">
@@ -628,7 +707,7 @@ export default function App() {
         </div>
       )}
 
-      {/* Modal เข้าสู่ระบบด้วย PIN */}
+      {/* Modal Login */}
       {isLoginModalOpen && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl relative">
@@ -644,7 +723,7 @@ export default function App() {
                 <KeyRound className="w-6 h-6" />
               </div>
               <h3 className="text-lg font-bold text-[#1B2A3A]">เข้าสู่ระบบจัดการสินค้า</h3>
-              <p className="text-xs text-gray-500 mt-1">กรอกรหัส PIN 4 หลักเพื่อเข้าสิทธิ์เจ้าของร้าน</p>
+              <p className="text-xs text-gray-500 mt-1">สาขาหาดใหญ่ (ถนนสามสิบเมตร)</p>
             </div>
 
             <form onSubmit={handleLoginSubmit} className="space-y-4">
@@ -678,14 +757,17 @@ export default function App() {
         </div>
       )}
 
-      {/* Modal เพิ่ม / แก้ไข สินค้า + โปรโมชั่น */}
+      {/* Modal เพิ่ม / แก้ไข สินค้า */}
       {(isAddModalOpen || editingProduct) && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl flex flex-col max-h-[90vh]">
             <div className="p-4 border-b flex justify-between items-center bg-[#1B2A3A] text-white rounded-t-2xl">
-              <h3 className="font-bold text-base text-[#D4AF37]">
-                {editingProduct ? 'แก้ไขข้อมูลสินค้า / โปรโมชั่น' : 'เพิ่มสินค้าใหม่'}
-              </h3>
+              <div>
+                <h3 className="font-bold text-base text-[#D4AF37]">
+                  {editingProduct ? 'แก้ไขข้อมูลสินค้า / โปรโมชั่น' : 'เพิ่มสินค้าใหม่'}
+                </h3>
+                <p className="text-[10px] text-gray-300">สาขาหาดใหญ่ (ถ.สามสิบเมตร)</p>
+              </div>
               <button 
                 onClick={() => { setIsAddModalOpen(false); setEditingProduct(null); }}
                 className="text-gray-300 hover:text-white cursor-pointer"
@@ -779,7 +861,7 @@ export default function App() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-600 mb-1">ตำแหน่งวางหน้าร้าน</label>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1">จุดวางหน้าร้าน (สาขาหาดใหญ่)</label>
                   <input 
                     type="text" 
                     placeholder="เช่น โซน B ชั้น 2" 
