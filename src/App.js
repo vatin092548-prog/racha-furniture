@@ -24,9 +24,8 @@ import {
   Share2,
   Package,
   CheckCircle,
-  AlertCircle,
-  LayoutDashboard,
-  Tag
+  Tag,
+  LayoutDashboard
 } from 'lucide-react';
 
 export default function App() {
@@ -47,16 +46,16 @@ export default function App() {
   const [viewingProduct, setViewingProduct] = useState(null);
   const [toastMessage, setToastMessage] = useState('');
 
-  // ข้อมูลสินค้าเริ่มต้น (เพิ่ม promoPrice)
+  // ข้อมูลสินค้าเริ่มต้น
   const initialProducts = [
     {
       id: 'A1',
       name: 'COACHELL A-Q (ชุดห้องนอน 6 ชิ้น)',
       category: 'ห้องนอน',
-      price: 22900,
-      promoPrice: 16900,
+      price: 16900,
+      promoPrice: 9997,
       size: '5 ฟุต',
-      location: 'โซน B ชั้น 2',
+      location: '61',
       status: 'สินค้าตัวโชว์',
       image: 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=500&auto=format&fit=crop&q=60',
       description: 'ชุดห้องนอน 6 ชิ้น ประกอบด้วย เตียง 5 ฟุต, ตู้เสื้อผ้า 158 ซม., โต๊ะแป้ง, ตู้ข้างเตียง, สตูล, ที่นอนสปริง'
@@ -88,7 +87,7 @@ export default function App() {
     localStorage.setItem('racha_products', JSON.stringify(products));
   }, [products]);
 
-  // ตรวจจับ URL Direct Link (เช่น ?product=A1)
+  // ตรวจจับ URL Direct Link (?product=ID)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const productId = params.get('product');
@@ -100,7 +99,7 @@ export default function App() {
     }
   }, [products]);
 
-  // Form States (เพิ่ม promoPrice)
+  // Form States
   const [formData, setFormData] = useState({
     id: '',
     name: '',
@@ -129,7 +128,6 @@ export default function App() {
     setTimeout(() => setToastMessage(''), 3000);
   };
 
-  // ฟังก์ชันแชร์สินค้า (LINE / คัดลอกลิงก์)
   const handleShareProduct = (product, e) => {
     if (e) e.stopPropagation();
     const shareUrl = `${window.location.origin}${window.location.pathname}?product=${product.id}`;
@@ -138,7 +136,7 @@ export default function App() {
 
     if (navigator.clipboard) {
       navigator.clipboard.writeText(shareText);
-      showToast('คัดลอกลิงก์และรายละเอียดเรียบร้อย! นำไปวางใน LINE ได้เลย');
+      showToast('คัดลอกลิงก์เรียบร้อย! นำไปวางใน LINE ได้เลย');
     } else {
       showToast('ไม่สามารถคัดลอกข้อความได้อัตโนมัติ');
     }
@@ -336,14 +334,14 @@ export default function App() {
                 <Package className="w-8 h-8 text-blue-400" />
               </div>
 
-              <div className="bg-amber-50 border border-amber-100 p-4 rounded-xl flex items-center justify-between">
+              <div className="bg-red-50 border border-red-100 p-4 rounded-xl flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-amber-600 font-semibold mb-1">สินค้าโปรโมชั่น</p>
-                  <p className="text-2xl font-black text-amber-900">
+                  <p className="text-xs text-red-600 font-semibold mb-1">สินค้าโปรโมชั่น</p>
+                  <p className="text-2xl font-black text-red-900">
                     {products.filter(p => p.promoPrice).length} รายการ
                   </p>
                 </div>
-                <Tag className="w-8 h-8 text-amber-500" />
+                <Tag className="w-8 h-8 text-red-400" />
               </div>
 
               <div className="bg-green-50 border border-green-100 p-4 rounded-xl flex items-center justify-between">
@@ -418,19 +416,27 @@ export default function App() {
                     className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 relative group cursor-pointer flex flex-col justify-between"
                   >
                     
-                    {/* ปุ่มสำหรับ แอดมิน */}
+                    {/* ป้าย Promo Badge (มุมซ้ายบน) */}
+                    {product.promoPrice && (
+                      <div className="absolute top-3 left-3 z-10 bg-red-600 text-white font-bold text-[11px] px-2.5 py-1 rounded-md shadow-md flex items-center gap-1">
+                        <Tag className="w-3 h-3" />
+                        <span>ลดพิเศษ</span>
+                      </div>
+                    )}
+
+                    {/* ปุ่มจัดการสำหรับ Admin (มุมขวาบน - ไม่ซ้อนกับป้ายโปรโมชั่น) */}
                     {isLoggedIn && (
-                      <div className="absolute top-3 left-3 flex gap-1.5 z-10">
+                      <div className="absolute top-3 right-3 flex gap-1.5 z-20">
                         <button 
                           onClick={(e) => handleOpenEditModal(product, e)}
-                          className="bg-white/90 hover:bg-white text-gray-700 p-2 rounded-full shadow-md transition-all cursor-pointer"
+                          className="bg-white/90 hover:bg-white text-gray-800 p-2 rounded-full shadow-lg border border-gray-200 transition-all cursor-pointer hover:scale-110"
                           title="แก้ไขสินค้า/โปรโมชั่น"
                         >
                           <Edit className="w-4 h-4 text-[#1B2A3A]" />
                         </button>
                         <button 
                           onClick={(e) => handleDeleteProduct(product.id, e)}
-                          className="bg-white/90 hover:bg-white text-red-600 p-2 rounded-full shadow-md transition-all cursor-pointer"
+                          className="bg-white/90 hover:bg-white text-red-600 p-2 rounded-full shadow-lg border border-gray-200 transition-all cursor-pointer hover:scale-110"
                           title="ลบสินค้า"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -438,75 +444,66 @@ export default function App() {
                       </div>
                     )}
 
-                    {/* ป้าย Promo Badge */}
-                    {product.promoPrice && (
-                      <div className="absolute top-3 left-3 z-10 bg-red-600 text-white font-bold text-[11px] px-2.5 py-1 rounded-md shadow-md flex items-center gap-1 animate-pulse">
-                        <Tag className="w-3 h-3" />
-                        <span>ลดพิเศษ</span>
+                    {/* รูปภาพสินค้า & ปุ่มแชร์ (ย้ายแชร์มาไว้มุมขวาล่างของรูป) */}
+                    <div className="relative h-56 bg-slate-900/5 p-2 flex items-center justify-center overflow-hidden">
+                      {product.image ? (
+                        <img 
+                          src={product.image} 
+                          alt={product.name} 
+                          className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300" 
+                        />
+                      ) : (
+                        <ImageIcon className="w-12 h-12 text-gray-300" />
+                      )}
+
+                      {/* ปุ่มแชร์สินค้า (มุมขวาล่างของรูปภาพ) */}
+                      <button
+                        onClick={(e) => handleShareProduct(product, e)}
+                        className="absolute bottom-3 right-3 bg-[#06C755] hover:bg-[#05b34c] text-white px-2.5 py-1.5 rounded-full shadow-md transition-all cursor-pointer flex items-center gap-1 z-10 text-xs font-bold"
+                        title="ส่งลิงก์สินค้าให้ลูกค้าใน LINE"
+                      >
+                        <Share2 className="w-3.5 h-3.5" />
+                        <span>แชร์</span>
+                      </button>
+                    </div>
+
+                    <div className="p-4">
+                      <div className="flex items-start justify-between gap-2 mb-2">
+                        <h3 className="font-bold text-gray-800 text-base group-hover:text-[#1D4ED8] transition-colors line-clamp-1">{product.name}</h3>
+                        <span className="bg-gray-100 text-gray-500 text-[10px] font-mono px-2 py-0.5 rounded shrink-0">
+                          {product.id}
+                        </span>
                       </div>
-                    )}
 
-                    {/* ปุ่ม 📤 แชร์สินค้า */}
-                    <button
-                      onClick={(e) => handleShareProduct(product, e)}
-                      className="absolute top-3 right-3 bg-[#06C755] hover:bg-[#05b34c] text-white px-2.5 py-1.5 rounded-full shadow-md transition-all cursor-pointer flex items-center gap-1 z-10 text-xs font-bold"
-                      title="ส่งลิงก์สินค้าให้ลูกค้าใน LINE"
-                    >
-                      <Share2 className="w-3.5 h-3.5" />
-                      <span>แชร์</span>
-                    </button>
-
-                    <div>
-                      <div className="relative h-56 bg-slate-900/5 p-2 flex items-center justify-center overflow-hidden">
-                        {product.image ? (
-                          <img 
-                            src={product.image} 
-                            alt={product.name} 
-                            className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300" 
-                          />
-                        ) : (
-                          <ImageIcon className="w-12 h-12 text-gray-300" />
-                        )}
-                      </div>
-                      
-                      <div className="p-4">
-                        <div className="flex items-start justify-between gap-2 mb-2">
-                          <h3 className="font-bold text-gray-800 text-base group-hover:text-[#1D4ED8] transition-colors line-clamp-1">{product.name}</h3>
-                          <span className="bg-gray-100 text-gray-500 text-[10px] font-mono px-2 py-0.5 rounded shrink-0">
-                            {product.id}
-                          </span>
-                        </div>
-
-                        {/* แสดงราคาโปรโมชั่น vs ราคาจริง */}
-                        <div className="mb-3 flex items-baseline gap-2">
-                          {product.promoPrice ? (
-                            <>
-                              <span className="text-2xl font-black text-red-600">
-                                ฿{Number(product.promoPrice).toLocaleString()}
-                              </span>
-                              <span className="text-xs text-gray-400 line-through font-semibold">
-                                ฿{Number(product.price).toLocaleString()}
-                              </span>
-                            </>
-                          ) : (
-                            <span className="text-2xl font-black text-[#1D4ED8]">
+                      {/* แสดงราคาโปรโมชั่น vs ราคาจริง */}
+                      <div className="mb-3 flex items-baseline gap-2">
+                        {product.promoPrice ? (
+                          <>
+                            <span className="text-2xl font-black text-red-600">
+                              ฿{Number(product.promoPrice).toLocaleString()}
+                            </span>
+                            <span className="text-xs text-gray-400 line-through font-semibold">
                               ฿{Number(product.price).toLocaleString()}
                             </span>
-                          )}
-                        </div>
+                          </>
+                        ) : (
+                          <span className="text-2xl font-black text-[#1D4ED8]">
+                            ฿{Number(product.price).toLocaleString()}
+                          </span>
+                        )}
+                      </div>
 
-                        <div className="space-y-1.5 text-xs text-gray-500 mb-4 border-t border-gray-100 pt-3">
-                          <div className="flex items-center gap-2">
-                            <Box className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-                            <span className="truncate">ขนาด: {product.size || '-'}</span>
-                          </div>
-                          {isLoggedIn && (
-                            <div className="flex items-center gap-2">
-                              <MapPin className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                              <span className="font-semibold text-amber-800">วางหน้าร้าน: {product.location || '-'}</span>
-                            </div>
-                          )}
+                      <div className="space-y-1.5 text-xs text-gray-500 mb-4 border-t border-gray-100 pt-3">
+                        <div className="flex items-center gap-2">
+                          <Box className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                          <span className="truncate">ขนาด: {product.size || '-'}</span>
                         </div>
+                        {isLoggedIn && (
+                          <div className="flex items-center gap-2">
+                            <MapPin className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                            <span className="font-semibold text-amber-800">วางหน้าร้าน: {product.location || '-'}</span>
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -545,7 +542,6 @@ export default function App() {
             </button>
 
             <div className="overflow-y-auto">
-              
               <div className="w-full bg-slate-900/5 relative flex items-center justify-center p-3 min-h-[260px] max-h-[420px]">
                 {viewingProduct.image ? (
                   <img 
@@ -573,7 +569,6 @@ export default function App() {
                   </span>
                 </div>
 
-                {/* ราคาสินค้าใน Modal */}
                 <div className="mb-4 flex items-baseline gap-3">
                   {viewingProduct.promoPrice ? (
                     <>
@@ -722,7 +717,6 @@ export default function App() {
                 />
               </div>
 
-              {/* ช่องปรับราคาปกติ และ ราคาโปรโมชั่น */}
               <div className="grid grid-cols-2 gap-2 bg-amber-50/50 p-2.5 rounded-xl border border-amber-200">
                 <div>
                   <label className="block text-xs font-semibold text-gray-600 mb-1">ราคาปกติ (บาท)</label>
