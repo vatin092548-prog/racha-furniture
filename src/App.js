@@ -1193,17 +1193,15 @@ export default function App() {
               <div className="mt-5 bg-green-50 border border-green-200 rounded-xl p-4">
                 <div className="flex gap-3">
                   <MessageCircle className="text-green-600 w-5 h-5 shrink-0" />
-                 <div className="mt-5 bg-green-50 border border-green-200 rounded-xl p-4">
-                <div className="flex gap-3">
-                  <MessageCircle className="text-green-600 w-5 h-5 shrink-0" />
                   <div>
                     <p className="font-bold text-green-800 text-sm">สนใจสินค้านี้?</p>
                     <p className="text-xs text-green-700 mt-1">
-                      แคปหน้าจอสินค้า <Camera className="inline w-3.5 h-3.5 mx-1" /> หรือกดแชร์ข้อมูลเพื่อคัดลอกข้อมูลสินค้าให้พนักงานในไลน์
+                      แคปหน้าจอสินค้า <Camera className="inline w-3.5 h-3.5 mx-1" /> หรือแชร์ข้อมูลให้พนักงาน
                     </p>
                   </div>
                 </div>
               </div>
+
               <button
                 onClick={() => handleShare(viewingProduct)}
                 className="w-full mt-4 bg-[#06C755] hover:bg-[#05B34C] text-white py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 shadow-md"
