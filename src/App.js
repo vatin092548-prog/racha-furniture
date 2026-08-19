@@ -446,11 +446,12 @@ export default function App() {
 
 
   /* =======================================================
-     SHARE
+     SHARE (ส่งรูปภาพ + ข้อความลง LINE)
   ======================================================= */
 
   const handleShare = async (product, event) => {
     if (event) event.stopPropagation();
+
     const url = `${window.location.origin}${window.location.pathname}?product=${product.id}`;
     const price = product.promoPrice
       ? `฿${Number(product.promoPrice).toLocaleString()}`
@@ -459,14 +460,44 @@ export default function App() {
     const text = `🪑 ${product.name}\n💰 ราคา ${price}\n📍 ราชาเฟอร์นิเจอร์ สาขาหาดใหญ่\n📦 สถานะ: ${product.status || 'มีสินค้าพร้อมส่ง'}\n📍 โซนวาง: ${product.location || "-"}\n\nดูรายละเอียดสินค้า:\n${url}`;
 
     try {
-      if (navigator.clipboard) {
+      let imageFile = null;
+      if (product.image && product.image.startsWith("data:image")) {
+        const response = await fetch(product.image);
+        const blob = await response.blob();
+        imageFile = new File([blob], `${product.id || "product"}.jpg`, { type: "image/jpeg" });
+      }
+
+      // ส่งรูปพร้อมข้อความกรณีใช้บนมือถือ
+      if (navigator.canShare && navigator.canShare({ files: [imageFile] })) {
+        await navigator.share({
+          title: product.name,
+          text: text,
+          files: [imageFile],
+        });
+        showToast("ส่งข้อมูลสินค้าเรียบร้อย");
+        return;
+      }
+
+      // คัดลอกรูปภาพลง Clipboard กรณีใช้อยู่บนคอมพิวเตอร์
+      if (navigator.clipboard && window.ClipboardItem && imageFile) {
+        await navigator.clipboard.write([
+          new ClipboardItem({
+            [imageFile.type]: imageFile,
+          }),
+        ]);
+        showToast("คัดลอกรูปภาพสินค้าแล้ว! กด Ctrl+V ใน LINE ได้เลย");
+      } else if (navigator.clipboard) {
         await navigator.clipboard.writeText(text);
-        showToast("คัดลอกข้อมูลสินค้าแล้ว");
+        showToast("คัดลอกข้อความสินค้าเรียบร้อยแล้ว");
       } else {
         alert(text);
       }
     } catch (error) {
-      alert(text);
+      console.error("Share error:", error);
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(text);
+        showToast("คัดลอกข้อความสินค้าเรียบร้อยแล้ว");
+      }
     }
   };
 
@@ -562,7 +593,6 @@ export default function App() {
       const minMatch = minPrice === "" || actualPrice >= Number(minPrice);
       const maxMatch = maxPrice === "" || actualPrice <= Number(maxPrice);
 
-      // ตัวกรองย่อยขนาดสำหรับห้องนอน และที่นั่งสำหรับห้องอาหาร
       let subFilterMatch = true;
       if (selectedCategory === "ห้องนอน" && subFilterSize !== "ทั้งหมด") {
         const sizeStr = String(product.size || "") + String(product.name || "");
@@ -629,7 +659,6 @@ export default function App() {
                 </span>
               </div>
               
-              {/* ปรับปรุง: เว้นบรรทัดเบอร์โทรศัพท์ลงมาจากสาขา */}
               <div className="flex flex-col text-xs text-[#D4AF37] mt-0.5 space-y-0.5">
                 <div className="flex items-center gap-1">
                   <MapPin className="w-3 h-3 shrink-0" /> สาขาหาดใหญ่ (ถ.สามสิบเมตร)
@@ -714,7 +743,7 @@ export default function App() {
               </div>
               <div className="bg-green-50 border border-green-100 rounded-xl p-4 flex justify-between">
                 <div>
-                  <p className="text-xs text-green-600 font-bold">📦 พร้อมส่ง</p>
+                  <p className="text-xs text-green-600 font-bold">พร้อมขาย</p>
                   <p className="text-2xl font-black text-green-900">{stockCount}</p>
                 </div>
                 <CheckCircle2 className="text-green-400" />
@@ -1000,7 +1029,7 @@ export default function App() {
         )}
       </main>
 
-      {/* LOGIN MODAL (ปรับปรุงข้อความและใช้ระบบ Password) */}
+      {/* LOGIN MODAL */}
       {showLoginModal && (
         <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl p-6 relative">
@@ -1258,7 +1287,6 @@ export default function App() {
                 </div>
               )}
 
-              {/* ปรับปรุงกล่องคำแนะนำ */}
               <div className="mt-5 bg-green-50 border border-green-200 rounded-xl p-4">
                 <div className="flex gap-3">
                   <MessageCircle className="text-green-600 w-5 h-5 shrink-0" />
@@ -1271,12 +1299,12 @@ export default function App() {
                 </div>
               </div>
 
-              {/* ปุ่มคัดลอกข้อมูลสินค้า */}
+              {/* ปุ่มแชร์รูปภาพพร้อมข้อมูลสินค้า */}
               <button
                 onClick={() => handleShare(viewingProduct)}
-                className="w-full mt-4 bg-[#06C755] hover:bg-[#05B34C] text-white py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 shadow-md"
+                className="w-full mt-4 bg-[#06C755] hover:bg-[#05B34C] text-white py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 shadow-md transition"
               >
-                <Share2 className="w-5 h-5" /> คัดลอกข้อมูลสินค้า
+                <Share2 className="w-5 h-5" /> แชร์รูปพร้อมข้อมูลลง LINE
               </button>
 
               {isLoggedIn && (
