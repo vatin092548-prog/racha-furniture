@@ -25,7 +25,8 @@ import {
   Package,
   CheckCircle,
   AlertCircle,
-  LayoutDashboard
+  LayoutDashboard,
+  Tag
 } from 'lucide-react';
 
 export default function App() {
@@ -46,24 +47,26 @@ export default function App() {
   const [viewingProduct, setViewingProduct] = useState(null);
   const [toastMessage, setToastMessage] = useState('');
 
-  // ข้อมูลสินค้าเริ่มต้น
+  // ข้อมูลสินค้าเริ่มต้น (เพิ่ม promoPrice)
   const initialProducts = [
     {
-      id: 'P001',
-      name: 'เตียงนอนไม้สัก 6 ฟุต',
+      id: 'A1',
+      name: 'COACHELL A-Q (ชุดห้องนอน 6 ชิ้น)',
       category: 'ห้องนอน',
-      price: 24500,
-      size: '200 x 215 x 110 ซม.',
+      price: 22900,
+      promoPrice: 16900,
+      size: '5 ฟุต',
       location: 'โซน B ชั้น 2',
-      status: 'มีสินค้าพร้อมส่ง',
+      status: 'สินค้าตัวโชว์',
       image: 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=500&auto=format&fit=crop&q=60',
-      description: 'เตียงนอนไม้สักทองแท้ โครงสร้างแข็งแรง ทนทาน ดีไซน์สไตล์มินิมอลโมเดิร์น เคลือบกันปลวกและเชื้อราอย่างดี'
+      description: 'ชุดห้องนอน 6 ชิ้น ประกอบด้วย เตียง 5 ฟุต, ตู้เสื้อผ้า 158 ซม., โต๊ะแป้ง, ตู้ข้างเตียง, สตูล, ที่นอนสปริง'
     },
     {
       id: 'P002',
       name: 'โซฟาหนัง L-Shape พรีเมียม',
       category: 'ห้องนั่งเล่น',
       price: 32000,
+      promoPrice: '',
       size: '280 x 160 x 90 ซม.',
       location: 'โซน A ชั้น 1',
       status: 'มีสินค้าพร้อมส่ง',
@@ -85,7 +88,7 @@ export default function App() {
     localStorage.setItem('racha_products', JSON.stringify(products));
   }, [products]);
 
-  // ตรวจจับ URL Direct Link (เช่น ?product=P001)
+  // ตรวจจับ URL Direct Link (เช่น ?product=A1)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const productId = params.get('product');
@@ -97,12 +100,13 @@ export default function App() {
     }
   }, [products]);
 
-  // Form States
+  // Form States (เพิ่ม promoPrice)
   const [formData, setFormData] = useState({
     id: '',
     name: '',
     category: 'ห้องนอน',
     price: '',
+    promoPrice: '',
     size: '',
     location: '',
     status: 'มีสินค้าพร้อมส่ง',
@@ -129,7 +133,8 @@ export default function App() {
   const handleShareProduct = (product, e) => {
     if (e) e.stopPropagation();
     const shareUrl = `${window.location.origin}${window.location.pathname}?product=${product.id}`;
-    const shareText = `🪑 ${product.name}\n💰 ราคา: ฿${Number(product.price).toLocaleString()}\n📍 สถานะ: ${product.status}\n\nดูรายละเอียดสินค้าได้ที่นี่:\n${shareUrl}`;
+    const displayPrice = product.promoPrice ? `฿${Number(product.promoPrice).toLocaleString()} (จากปกติ ฿${Number(product.price).toLocaleString()})` : `฿${Number(product.price).toLocaleString()}`;
+    const shareText = `🪑 ${product.name}\n💰 ราคา: ${displayPrice}\n📍 สถานะ: ${product.status}\n\nดูรายละเอียดสินค้าได้ที่นี่:\n${shareUrl}`;
 
     if (navigator.clipboard) {
       navigator.clipboard.writeText(shareText);
@@ -174,6 +179,7 @@ export default function App() {
       name: '',
       category: selectedCategory || 'ห้องนอน',
       price: '',
+      promoPrice: '',
       size: '',
       location: '',
       status: 'มีสินค้าพร้อมส่ง',
@@ -186,7 +192,10 @@ export default function App() {
   const handleOpenEditModal = (product, e) => {
     if (e) e.stopPropagation();
     setEditingProduct(product);
-    setFormData(product);
+    setFormData({
+      ...product,
+      promoPrice: product.promoPrice || ''
+    });
   };
 
   const handleDeleteProduct = (id, e) => {
@@ -200,12 +209,18 @@ export default function App() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    const updatedData = {
+      ...formData,
+      price: Number(formData.price),
+      promoPrice: formData.promoPrice ? Number(formData.promoPrice) : ''
+    };
+
     if (editingProduct) {
-      setProducts(products.map(p => p.id === editingProduct.id ? { ...formData, price: Number(formData.price) } : p));
+      setProducts(products.map(p => p.id === editingProduct.id ? updatedData : p));
       setEditingProduct(null);
-      showToast('อัปเดตข้อมูลสินค้าแล้ว');
+      showToast('อัปเดตข้อมูลสินค้าและโปรโมชั่นแล้ว');
     } else {
-      setProducts([...products, { ...formData, price: Number(formData.price) }]);
+      setProducts([...products, updatedData]);
       setIsAddModalOpen(false);
       showToast('เพิ่มสินค้าใหม่เรียบร้อยแล้ว');
     }
@@ -304,7 +319,7 @@ export default function App() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto p-6">
 
-        {/* Dashboard สำหรับ แอดมิน / เจ้าของร้าน */}
+        {/* Dashboard สำหรับ แอดมิน */}
         {isLoggedIn && (
           <div className="mb-8 bg-white p-5 rounded-2xl border border-amber-200 shadow-sm">
             <div className="flex items-center gap-2 mb-4 border-b border-gray-100 pb-2">
@@ -321,6 +336,16 @@ export default function App() {
                 <Package className="w-8 h-8 text-blue-400" />
               </div>
 
+              <div className="bg-amber-50 border border-amber-100 p-4 rounded-xl flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-amber-600 font-semibold mb-1">สินค้าโปรโมชั่น</p>
+                  <p className="text-2xl font-black text-amber-900">
+                    {products.filter(p => p.promoPrice).length} รายการ
+                  </p>
+                </div>
+                <Tag className="w-8 h-8 text-amber-500" />
+              </div>
+
               <div className="bg-green-50 border border-green-100 p-4 rounded-xl flex items-center justify-between">
                 <div>
                   <p className="text-xs text-green-600 font-semibold mb-1">พร้อมส่ง/ตัวโชว์</p>
@@ -329,16 +354,6 @@ export default function App() {
                   </p>
                 </div>
                 <CheckCircle className="w-8 h-8 text-green-400" />
-              </div>
-
-              <div className="bg-red-50 border border-red-100 p-4 rounded-xl flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-red-600 font-semibold mb-1">สินค้าหมด</p>
-                  <p className="text-2xl font-black text-red-900">
-                    {products.filter(p => p.status === 'สินค้าหมด').length} รายการ
-                  </p>
-                </div>
-                <AlertCircle className="w-8 h-8 text-red-400" />
               </div>
             </div>
           </div>
@@ -409,7 +424,7 @@ export default function App() {
                         <button 
                           onClick={(e) => handleOpenEditModal(product, e)}
                           className="bg-white/90 hover:bg-white text-gray-700 p-2 rounded-full shadow-md transition-all cursor-pointer"
-                          title="แก้ไขสินค้า"
+                          title="แก้ไขสินค้า/โปรโมชั่น"
                         >
                           <Edit className="w-4 h-4 text-[#1B2A3A]" />
                         </button>
@@ -423,7 +438,15 @@ export default function App() {
                       </div>
                     )}
 
-                    {/* ปุ่ม 📤 แชร์สินค้า (LINE/Copy Link) */}
+                    {/* ป้าย Promo Badge */}
+                    {product.promoPrice && (
+                      <div className="absolute top-3 left-3 z-10 bg-red-600 text-white font-bold text-[11px] px-2.5 py-1 rounded-md shadow-md flex items-center gap-1 animate-pulse">
+                        <Tag className="w-3 h-3" />
+                        <span>ลดพิเศษ</span>
+                      </div>
+                    )}
+
+                    {/* ปุ่ม 📤 แชร์สินค้า */}
                     <button
                       onClick={(e) => handleShareProduct(product, e)}
                       className="absolute top-3 right-3 bg-[#06C755] hover:bg-[#05b34c] text-white px-2.5 py-1.5 rounded-full shadow-md transition-all cursor-pointer flex items-center gap-1 z-10 text-xs font-bold"
@@ -434,7 +457,6 @@ export default function App() {
                     </button>
 
                     <div>
-                      {/* ปรับปรุงตรงนี้: เปลี่ยนเป็น object-contain เพื่อแสดงภาพเต็ม 100% ไม่โดนตัดขอบ */}
                       <div className="relative h-56 bg-slate-900/5 p-2 flex items-center justify-center overflow-hidden">
                         {product.image ? (
                           <img 
@@ -449,15 +471,29 @@ export default function App() {
                       
                       <div className="p-4">
                         <div className="flex items-start justify-between gap-2 mb-2">
-                          <h3 className="font-bold text-gray-800 text-base group-hover:text-[#1D4ED8] transition-colors">{product.name}</h3>
+                          <h3 className="font-bold text-gray-800 text-base group-hover:text-[#1D4ED8] transition-colors line-clamp-1">{product.name}</h3>
                           <span className="bg-gray-100 text-gray-500 text-[10px] font-mono px-2 py-0.5 rounded shrink-0">
                             {product.id}
                           </span>
                         </div>
 
-                        <p className="text-2xl font-black text-[#1D4ED8] mb-3">
-                          ฿{Number(product.price).toLocaleString()}
-                        </p>
+                        {/* แสดงราคาโปรโมชั่น vs ราคาจริง */}
+                        <div className="mb-3 flex items-baseline gap-2">
+                          {product.promoPrice ? (
+                            <>
+                              <span className="text-2xl font-black text-red-600">
+                                ฿{Number(product.promoPrice).toLocaleString()}
+                              </span>
+                              <span className="text-xs text-gray-400 line-through font-semibold">
+                                ฿{Number(product.price).toLocaleString()}
+                              </span>
+                            </>
+                          ) : (
+                            <span className="text-2xl font-black text-[#1D4ED8]">
+                              ฿{Number(product.price).toLocaleString()}
+                            </span>
+                          )}
+                        </div>
 
                         <div className="space-y-1.5 text-xs text-gray-500 mb-4 border-t border-gray-100 pt-3">
                           <div className="flex items-center gap-2">
@@ -537,9 +573,26 @@ export default function App() {
                   </span>
                 </div>
 
-                <p className="text-3xl font-black text-[#1D4ED8] mb-4">
-                  ฿{Number(viewingProduct.price).toLocaleString()}
-                </p>
+                {/* ราคาสินค้าใน Modal */}
+                <div className="mb-4 flex items-baseline gap-3">
+                  {viewingProduct.promoPrice ? (
+                    <>
+                      <span className="text-3xl font-black text-red-600">
+                        ฿{Number(viewingProduct.promoPrice).toLocaleString()}
+                      </span>
+                      <span className="text-sm text-gray-400 line-through font-semibold">
+                        ปกติ ฿{Number(viewingProduct.price).toLocaleString()}
+                      </span>
+                      <span className="bg-red-100 text-red-700 text-xs font-bold px-2 py-0.5 rounded-full border border-red-200">
+                        โปรโมชั่นพิเศษ
+                      </span>
+                    </>
+                  ) : (
+                    <span className="text-3xl font-black text-[#1D4ED8]">
+                      ฿{Number(viewingProduct.price).toLocaleString()}
+                    </span>
+                  )}
+                </div>
 
                 {viewingProduct.description && (
                   <p className="text-gray-600 text-sm mb-6 leading-relaxed bg-gray-50 p-3.5 rounded-xl border border-gray-100">
@@ -580,7 +633,7 @@ export default function App() {
         </div>
       )}
 
-      {/* Modal ป๊อปอัพ เข้าสู่ระบบด้วย PIN */}
+      {/* Modal เข้าสู่ระบบด้วย PIN */}
       {isLoginModalOpen && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl relative">
@@ -630,13 +683,13 @@ export default function App() {
         </div>
       )}
 
-      {/* Modal ป๊อปอัพ เพิ่ม/แก้ไข สินค้า */}
+      {/* Modal เพิ่ม / แก้ไข สินค้า + โปรโมชั่น */}
       {(isAddModalOpen || editingProduct) && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl flex flex-col max-h-[90vh]">
             <div className="p-4 border-b flex justify-between items-center bg-[#1B2A3A] text-white rounded-t-2xl">
               <h3 className="font-bold text-base text-[#D4AF37]">
-                {editingProduct ? 'แก้ไขข้อมูลสินค้า / เปลี่ยนราคา' : 'เพิ่มสินค้าใหม่'}
+                {editingProduct ? 'แก้ไขข้อมูลสินค้า / โปรโมชั่น' : 'เพิ่มสินค้าใหม่'}
               </h3>
               <button 
                 onClick={() => { setIsAddModalOpen(false); setEditingProduct(null); }}
@@ -669,17 +722,31 @@ export default function App() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
+              {/* ช่องปรับราคาปกติ และ ราคาโปรโมชั่น */}
+              <div className="grid grid-cols-2 gap-2 bg-amber-50/50 p-2.5 rounded-xl border border-amber-200">
                 <div>
-                  <label className="block text-xs font-semibold text-gray-600 mb-1">ราคา (บาท)</label>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1">ราคาปกติ (บาท)</label>
                   <input 
                     type="number" 
                     value={formData.price} 
                     onChange={e => setFormData({...formData, price: e.target.value})}
-                    className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-[#D4AF37] outline-none font-bold text-blue-600" 
+                    className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-[#D4AF37] outline-none font-bold text-gray-700 bg-white" 
                     required 
                   />
                 </div>
+                <div>
+                  <label className="block text-xs font-bold text-red-600 mb-1">ราคาโปรโมชั่น (ถ้ามี)</label>
+                  <input 
+                    type="number" 
+                    placeholder="เว้นว่างถ้าไม่มีโปร"
+                    value={formData.promoPrice} 
+                    onChange={e => setFormData({...formData, promoPrice: e.target.value})}
+                    className="w-full border border-red-300 rounded-lg p-2 focus:ring-2 focus:ring-red-500 outline-none font-bold text-red-600 bg-white" 
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
                 <div>
                   <label className="block text-xs font-semibold text-gray-600 mb-1">หมวดหมู่</label>
                   <select 
@@ -692,9 +759,6 @@ export default function App() {
                     ))}
                   </select>
                 </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
                 <div>
                   <label className="block text-xs font-semibold text-gray-600 mb-1">สถานะสินค้า</label>
                   <select 
@@ -707,6 +771,19 @@ export default function App() {
                     <option value="สินค้าหมด">สินค้าหมด</option>
                   </select>
                 </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1">ขนาดสินค้า</label>
+                  <input 
+                    type="text" 
+                    placeholder="เช่น 5 ฟุต" 
+                    value={formData.size} 
+                    onChange={e => setFormData({...formData, size: e.target.value})}
+                    className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-[#D4AF37] outline-none" 
+                  />
+                </div>
                 <div>
                   <label className="block text-xs font-semibold text-gray-600 mb-1">ตำแหน่งวางหน้าร้าน</label>
                   <input 
@@ -717,17 +794,6 @@ export default function App() {
                     className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-[#D4AF37] outline-none" 
                   />
                 </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1">ขนาดสินค้า</label>
-                <input 
-                  type="text" 
-                  placeholder="เช่น 200 x 215 x 110 ซม." 
-                  value={formData.size} 
-                  onChange={e => setFormData({...formData, size: e.target.value})}
-                  className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-[#D4AF37] outline-none" 
-                />
               </div>
 
               <div>
