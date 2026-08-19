@@ -27,7 +27,9 @@ import {
   Tag,
   LayoutDashboard,
   Flame,
-  ArrowUpDown
+  ArrowUpDown,
+  MessageCircle,
+  Camera
 } from 'lucide-react';
 
 export default function App() {
@@ -37,7 +39,7 @@ export default function App() {
   // Filter & Sort States
   const [filterPromoOnly, setFilterPromoOnly] = useState(false);
   const [filterInStockOnly, setFilterInStockOnly] = useState(false);
-  const [sortByPrice, setSortByPrice] = useState('none'); // 'none', 'asc', 'desc'
+  const [sortByPrice, setSortByPrice] = useState('none');
 
   // Authentication States
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -60,7 +62,7 @@ export default function App() {
       name: 'COACHELL A-Q (ชุดห้องนอน 6 ชิ้น)',
       category: 'ห้องนอน',
       price: 16900,
-      promoPrice: 9997,
+      promoPrice: 10000,
       size: '5 ฟุต',
       location: '61',
       status: 'สินค้าตัวโชว์',
@@ -231,7 +233,6 @@ export default function App() {
     }
   };
 
-  // การกรองและเรียงลำดับสินค้า
   const filteredProducts = products.filter(product => {
     const matchesCategory = selectedCategory ? product.category === selectedCategory : true;
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -262,7 +263,6 @@ export default function App() {
       <header className="bg-[#1B2A3A] text-white shadow-md px-6 py-4 sticky top-0 z-30">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           
-          {/* Logo & Branch Name */}
           <div className="flex items-center gap-3 cursor-pointer" onClick={() => { setSelectedCategory(null); setSearchTerm(''); }}>
             <div className="text-[#D4AF37]">
               <svg width="42" height="42" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round">
@@ -289,7 +289,6 @@ export default function App() {
             </div>
           </div>
 
-          {/* Search & Actions */}
           <div className="flex items-center gap-3 w-full md:w-auto">
             <div className="relative w-full md:w-80">
               <input
@@ -338,7 +337,7 @@ export default function App() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto p-6">
 
-        {/* Admin Dashboard */}
+        {/* Dashboard */}
         {isLoggedIn && (
           <div className="mb-8 bg-white p-5 rounded-2xl border border-amber-200 shadow-sm">
             <div className="flex items-center justify-between mb-4 border-b border-gray-100 pb-2">
@@ -417,7 +416,7 @@ export default function App() {
           </>
         )}
 
-        {/* แถบ Quick Filters & รายการสินค้า */}
+        {/* รายการสินค้า */}
         {(selectedCategory || searchTerm) && (
           <div>
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
@@ -436,12 +435,10 @@ export default function App() {
               )}
             </div>
 
-            {/* แถบ Quick Filters ด้านบนรายการสินค้า */}
+            {/* Quick Filters */}
             <div className="bg-white p-3 rounded-xl border border-gray-200 shadow-sm mb-6 flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-xs font-bold text-gray-500 mr-1">ตัวกรองด่วน:</span>
-                
-                {/* ปุ่ม Filter โปรโมชั่น */}
                 <button
                   onClick={() => setFilterPromoOnly(!filterPromoOnly)}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
@@ -454,7 +451,6 @@ export default function App() {
                   <span>🔥 ลดพิเศษเฉพาะโปร</span>
                 </button>
 
-                {/* ปุ่ม Filter พร้อมส่ง */}
                 <button
                   onClick={() => setFilterInStockOnly(!filterInStockOnly)}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
@@ -468,7 +464,6 @@ export default function App() {
                 </button>
               </div>
 
-              {/* ปุ่ม เรียงตามราคา */}
               <div className="flex items-center gap-2">
                 <ArrowUpDown className="w-3.5 h-3.5 text-gray-400" />
                 <select
@@ -493,7 +488,6 @@ export default function App() {
                     className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 relative group cursor-pointer flex flex-col justify-between"
                   >
                     
-                    {/* ป้าย Promo Badge */}
                     {product.promoPrice && (
                       <div className="absolute top-3 left-3 z-10 bg-red-600 text-white font-bold text-[11px] px-2.5 py-1 rounded-md shadow-md flex items-center gap-1">
                         <Tag className="w-3 h-3" />
@@ -501,7 +495,6 @@ export default function App() {
                       </div>
                     )}
 
-                    {/* ปุ่ม Admin */}
                     {isLoggedIn && (
                       <div className="absolute top-3 right-3 flex gap-1.5 z-20">
                         <button 
@@ -521,7 +514,6 @@ export default function App() {
                       </div>
                     )}
 
-                    {/* รูปภาพสินค้า */}
                     <div className="relative h-56 bg-slate-900/5 p-2 flex items-center justify-center overflow-hidden">
                       {product.image ? (
                         <img 
@@ -533,7 +525,6 @@ export default function App() {
                         <ImageIcon className="w-12 h-12 text-gray-300" />
                       )}
 
-                      {/* ปุ่มแชร์ */}
                       <button
                         onClick={(e) => handleShareProduct(product, e)}
                         className="absolute bottom-3 right-3 bg-[#06C755] hover:bg-[#05b34c] text-white px-2.5 py-1.5 rounded-full shadow-md transition-all cursor-pointer flex items-center gap-1 z-10 text-xs font-bold"
@@ -552,7 +543,6 @@ export default function App() {
                         </span>
                       </div>
 
-                      {/* แสดงราคา */}
                       <div className="mb-3 flex items-baseline gap-2">
                         {product.promoPrice ? (
                           <>
@@ -611,7 +601,7 @@ export default function App() {
         )}
       </main>
 
-      {/* Modal ดูรายละเอียดสินค้า */}
+      {/* Modal ดูรายละเอียดสินค้า + คำแนะนำการสั่งซื้อ */}
       {viewingProduct && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl max-w-2xl w-full shadow-2xl overflow-hidden relative max-h-[90vh] flex flex-col">
@@ -691,13 +681,26 @@ export default function App() {
                   </div>
                 </div>
 
-                <div className="pt-4 border-t border-gray-100">
+                {/* 📌 กล่องคำแนะนำวิธีสั่งซื้อ / แจ้งพนักงาน */}
+                <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-3.5 mb-4 text-emerald-900 text-xs leading-relaxed flex items-start gap-3 shadow-sm">
+                  <div className="p-2 bg-emerald-500 text-white rounded-xl shrink-0 mt-0.5">
+                    <MessageCircle className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-emerald-800 text-sm mb-1">สนใจสั่งซื้อ หรือ สอบถามสินค้านี้?</p>
+                    <p className="text-emerald-700">
+                      ท่านสามารถ <strong className="text-emerald-900 font-bold">แคปภาพหน้าจอนี้</strong> <Camera className="w-3.5 h-3.5 inline text-emerald-700" /> หรือ <strong className="text-emerald-900 font-bold">กดปุ่มสีเขียวด้านล่าง</strong> เพื่อส่งข้อมูลแจ้งพนักงานใน LINE ได้ทันทีเลยค่ะ
+                    </p>
+                  </div>
+                </div>
+
+                <div className="pt-2">
                   <button
                     onClick={() => handleShareProduct(viewingProduct)}
                     className="w-full bg-[#06C755] hover:bg-[#05b34c] text-white py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 shadow-md cursor-pointer transition-all text-base"
                   >
                     <Share2 className="w-5 h-5" />
-                    <span>แชร์สินค้าลง LINE</span>
+                    <span>แชร์สินค้าลง LINE เพื่อส่งให้พนักงาน</span>
                   </button>
                 </div>
 
@@ -757,7 +760,7 @@ export default function App() {
         </div>
       )}
 
-      {/* Modal เพิ่ม / แก้ไข สินค้า */}
+      {/* Modal เพิ่ม/แก้ไข */}
       {(isAddModalOpen || editingProduct) && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl flex flex-col max-h-[90vh]">
