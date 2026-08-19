@@ -4,9 +4,9 @@ import {
   Sofa, 
   Armchair, 
   Utensils, 
-  Monitor, 
+  Briefcase, 
   Sparkles, 
-  Flower2, 
+  LayoutGrid, 
   Search, 
   Plus, 
   ArrowLeft,
@@ -123,14 +123,15 @@ export default function App() {
     description: ''
   });
 
+  // รายการหมวดหมู่สินค้าตามที่ขอปรับปรุง
   const categories = [
     { name: 'ห้องนอน', icon: Bed },
     { name: 'ห้องนั่งเล่น', icon: Sofa },
     { name: 'โซฟา & เก้าอี้พักผ่อน', icon: Armchair },
     { name: 'ห้องอาหาร/ห้องครัว', icon: Utensils },
-    { name: 'ห้องทำงาน/ห้องเกมมิ่ง', icon: Monitor },
+    { name: 'ห้องสำนักงาน', icon: Briefcase },
     { name: 'สินค้าพิเศษ', icon: Sparkles },
-    { name: 'ของตกแต่ง', icon: Flower2 },
+    { name: 'ห้องทั่วไป', icon: LayoutGrid },
   ];
 
   const showToast = (msg) => {
@@ -152,7 +153,7 @@ export default function App() {
     }
   };
 
-  // 1. เข้าสู่ระบบด้วยเบอร์โทรพนักงาน
+  // เข้าสู่ระบบด้วยเบอร์โทรพนักงาน
   const handleLoginSubmit = (e) => {
     e.preventDefault();
     if (phoneInput.trim() === STAFF_PHONE) {
@@ -216,7 +217,6 @@ export default function App() {
     }
   };
 
-  // 2. เพิ่มสินค้าสำเร็จ & 3. แก้ไขสินค้าสำเร็จ
   const handleSubmit = (e) => {
     e.preventDefault();
     const updatedData = {
@@ -713,7 +713,7 @@ export default function App() {
         </div>
       )}
 
-      {/* Modal Login สำหรับพนักงาน (กรอกเบอร์โทรศัพท์) */}
+      {/* Modal Login สำหรับพนักงาน (ไม่แสดงเบอร์ตั้งต้นแล้ว) */}
       {isLoginModalOpen && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl relative">
@@ -738,10 +738,10 @@ export default function App() {
                 <input 
                   type="tel" 
                   maxLength={10}
-                  placeholder="0822810874" 
+                  placeholder="กรอกเบอร์โทรศัพท์" 
                   value={phoneInput}
                   onChange={(e) => setPhoneInput(e.target.value)}
-                  className="w-full text-center text-xl font-bold border-2 border-gray-300 rounded-xl py-2.5 focus:ring-2 focus:ring-[#D4AF37] outline-none text-gray-800"
+                  className="w-full text-center text-[#1B2A3A] text-lg font-bold border-2 border-gray-300 rounded-xl py-2.5 focus:ring-2 focus:ring-[#D4AF37] outline-none placeholder:text-gray-300 placeholder:font-normal"
                   autoFocus
                   required
                 />
