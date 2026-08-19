@@ -467,10 +467,10 @@ export default function App() {
 
 
   /* =======================================================
-     SHARE (เด้งเข้าแอป LINE ทันทีบนมือถือ)
+     SHARE (คัดลอกรูปภาพลง Clipboard + เด้งเปิด LINE)
   ======================================================= */
 
-  const handleShare = (product, event) => {
+  const handleShare = async (product, event) => {
     if (event) event.stopPropagation();
 
     const baseUrl = window.location.origin + window.location.pathname;
@@ -486,12 +486,24 @@ export default function App() {
       `📍 ราชาเฟอร์นิเจอร์ สาขาหาดใหญ่\n` +
       `📦 สถานะ: ${product.status || 'มีสินค้าพร้อมส่ง'}\n` +
       `📍 โซนวาง: ${product.location || "-"}\n\n` +
-      `ดูรูปและรายละเอียดสินค้าเพิ่มเติมได้ที่ลิงก์นี้ครับ:\n` +
+      `ดูรูปและรายละเอียดสินค้าเพิ่มเติมได้ที่:\n` +
       `${productUrl}`;
 
-    // คำสั่งเปิดแอป LINE โดยตรง
-    const lineShareUrl = `line://msg/text/${encodeURIComponent(shareText)}`;
+    // คัดลอกรูปภาพลง Clipboard ให้อัตโนมัติ (สำหรับกด Paste วางรูปส่งเข้า LINE)
+    try {
+      if (product.image && product.image.startsWith("data:image") && window.ClipboardItem) {
+        const response = await fetch(product.image);
+        const blob = await response.blob();
+        await navigator.clipboard.write([
+          new ClipboardItem({ [blob.type]: blob })
+        ]);
+      }
+    } catch (err) {
+      console.log("Clipboard image copy not supported/allowed in this context");
+    }
 
+    // สั่งเด้งเปิดแอป LINE
+    const lineShareUrl = `line://msg/text/${encodeURIComponent(shareText)}`;
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
     if (isMobile) {
@@ -499,7 +511,7 @@ export default function App() {
     } else {
       if (navigator.clipboard) {
         navigator.clipboard.writeText(shareText);
-        showToast("คัดลอกลิงก์และข้อมูลสินค้าแล้ว! นำไปวางใน LINE ได้เลย");
+        showToast("คัดลอกรูปภาพและข้อความแล้ว! กด Ctrl+V ใน LINE ได้เลย");
       } else {
         alert(shareText);
       }
@@ -1306,13 +1318,13 @@ export default function App() {
                   <div>
                     <p className="font-bold text-green-800 text-sm">สนใจสินค้านี้?</p>
                     <p className="text-xs text-green-700 mt-1">
-                      แคปหน้าจอสินค้า <Camera className="inline w-3.5 h-3.5 mx-1" /> หรือคัดลอกข้อมูลให้พนักงานในไลน์
+                      แคปหน้าจอสินค้า <Camera className="inline w-3.5 h-3.5 mx-1" /> หรือกดปุ่มวาง (Paste) เพื่อแนบรูปในแชต LINE
                     </p>
                   </div>
                 </div>
               </div>
 
-              {/* ปุ่มส่งแชร์เข้า LINE ทันที */}
+              {/* ปุ่มแชร์เข้า LINE */}
               <button
                 onClick={() => handleShare(viewingProduct)}
                 className="w-full mt-4 bg-[#06C755] hover:bg-[#05B34C] text-white py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 shadow-md transition"
