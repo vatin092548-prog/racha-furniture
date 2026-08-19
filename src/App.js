@@ -714,7 +714,7 @@ export default function App() {
               </div>
               <div className="bg-green-50 border border-green-100 rounded-xl p-4 flex justify-between">
                 <div>
-                  <p className="text-xs text-green-600 font-bold">พร้อมขาย</p>
+                  <p className="text-xs text-green-600 font-bold">📦 พร้อมส่ง</p>
                   <p className="text-2xl font-black text-green-900">{stockCount}</p>
                 </div>
                 <CheckCircle2 className="text-green-400" />
