@@ -130,7 +130,7 @@ export default function App() {
   ======================================================= */
 
   const emptyForm = {
-    id: "A",
+    id: "",
     name: "",
     category: "ห้องนอน",
     price: "",
@@ -143,6 +143,30 @@ export default function App() {
   };
 
   const [formData, setFormData] = useState(emptyForm);
+
+
+  /* =======================================================
+     AUTO GENERATE ID (คำนวณ Prefix + เลขลำดับถัดไป)
+  ======================================================= */
+
+  const generateNextId = (categoryName, currentProducts) => {
+    const prefix = categoryPrefixMap[categoryName] || "A";
+    
+    // กรองสินค้าเฉพาะหมวดหมู่นี้ที่มี ID ขึ้นต้นด้วย Prefix ดังกล่าว
+    const categoryProducts = currentProducts.filter(p => p.category === categoryName || p.id?.startsWith(prefix));
+
+    let maxNum = 0;
+    categoryProducts.forEach(p => {
+      // ดึงตัวเลขหลัง Prefix เช่น A12 -> 12
+      const match = p.id?.match(new RegExp(`^${prefix}(\\d+)$`));
+      if (match) {
+        const num = parseInt(match[1], 10);
+        if (num > maxNum) maxNum = num;
+      }
+    });
+
+    return `${prefix}${maxNum + 1}`;
+  };
 
 
   /* =======================================================
@@ -220,11 +244,11 @@ export default function App() {
   const openAddProduct = () => {
     setEditingProduct(null);
     const targetCategory = selectedCategory || "ห้องนอน";
-    const code = categoryPrefixMap[targetCategory] || "A";
+    const autoId = generateNextId(targetCategory, products);
 
     setFormData({
       ...emptyForm,
-      id: code,
+      id: autoId,
       category: targetCategory,
     });
     setShowProductModal(true);
@@ -351,8 +375,7 @@ export default function App() {
       }
     }
 
-    // กำหนด Document ID ตามรหัสตัวอักษร
-    const newProductId = formData.id?.trim() || "A";
+    const newProductId = formData.id?.trim() || `P${Date.now()}`;
 
     const productData = {
       name: formData.name.trim(),
@@ -368,8 +391,10 @@ export default function App() {
     };
 
     try {
+      // 1. บันทึกข้อมูลไปยัง Document ID ใหม่
       await setDoc(doc(db, PRODUCTS_COLLECTION, newProductId), productData);
 
+      // 2. ถ้าเป็นการแก้ไขสินค้า และมีการแก้รหัสสินค้า ให้ลบ Document ID เก่าทิ้ง
       if (editingProduct && editingProduct.id !== newProductId) {
         await deleteDoc(doc(db, PRODUCTS_COLLECTION, editingProduct.id));
       }
@@ -621,9 +646,13 @@ export default function App() {
                       </div>
                       <span className="font-bold">{category.name}</span>
                     </div>
-                    <span className="font-mono font-bold text-lg text-red-600 bg-red-50 border border-red-200 px-3 py-1 rounded-lg">
-                      {category.prefix}
-                    </span>
+
+                    {/* แสดงรหัสเฉพาะโหมดพนักงานเท่านั้น */}
+                    {isLoggedIn && (
+                      <span className="font-mono font-bold text-lg text-red-600 bg-red-50 border border-red-200 px-3 py-1 rounded-lg">
+                        {category.prefix}
+                      </span>
+                    )}
                   </button>
                 );
               })}
@@ -646,7 +675,7 @@ export default function App() {
               </button>
               {selectedCategory && (
                 <span className="bg-amber-100 text-amber-900 px-3 py-1.5 rounded-full text-xs font-bold">
-                  หมวด: {selectedCategory} ({categoryPrefixMap[selectedCategory]})
+                  หมวด: {selectedCategory} {isLoggedIn && `(${categoryPrefixMap[selectedCategory]})`}
                 </span>
               )}
             </div>
@@ -718,9 +747,11 @@ export default function App() {
                     <div className="p-4">
                       <div className="flex justify-between gap-2">
                         <h3 className="font-bold text-gray-800">{product.name}</h3>
-                        <span className="bg-gray-100 text-gray-500 px-2 py-0.5 rounded text-[10px] font-mono h-fit">
-                          {product.id}
-                        </span>
+                        {isLoggedIn && (
+                          <span className="bg-gray-100 text-gray-500 px-2 py-0.5 rounded text-[10px] font-mono h-fit">
+                            {product.id}
+                          </span>
+                        )}
                       </div>
 
                       <div className="mt-2">
@@ -841,14 +872,17 @@ export default function App() {
             </div>
 
             <form onSubmit={handleSaveProduct} className="p-5 overflow-y-auto space-y-4">
-              {/* ID (แสดงเฉพาะรหัสตัวอักษร) */}
+              {/* ID (รันตัวเลขอัตโนมัติ และปลดล็อกให้แก้ไขพิมพ์เปลี่ยนได้) */}
               <div>
-                <label className="block text-xs font-bold text-gray-600 mb-1">รหัสสินค้า</label>
+                <label className="block text-xs font-bold text-gray-600 mb-1">
+                  รหัสสินค้า (รันให้อัตโนมัติ หรือพิมพ์แก้ไขได้)
+                </label>
                 <input
                   type="text"
                   value={formData.id}
-                  readOnly
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 bg-gray-100 font-bold text-red-600 cursor-not-allowed"
+                  onChange={(e) => setFormData({ ...formData, id: e.target.value })}
+                  placeholder="เช่น A1, T2"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 font-mono font-bold text-blue-700 focus:ring-2 focus:ring-[#D4AF37] outline-none"
                 />
               </div>
 
@@ -864,18 +898,18 @@ export default function App() {
                 />
               </div>
 
-              {/* เปลี่ยนหมวดหมู่ ➔ เปลี่ยนรหัสตัวอักษรให้อัตโนมัติ */}
+              {/* สลับหมวดหมู่ ➔ คำนวณรหัส ID รันตัวเลขให้ใหม่เฉพาะตอนเพิ่มสินค้าใหม่ */}
               <div>
                 <label className="block text-xs font-bold text-gray-600 mb-1">หมวดหมู่</label>
                 <select
                   value={formData.category}
                   onChange={(e) => {
                     const newCat = e.target.value;
-                    const newPrefix = categoryPrefixMap[newCat] || "A";
+                    const autoId = editingProduct ? formData.id : generateNextId(newCat, products);
                     setFormData({
                       ...formData,
                       category: newCat,
-                      id: newPrefix,
+                      id: autoId,
                     });
                   }}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2.5"
@@ -1008,7 +1042,9 @@ export default function App() {
 
               <div className="flex justify-between gap-3 mt-3">
                 <h2 className="text-2xl font-black">{viewingProduct.name}</h2>
-                <span className="text-xs bg-gray-100 h-fit px-2 py-1 rounded font-mono">{viewingProduct.id}</span>
+                {isLoggedIn && (
+                  <span className="text-xs bg-gray-100 h-fit px-2 py-1 rounded font-mono">{viewingProduct.id}</span>
+                )}
               </div>
 
               <div className="mt-3 mb-5">
