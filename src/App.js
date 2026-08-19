@@ -612,7 +612,9 @@ export default function App() {
                 </span>
               </div>
               <div className="flex items-center gap-1 text-xs text-[#D4AF37]">
-                <MapPin className="w-3 h-3" /> สาขาหาดใหญ่ (ถ.สามสิบเมตร)
+                <MapPin className="w-3 h-3" /> สาขาหาดใหญ่ (ถ.สามสิบเมตร) สอบถาม-สั่งซื้อ โทร.074-244665 , 086-4906582
+                                
+
               </div>
             </div>
           </div>
