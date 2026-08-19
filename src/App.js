@@ -211,6 +211,27 @@ export default function App() {
 
 
   /* =======================================================
+     OPEN PRODUCT AUTOMATICALLY FROM URL PARAMETER (?product=A1)
+  ======================================================= */
+
+  useEffect(() => {
+    if (products.length > 0) {
+      const urlParams = new URLSearchParams(window.location.search);
+      const productIdFromUrl = urlParams.get("product");
+
+      if (productIdFromUrl) {
+        const foundProduct = products.find(
+          (p) => String(p.id).toLowerCase() === String(productIdFromUrl).toLowerCase()
+        );
+        if (foundProduct) {
+          setViewingProduct(foundProduct);
+        }
+      }
+    }
+  }, [products]);
+
+
+  /* =======================================================
      TOAST
   ======================================================= */
 
@@ -446,57 +467,41 @@ export default function App() {
 
 
   /* =======================================================
-     SHARE (ส่งรูปภาพ + ข้อความลง LINE)
+     SHARE (เด้งเข้าแอป LINE ทันทีบนมือถือ)
   ======================================================= */
 
-  const handleShare = async (product, event) => {
+  const handleShare = (product, event) => {
     if (event) event.stopPropagation();
 
-    const url = `${window.location.origin}${window.location.pathname}?product=${product.id}`;
+    const baseUrl = window.location.origin + window.location.pathname;
+    const productUrl = `${baseUrl}?product=${product.id}`;
+
     const price = product.promoPrice
       ? `฿${Number(product.promoPrice).toLocaleString()}`
       : `฿${Number(product.price).toLocaleString()}`;
 
-    const text = `🪑 ${product.name}\n💰 ราคา ${price}\n📍 ราชาเฟอร์นิเจอร์ สาขาหาดใหญ่\n📦 สถานะ: ${product.status || 'มีสินค้าพร้อมส่ง'}\n📍 โซนวาง: ${product.location || "-"}\n\nดูรายละเอียดสินค้า:\n${url}`;
+    const shareText = 
+      `🪑 ${product.name}\n` +
+      `💰 ราคา ${price}\n` +
+      `📍 ราชาเฟอร์นิเจอร์ สาขาหาดใหญ่\n` +
+      `📦 สถานะ: ${product.status || 'มีสินค้าพร้อมส่ง'}\n` +
+      `📍 โซนวาง: ${product.location || "-"}\n\n` +
+      `ดูรูปและรายละเอียดสินค้าเพิ่มเติมได้ที่ลิงก์นี้ครับ:\n` +
+      `${productUrl}`;
 
-    try {
-      let imageFile = null;
-      if (product.image && product.image.startsWith("data:image")) {
-        const response = await fetch(product.image);
-        const blob = await response.blob();
-        imageFile = new File([blob], `${product.id || "product"}.jpg`, { type: "image/jpeg" });
-      }
+    // คำสั่งเปิดแอป LINE โดยตรง
+    const lineShareUrl = `line://msg/text/${encodeURIComponent(shareText)}`;
 
-      // ส่งรูปพร้อมข้อความกรณีใช้บนมือถือ
-      if (navigator.canShare && navigator.canShare({ files: [imageFile] })) {
-        await navigator.share({
-          title: product.name,
-          text: text,
-          files: [imageFile],
-        });
-        showToast("ส่งข้อมูลสินค้าเรียบร้อย");
-        return;
-      }
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-      // คัดลอกรูปภาพลง Clipboard กรณีใช้อยู่บนคอมพิวเตอร์
-      if (navigator.clipboard && window.ClipboardItem && imageFile) {
-        await navigator.clipboard.write([
-          new ClipboardItem({
-            [imageFile.type]: imageFile,
-          }),
-        ]);
-        showToast("คัดลอกรูปภาพสินค้าแล้ว! กด Ctrl+V ใน LINE ได้เลย");
-      } else if (navigator.clipboard) {
-        await navigator.clipboard.writeText(text);
-        showToast("คัดลอกข้อความสินค้าเรียบร้อยแล้ว");
-      } else {
-        alert(text);
-      }
-    } catch (error) {
-      console.error("Share error:", error);
+    if (isMobile) {
+      window.location.href = lineShareUrl;
+    } else {
       if (navigator.clipboard) {
-        await navigator.clipboard.writeText(text);
-        showToast("คัดลอกข้อความสินค้าเรียบร้อยแล้ว");
+        navigator.clipboard.writeText(shareText);
+        showToast("คัดลอกลิงก์และข้อมูลสินค้าแล้ว! นำไปวางใน LINE ได้เลย");
+      } else {
+        alert(shareText);
       }
     }
   };
@@ -640,6 +645,7 @@ export default function App() {
               setSelectedCategory("");
               setSearchTerm("");
               setSubFilterSize("ทั้งหมด");
+              window.history.pushState({}, "", window.location.pathname);
             }}
           >
             <div className="text-[#D4AF37]">
@@ -801,6 +807,7 @@ export default function App() {
                   setSelectedCategory("");
                   setSearchTerm("");
                   setSubFilterSize("ทั้งหมด");
+                  window.history.pushState({}, "", window.location.pathname);
                 }}
                 className="bg-[#1B2A3A] text-[#D4AF37] border border-[#D4AF37] px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-bold shadow-sm hover:bg-[#111B25] transition"
               >
@@ -1234,7 +1241,13 @@ export default function App() {
       {viewingProduct && (
         <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto relative shadow-2xl">
-            <button onClick={() => setViewingProduct(null)} className="absolute top-4 right-4 z-10 bg-white rounded-full p-2 shadow">
+            <button
+              onClick={() => {
+                setViewingProduct(null);
+                window.history.pushState({}, "", window.location.pathname);
+              }}
+              className="absolute top-4 right-4 z-10 bg-white rounded-full p-2 shadow"
+            >
               <X className="w-5 h-5" />
             </button>
 
@@ -1299,12 +1312,12 @@ export default function App() {
                 </div>
               </div>
 
-              {/* ปุ่มแชร์รูปภาพพร้อมข้อมูลสินค้า */}
+              {/* ปุ่มส่งแชร์เข้า LINE ทันที */}
               <button
                 onClick={() => handleShare(viewingProduct)}
                 className="w-full mt-4 bg-[#06C755] hover:bg-[#05B34C] text-white py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 shadow-md transition"
               >
-                <Share2 className="w-5 h-5" /> แชร์รูปพร้อมข้อมูลลง LINE
+                <Share2 className="w-5 h-5" /> แชร์ข้อมูลสินค้าลง LINE
               </button>
 
               {isLoggedIn && (
