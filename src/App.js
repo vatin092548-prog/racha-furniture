@@ -22,13 +22,10 @@ import {
   LogOut,
   KeyRound,
   Share2,
-  Phone,
-  MessageCircle,
   Package,
   CheckCircle,
   AlertCircle,
-  LayoutDashboard,
-  Eye
+  LayoutDashboard
 } from 'lucide-react';
 
 export default function App() {
@@ -46,7 +43,7 @@ export default function App() {
   // Modal & Detail States
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
-  const [viewingProduct, setViewingProduct] = useState(null); // สำหรับดูรายละเอียดสินค้า
+  const [viewingProduct, setViewingProduct] = useState(null);
   const [toastMessage, setToastMessage] = useState('');
 
   // ข้อมูลสินค้าเริ่มต้น
@@ -88,7 +85,7 @@ export default function App() {
     localStorage.setItem('racha_products', JSON.stringify(products));
   }, [products]);
 
-  // ระบบตรวจจับ URL Direct Link (เช่น ?product=P001)
+  // ตรวจจับ URL Direct Link (เช่น ?product=P001)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const productId = params.get('product');
@@ -123,7 +120,6 @@ export default function App() {
     { name: 'ของตกแต่ง', icon: Flower2 },
   ];
 
-  // แสดง Toast แจ้งเตือน
   const showToast = (msg) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(''), 3000);
@@ -133,11 +129,11 @@ export default function App() {
   const handleShareProduct = (product, e) => {
     if (e) e.stopPropagation();
     const shareUrl = `${window.location.origin}${window.location.pathname}?product=${product.id}`;
-    const shareText = `🪑 ${product.name}\n💰 ราคา: ฿${Number(product.price).toLocaleString()}\n📍 สถานะ: ${product.status}\n\nดูรายละเอียดเพิ่มเติมได้ที่นี่:\n${shareUrl}`;
+    const shareText = `🪑 ${product.name}\n💰 ราคา: ฿${Number(product.price).toLocaleString()}\n📍 สถานะ: ${product.status}\n\nดูรายละเอียดสินค้าได้ที่นี่:\n${shareUrl}`;
 
     if (navigator.clipboard) {
       navigator.clipboard.writeText(shareText);
-      showToast('คัดลอกลิงก์และรายละเอียดสินค้าเรียบร้อย! นำไปวางใน LINE ได้เลย');
+      showToast('คัดลอกลิงก์และรายละเอียดเรียบร้อย! นำไปวางใน LINE ได้เลย');
     } else {
       showToast('ไม่สามารถคัดลอกข้อความได้อัตโนมัติ');
     }
@@ -496,23 +492,29 @@ export default function App() {
         )}
       </main>
 
-      {/* Modal ดูรายละเอียดสินค้า (สำหรับลูกค้า & พนักงาน) */}
+      {/* Modal ดูรายละเอียดสินค้า (รูปภาพเต็มใบ + ปุ่มแชร์ LINE ปรับปรุงใหม่) */}
       {viewingProduct && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl max-w-2xl w-full shadow-2xl overflow-hidden relative max-h-[90vh] flex flex-col">
             <button 
               onClick={() => setViewingProduct(null)}
-              className="absolute top-3 right-3 bg-white/80 hover:bg-white text-gray-700 p-2 rounded-full z-20 shadow-md cursor-pointer"
+              className="absolute top-3 right-3 bg-white/80 hover:bg-white text-gray-700 p-2 rounded-full z-20 shadow-md cursor-pointer transition-all"
             >
               <X className="w-5 h-5" />
             </button>
 
             <div className="overflow-y-auto">
-              <div className="h-64 sm:h-80 bg-gray-100 relative">
+              
+              {/* แสดงรูปภาพแบบเต็มใบ ไม่โดนซูมตัดขอบ */}
+              <div className="w-full bg-slate-900/5 relative flex items-center justify-center p-3 min-h-[260px] max-h-[420px]">
                 {viewingProduct.image ? (
-                  <img src={viewingProduct.image} alt={viewingProduct.name} className="w-full h-full object-cover" />
+                  <img 
+                    src={viewingProduct.image} 
+                    alt={viewingProduct.name} 
+                    className="w-full h-full max-h-[380px] object-contain rounded-xl shadow-sm" 
+                  />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center">
+                  <div className="w-full h-48 flex items-center justify-center">
                     <ImageIcon className="w-16 h-16 text-gray-300" />
                   </div>
                 )}
@@ -526,7 +528,7 @@ export default function App() {
                     </span>
                     <h2 className="text-2xl font-bold text-gray-800">{viewingProduct.name}</h2>
                   </div>
-                  <span className="text-xs font-mono bg-gray-100 text-gray-500 px-2 py-1 rounded">
+                  <span className="text-xs font-mono bg-gray-100 text-gray-500 px-2 py-1 rounded shrink-0">
                     {viewingProduct.id}
                   </span>
                 </div>
@@ -536,45 +538,37 @@ export default function App() {
                 </p>
 
                 {viewingProduct.description && (
-                  <p className="text-gray-600 text-sm mb-6 leading-relaxed bg-gray-50 p-3 rounded-xl border border-gray-100">
+                  <p className="text-gray-600 text-sm mb-6 leading-relaxed bg-gray-50 p-3.5 rounded-xl border border-gray-100">
                     {viewingProduct.description}
                   </p>
                 )}
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6 text-sm text-gray-600">
                   <div className="p-3 bg-gray-50 rounded-lg flex items-center gap-2">
-                    <Box className="w-4 h-4 text-gray-400" />
+                    <Box className="w-4 h-4 text-gray-400 shrink-0" />
                     <span><strong>ขนาด:</strong> {viewingProduct.size || '-'}</span>
                   </div>
                   <div className="p-3 bg-gray-50 rounded-lg flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-green-600" />
+                    <CheckCircle2 className="w-4 h-4 text-green-600 shrink-0" />
                     <span><strong>สถานะ:</strong> {viewingProduct.status}</span>
                   </div>
                   {isLoggedIn && (
-                    <div className="p-3 bg-amber-50 rounded-lg flex items-center gap-2 col-span-2 border border-amber-200">
-                      <MapPin className="w-4 h-4 text-amber-600" />
+                    <div className="p-3 bg-amber-50 rounded-lg flex items-center gap-2 col-span-1 sm:col-span-2 border border-amber-200">
+                      <MapPin className="w-4 h-4 text-amber-600 shrink-0" />
                       <span className="text-amber-900"><strong>ตำแหน่งวางหน้าร้าน:</strong> {viewingProduct.location || '-'}</span>
                     </div>
                   )}
                 </div>
 
-                {/* ปุ่มติดต่อร้านสำหรับลูกค้า */}
-                <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-100">
+                {/* ปุ่มแชร์เข้า LINE แบบเต็มปุ่ม */}
+                <div className="pt-4 border-t border-gray-100">
                   <button
                     onClick={() => handleShareProduct(viewingProduct)}
-                    className="flex-1 bg-[#06C755] hover:bg-[#05b34c] text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 shadow-md cursor-pointer transition-colors"
+                    className="w-full bg-[#06C755] hover:bg-[#05b34c] text-white py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 shadow-md cursor-pointer transition-all text-base"
                   >
                     <Share2 className="w-5 h-5" />
                     <span>แชร์สินค้าลง LINE</span>
                   </button>
-
-                  <a 
-                    href="tel:0812345678" 
-                    className="flex-1 bg-[#1B2A3A] hover:bg-[#111B25] text-[#D4AF37] py-3 rounded-xl font-bold flex items-center justify-center gap-2 shadow-md cursor-pointer transition-colors text-center"
-                  >
-                    <Phone className="w-5 h-5" />
-                    <span>โทรสอบถาม / สั่งซื้อ</span>
-                  </a>
                 </div>
 
               </div>
