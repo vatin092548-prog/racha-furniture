@@ -38,6 +38,7 @@ import {
   ArrowUpDown,
   MessageCircle,
   Camera,
+  Filter,
 } from "lucide-react";
 
 
@@ -67,6 +68,10 @@ export default function App() {
 
   const [promoOnly, setPromoOnly] = useState(false);
   const [stockOnly, setStockOnly] = useState(false);
+
+  // สเตตสำหรับกรองช่วงราคา (Price Range)
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
 
   const [sortPrice, setSortPrice] = useState("none");
 
@@ -146,18 +151,15 @@ export default function App() {
 
 
   /* =======================================================
-     AUTO GENERATE ID (คำนวณ Prefix + เลขลำดับถัดไป)
+     AUTO GENERATE ID
   ======================================================= */
 
   const generateNextId = (categoryName, currentProducts) => {
     const prefix = categoryPrefixMap[categoryName] || "A";
-    
-    // กรองสินค้าเฉพาะหมวดหมู่นี้ที่มี ID ขึ้นต้นด้วย Prefix ดังกล่าว
     const categoryProducts = currentProducts.filter(p => p.category === categoryName || p.id?.startsWith(prefix));
 
     let maxNum = 0;
     categoryProducts.forEach(p => {
-      // ดึงตัวเลขหลัง Prefix เช่น A12 -> 12
       const match = p.id?.match(new RegExp(`^${prefix}(\\d+)$`));
       if (match) {
         const num = parseInt(match[1], 10);
@@ -391,10 +393,8 @@ export default function App() {
     };
 
     try {
-      // 1. บันทึกข้อมูลไปยัง Document ID ใหม่
       await setDoc(doc(db, PRODUCTS_COLLECTION, newProductId), productData);
 
-      // 2. ถ้าเป็นการแก้ไขสินค้า และมีการแก้รหัสสินค้า ให้ลบ Document ID เก่าทิ้ง
       if (editingProduct && editingProduct.id !== newProductId) {
         await deleteDoc(doc(db, PRODUCTS_COLLECTION, editingProduct.id));
       }
@@ -466,7 +466,7 @@ export default function App() {
 
 
   /* =======================================================
-     FILTER PRODUCTS
+     FILTER PRODUCTS (เพิ่มการกรองช่วงราคา)
   ======================================================= */
 
   const filteredProducts = products
@@ -479,7 +479,14 @@ export default function App() {
       const promoMatch = promoOnly ? Boolean(product.promoPrice) : true;
       const stockMatch = stockOnly ? product.status !== "สินค้าหมด" : true;
 
-      return categoryMatch && searchMatch && promoMatch && stockMatch;
+      // คำนวณราคาขายจริง (ถ้ามีโปรโมชั่น ใช้ราคาโปรโมชั่น)
+      const actualPrice = Number(product.promoPrice || product.price || 0);
+
+      // กรองช่วงราคา
+      const minMatch = minPrice === "" || actualPrice >= Number(minPrice);
+      const maxMatch = maxPrice === "" || actualPrice <= Number(maxPrice);
+
+      return categoryMatch && searchMatch && promoMatch && stockMatch && minMatch && maxMatch;
     })
     .sort((a, b) => {
       const priceA = Number(a.promoPrice || a.price || 0);
@@ -647,7 +654,6 @@ export default function App() {
                       <span className="font-bold">{category.name}</span>
                     </div>
 
-                    {/* แสดงรหัสเฉพาะโหมดพนักงานเท่านั้น */}
                     {isLoggedIn && (
                       <span className="font-mono font-bold text-lg text-red-600 bg-red-50 border border-red-200 px-3 py-1 rounded-lg">
                         {category.prefix}
@@ -680,8 +686,9 @@ export default function App() {
               )}
             </div>
 
-            <div className="bg-white border border-gray-200 rounded-xl p-3 mb-6 flex flex-wrap justify-between gap-3">
-              <div className="flex flex-wrap gap-2">
+            {/* FILTER BAR (เพิ่มฟิลเตอร์ช่วงราคา) */}
+            <div className="bg-white border border-gray-200 rounded-xl p-3 mb-6 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center gap-2">
                 <button
                   onClick={() => setPromoOnly(!promoOnly)}
                   className={`px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1 ${promoOnly ? "bg-red-600 text-white" : "bg-gray-100 text-gray-600"}`}
@@ -694,6 +701,38 @@ export default function App() {
                 >
                   <CheckCircle2 className="w-3.5 h-3.5" /> 📦 พร้อมส่ง
                 </button>
+
+                {/* ส่วนการกรองตามช่วงราคา (Price Range) */}
+                <div className="flex items-center gap-1 bg-gray-50 border border-gray-200 rounded-lg px-2 py-1">
+                  <Filter className="w-3.5 h-3.5 text-gray-400" />
+                  <span className="text-xs text-gray-500 font-bold">ราคา:</span>
+                  <input
+                    type="number"
+                    placeholder="ต่ำสุด"
+                    value={minPrice}
+                    onChange={(e) => setMinPrice(e.target.value)}
+                    className="w-16 bg-white border border-gray-300 rounded px-1.5 py-0.5 text-xs text-center outline-none"
+                  />
+                  <span className="text-xs text-gray-400">-</span>
+                  <input
+                    type="number"
+                    placeholder="สูงสุด"
+                    value={maxPrice}
+                    onChange={(e) => setMaxPrice(e.target.value)}
+                    className="w-16 bg-white border border-gray-300 rounded px-1.5 py-0.5 text-xs text-center outline-none"
+                  />
+                  {(minPrice || maxPrice) && (
+                    <button
+                      onClick={() => {
+                        setMinPrice("");
+                        setMaxPrice("");
+                      }}
+                      className="text-xs text-red-500 font-bold ml-1 hover:underline"
+                    >
+                      ล้าง
+                    </button>
+                  )}
+                </div>
               </div>
 
               <div className="flex items-center gap-2">
@@ -805,7 +844,7 @@ export default function App() {
               <div className="bg-white border border-dashed border-gray-300 rounded-xl p-16 text-center">
                 <Package className="w-14 h-14 text-gray-300 mx-auto mb-4" />
                 <h3 className="font-bold text-gray-600">ไม่พบสินค้า</h3>
-                <p className="text-xs text-gray-400 mt-1">ยังไม่มีสินค้าในหมวดหมู่นี้</p>
+                <p className="text-xs text-gray-400 mt-1">ไม่มีสินค้าตรงกับเงื่อนไขการค้นหาของคุณ</p>
                 {isLoggedIn && (
                   <button onClick={openAddProduct} className="mt-5 bg-[#1B2A3A] text-[#D4AF37] px-5 py-2.5 rounded-lg text-sm font-bold">
                     <Plus className="inline w-4 h-4 mr-1" /> เพิ่มสินค้า
@@ -872,7 +911,6 @@ export default function App() {
             </div>
 
             <form onSubmit={handleSaveProduct} className="p-5 overflow-y-auto space-y-4">
-              {/* ID (รันตัวเลขอัตโนมัติ และปลดล็อกให้แก้ไขพิมพ์เปลี่ยนได้) */}
               <div>
                 <label className="block text-xs font-bold text-gray-600 mb-1">
                   รหัสสินค้า (รันให้อัตโนมัติ หรือพิมพ์แก้ไขได้)
@@ -898,7 +936,6 @@ export default function App() {
                 />
               </div>
 
-              {/* สลับหมวดหมู่ ➔ คำนวณรหัส ID รันตัวเลขให้ใหม่เฉพาะตอนเพิ่มสินค้าใหม่ */}
               <div>
                 <label className="block text-xs font-bold text-gray-600 mb-1">หมวดหมู่</label>
                 <select
