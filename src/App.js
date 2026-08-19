@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { db } from './firebase';
+import React, { useEffect, useState } from "react";
+import { db } from "./firebase";
 
 import {
   collection,
   onSnapshot,
   doc,
   setDoc,
-  deleteDoc
-} from 'firebase/firestore';
+  deleteDoc,
+} from "firebase/firestore";
 
 import {
   Bed,
@@ -30,470 +30,329 @@ import {
   Image as ImageIcon,
   Lock,
   LogOut,
-  Phone,
   Share2,
   Package,
-  CheckCircle,
   Tag,
   LayoutDashboard,
   Flame,
   ArrowUpDown,
   MessageCircle,
-  Camera
-} from 'lucide-react';
+  Camera,
+} from "lucide-react";
 
+
+/* =========================================================
+   APP
+========================================================= */
 
 export default function App() {
 
-  /* =========================================================
-     FIRESTORE
-  ========================================================= */
+  /* =======================================================
+     FIREBASE
+  ======================================================= */
 
-  const FIRESTORE_COLLECTION = 'products';
+  const PRODUCTS_COLLECTION = "products";
 
   const [products, setProducts] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [firebaseError, setFirebaseError] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [firebaseError, setFirebaseError] = useState("");
 
 
-  /* =========================================================
+  /* =======================================================
      SEARCH / FILTER
-  ========================================================= */
+  ======================================================= */
 
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
 
-  const [filterPromoOnly, setFilterPromoOnly] = useState(false);
-  const [filterInStockOnly, setFilterInStockOnly] = useState(false);
+  const [promoOnly, setPromoOnly] = useState(false);
+  const [stockOnly, setStockOnly] = useState(false);
 
-  const [sortByPrice, setSortByPrice] = useState('none');
+  const [sortPrice, setSortPrice] = useState("none");
 
 
-  /* =========================================================
+  /* =======================================================
      LOGIN
-  ========================================================= */
+  ======================================================= */
 
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
-  const [phoneInput, setPhoneInput] = useState('');
-  const [loginError, setLoginError] = useState('');
+  const [phone, setPhone] = useState("");
+  const [loginError, setLoginError] = useState("");
 
-  const STAFF_PHONE = '0822810874';
-
-
-  /* =========================================================
-     MODAL
-  ========================================================= */
-
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState(null);
-  const [viewingProduct, setViewingProduct] = useState(null);
-
-  const [toastMessage, setToastMessage] = useState('');
+  // เบอร์พนักงานสำหรับทดสอบ
+  const STAFF_PHONE = "0822810874";
 
 
-  /* =========================================================
+  /* =======================================================
+     PRODUCT MODAL
+  ======================================================= */
+
+  const [showProductModal, setShowProductModal] =
+    useState(false);
+
+  const [editingProduct, setEditingProduct] =
+    useState(null);
+
+  const [viewingProduct, setViewingProduct] =
+    useState(null);
+
+
+  /* =======================================================
+     TOAST
+  ======================================================= */
+
+  const [toast, setToast] = useState("");
+
+
+  /* =======================================================
      FORM
-  ========================================================= */
+  ======================================================= */
 
-  const [formData, setFormData] = useState({
-    id: '',
-    name: '',
-    category: 'ห้องนอน',
-    price: '',
-    promoPrice: '',
-    size: '',
-    location: '',
-    status: 'มีสินค้าพร้อมส่ง',
-    image: '',
-    description: ''
-  });
+  const emptyForm = {
+    id: "",
+    name: "",
+    category: "ห้องนอน",
+    price: "",
+    promoPrice: "",
+    size: "",
+    location: "",
+    status: "มีสินค้าพร้อมส่ง",
+    image: "",
+    description: "",
+  };
+
+  const [formData, setFormData] =
+    useState(emptyForm);
 
 
-  /* =========================================================
-     CATEGORY
-  ========================================================= */
+  /* =======================================================
+     CATEGORIES
+  ======================================================= */
 
   const categories = [
     {
-      name: 'ห้องนอน',
-      icon: Bed
+      name: "ห้องนอน",
+      icon: Bed,
     },
     {
-      name: 'ห้องนั่งเล่น',
-      icon: Sofa
+      name: "ห้องนั่งเล่น",
+      icon: Sofa,
     },
     {
-      name: 'โซฟา & เก้าอี้พักผ่อน',
-      icon: Armchair
+      name: "โซฟา & เก้าอี้พักผ่อน",
+      icon: Armchair,
     },
     {
-      name: 'ห้องอาหาร/ห้องครัว',
-      icon: Utensils
+      name: "ห้องอาหาร/ห้องครัว",
+      icon: Utensils,
     },
     {
-      name: 'ห้องสำนักงาน',
-      icon: Briefcase
+      name: "ห้องสำนักงาน",
+      icon: Briefcase,
     },
     {
-      name: 'สินค้าพิเศษ',
-      icon: Sparkles
+      name: "สินค้าพิเศษ",
+      icon: Sparkles,
     },
     {
-      name: 'ห้องทั่วไป',
-      icon: LayoutGrid
-    }
+      name: "ห้องทั่วไป",
+      icon: LayoutGrid,
+    },
   ];
 
 
-  /* =========================================================
-     FIRESTORE - REALTIME
-  ========================================================= */
+  /* =======================================================
+     FIRESTORE REALTIME
+  ======================================================= */
 
   useEffect(() => {
 
-    console.log('========================================');
+    console.log("=================================");
+    console.log("🔥 FIREBASE START");
     console.log(
-      '🔥 Firebase Project:',
+      "Project ID:",
       db.app.options.projectId
     );
-
     console.log(
-      '🔥 Firestore Database:',
-      db.app.options.databaseId || '(default)'
+      "Database:",
+      db.app.options.databaseId || "(default)"
     );
-
     console.log(
-      '🔥 Collection:',
-      FIRESTORE_COLLECTION
+      "Collection:",
+      PRODUCTS_COLLECTION
     );
+    console.log("=================================");
 
-    console.log('========================================');
+
+    setLoading(true);
+    setFirebaseError("");
 
 
-    setIsLoading(true);
-    setFirebaseError('');
+    const productsRef = collection(
+      db,
+      PRODUCTS_COLLECTION
+    );
 
 
     const unsubscribe = onSnapshot(
-
-      collection(
-        db,
-        FIRESTORE_COLLECTION
-      ),
+      productsRef,
 
       (snapshot) => {
 
-        const items = snapshot.docs.map(
-          (itemDoc) => ({
-            id: itemDoc.id,
-            ...itemDoc.data()
-          })
+        const productList =
+          snapshot.docs.map((item) => ({
+            id: item.id,
+            ...item.data(),
+          }));
+
+
+        console.log(
+          "🔥 Firebase Products:",
+          productList
         );
 
 
         console.log(
-          '🔥 Products จาก Firebase:',
-          items
-        );
-
-        console.log(
-          '🔥 จำนวนสินค้า:',
-          items.length
+          "🔥 จำนวนสินค้า:",
+          productList.length
         );
 
 
-        setProducts(items);
-
-        setIsLoading(false);
-
-        setFirebaseError('');
+        setProducts(productList);
+        setLoading(false);
+        setFirebaseError("");
       },
-
 
       (error) => {
 
         console.error(
-          '❌ Firebase Error:',
-          error
+          "❌ Firestore READ ERROR"
         );
 
         console.error(
-          '❌ Error Code:',
+          "Code:",
           error.code
         );
 
         console.error(
-          '❌ Error Message:',
+          "Message:",
           error.message
         );
 
 
-        setProducts([]);
-
-        setIsLoading(false);
-
         setFirebaseError(
-          `ไม่สามารถอ่านข้อมูลจาก Firebase ได้: ${error.message}`
+          `ไม่สามารถอ่านข้อมูลจาก Firebase ได้\n${error.message}`
         );
-      }
 
+        setProducts([]);
+        setLoading(false);
+      }
     );
 
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribe();
+    };
 
   }, []);
 
 
-  /* =========================================================
-     DIRECT PRODUCT LINK
-  ========================================================= */
-
-  useEffect(() => {
-
-    const params =
-      new URLSearchParams(
-        window.location.search
-      );
-
-    const productId =
-      params.get('product');
-
-
-    if (
-      productId &&
-      products.length > 0
-    ) {
-
-      const found =
-        products.find(
-          (product) =>
-            product.id === productId
-        );
-
-
-      if (found) {
-        setViewingProduct(found);
-      }
-    }
-
-  }, [products]);
-
-
-  /* =========================================================
+  /* =======================================================
      TOAST
-  ========================================================= */
+  ======================================================= */
 
   const showToast = (message) => {
 
-    setToastMessage(message);
+    setToast(message);
 
     setTimeout(() => {
-      setToastMessage('');
-    }, 3500);
+      setToast("");
+    }, 3000);
 
   };
 
 
-  /* =========================================================
-     SHARE PRODUCT
-  ========================================================= */
-
-  const handleShareProduct = (
-    product,
-    event
-  ) => {
-
-    if (event) {
-      event.stopPropagation();
-    }
-
-
-    const shareUrl =
-      `${window.location.origin}${window.location.pathname}?product=${product.id}`;
-
-
-    const displayPrice =
-      product.promoPrice
-
-        ? `฿${Number(
-            product.promoPrice
-          ).toLocaleString()} (จากปกติ ฿${Number(
-            product.price
-          ).toLocaleString()})`
-
-        : `฿${Number(
-            product.price
-          ).toLocaleString()}`;
-
-
-    const shareText =
-      `🪑 ${product.name}\n` +
-      `💰 ราคา: ${displayPrice}\n` +
-      `📍 สาขาหาดใหญ่ (ถ.สามสิบเมตร) - ` +
-      `วางหน้าโซน: ${product.location || '-'}\n\n` +
-      `ดูรายละเอียดเพิ่มเติม:\n${shareUrl}`;
-
-
-    if (
-      navigator.clipboard
-    ) {
-
-      navigator.clipboard.writeText(
-        shareText
-      );
-
-      showToast(
-        'คัดลอกลิงก์เรียบร้อย! นำไปวางใน LINE ได้เลย'
-      );
-
-    } else {
-
-      showToast(
-        'ไม่สามารถคัดลอกข้อมูลได้'
-      );
-
-    }
-
-  };
-
-
-  /* =========================================================
+  /* =======================================================
      LOGIN
-  ========================================================= */
+  ======================================================= */
 
-  const handleLoginSubmit = (event) => {
+  const handleLogin = (event) => {
 
     event.preventDefault();
 
 
-    if (
-      phoneInput.trim() ===
-      STAFF_PHONE
-    ) {
+    if (phone === STAFF_PHONE) {
 
       setIsLoggedIn(true);
 
-      setIsLoginModalOpen(false);
+      setShowLoginModal(false);
 
-      setPhoneInput('');
+      setPhone("");
 
-      setLoginError('');
+      setLoginError("");
 
       showToast(
-        'ยินดีต้อนรับ! เข้าสู่ระบบพนักงานสำเร็จ'
+        "เข้าสู่ระบบพนักงานสำเร็จ"
       );
 
     } else {
 
       setLoginError(
-        'เบอร์โทรศัพท์ไม่ถูกต้อง'
+        "เบอร์โทรศัพท์ไม่ถูกต้อง"
       );
 
     }
 
   };
 
+
+  /* =======================================================
+     LOGOUT
+  ======================================================= */
 
   const handleLogout = () => {
 
     setIsLoggedIn(false);
 
     showToast(
-      'ออกจากระบบเรียบร้อย'
+      "ออกจากระบบเรียบร้อย"
     );
 
   };
 
 
-  /* =========================================================
-     IMAGE
-  ========================================================= */
+  /* =======================================================
+     OPEN ADD PRODUCT
+  ======================================================= */
 
-  const handleImageUpload = (
-    event
-  ) => {
-
-    const file =
-      event.target.files[0];
-
-
-    if (!file) {
-      return;
-    }
-
-
-    const reader =
-      new FileReader();
-
-
-    reader.onloadend = () => {
-
-      setFormData(
-        (previous) => ({
-          ...previous,
-          image: reader.result
-        })
-      );
-
-    };
-
-
-    reader.readAsDataURL(file);
-
-  };
-
-
-  /* =========================================================
-     OPEN ADD MODAL
-  ========================================================= */
-
-  const handleOpenAddModal = () => {
-
-    setFormData({
-
-      id: `P${String(
-        products.length + 1
-      ).padStart(3, '0')}`,
-
-      name: '',
-
-      category:
-        selectedCategory ||
-        'ห้องนอน',
-
-      price: '',
-
-      promoPrice: '',
-
-      size: '',
-
-      location: '',
-
-      status:
-        'มีสินค้าพร้อมส่ง',
-
-      image: '',
-
-      description: ''
-
-    });
-
+  const openAddProduct = () => {
 
     setEditingProduct(null);
 
-    setIsAddModalOpen(true);
+
+    setFormData({
+      ...emptyForm,
+      id: `P${String(
+        products.length + 1
+      ).padStart(3, "0")}`,
+      category:
+        selectedCategory ||
+        "ห้องนอน",
+    });
+
+
+    setShowProductModal(true);
 
   };
 
 
-  /* =========================================================
-     OPEN EDIT MODAL
-  ========================================================= */
+  /* =======================================================
+     OPEN EDIT PRODUCT
+  ======================================================= */
 
-  const handleOpenEditModal = (
+  const openEditProduct = (
     product,
     event
   ) => {
@@ -507,174 +366,353 @@ export default function App() {
 
 
     setFormData({
-
-      id: product.id || '',
-
-      name: product.name || '',
-
+      id: product.id || "",
+      name: product.name || "",
       category:
         product.category ||
-        'ห้องนอน',
-
+        "ห้องนอน",
       price:
-        product.price ?? '',
-
+        product.price ?? "",
       promoPrice:
-        product.promoPrice ?? '',
-
+        product.promoPrice ?? "",
       size:
-        product.size || '',
-
+        product.size || "",
       location:
-        product.location || '',
-
+        product.location || "",
       status:
         product.status ||
-        'มีสินค้าพร้อมส่ง',
-
+        "มีสินค้าพร้อมส่ง",
       image:
-        product.image || '',
-
+        product.image || "",
       description:
-        product.description || ''
-
+        product.description || "",
     });
+
+
+    setShowProductModal(true);
 
   };
 
 
-  /* =========================================================
-     SAVE PRODUCT TO FIRESTORE
-  ========================================================= */
+  /* =======================================================
+     CLOSE PRODUCT MODAL
+  ======================================================= */
 
-  const handleSubmit = async (
+  const closeProductModal = () => {
+
+    setShowProductModal(false);
+
+    setEditingProduct(null);
+
+    setFormData(emptyForm);
+
+  };
+
+
+  /* =======================================================
+     IMAGE UPLOAD
+  ======================================================= */
+
+  const handleImageUpload = (
+    event
+  ) => {
+
+    const file =
+      event.target.files?.[0];
+
+
+    if (!file) {
+      return;
+    }
+
+
+    // จำกัดขนาดรูป
+    if (
+      file.size >
+      2 * 1024 * 1024
+    ) {
+
+      alert(
+        "รูปภาพใหญ่เกินไป\nกรุณาใช้รูปไม่เกิน 2 MB"
+      );
+
+      return;
+    }
+
+
+    const reader =
+      new FileReader();
+
+
+    reader.onload = () => {
+
+      setFormData(
+        (previous) => ({
+          ...previous,
+          image:
+            reader.result,
+        })
+      );
+
+    };
+
+
+    reader.onerror = () => {
+
+      alert(
+        "ไม่สามารถอ่านรูปภาพได้"
+      );
+
+    };
+
+
+    reader.readAsDataURL(file);
+
+  };
+
+
+  /* =======================================================
+     SAVE PRODUCT
+  ======================================================= */
+
+  const handleSaveProduct = async (
     event
   ) => {
 
     event.preventDefault();
 
 
-    const productId =
-      editingProduct
+    console.log(
+      "================================="
+    );
 
-        ? editingProduct.id
-
-        : (
-            formData.id.trim() ||
-            `P${Date.now()}`
-          );
+    console.log(
+      "🟡 กดปุ่มบันทึกสินค้า"
+    );
 
 
-    if (
-      !formData.name.trim()
-    ) {
+    /* -------------------------------------------------------
+       CHECK LOGIN
+    ------------------------------------------------------- */
+
+    if (!isLoggedIn) {
 
       alert(
-        'กรุณากรอกชื่อสินค้า'
+        "กรุณาเข้าสู่ระบบพนักงานก่อน"
       );
 
       return;
     }
 
 
+    /* -------------------------------------------------------
+       CHECK NAME
+    ------------------------------------------------------- */
+
     if (
-      formData.price === '' ||
-      Number(formData.price) < 0
+      !formData.name ||
+      formData.name.trim() === ""
     ) {
 
       alert(
-        'กรุณากรอกราคาสินค้าให้ถูกต้อง'
+        "กรุณากรอกชื่อสินค้า"
       );
 
       return;
     }
 
+
+    /* -------------------------------------------------------
+       CHECK PRICE
+    ------------------------------------------------------- */
+
+    if (
+      formData.price === "" ||
+      formData.price === null ||
+      formData.price === undefined
+    ) {
+
+      alert(
+        "กรุณากรอกราคาสินค้า"
+      );
+
+      return;
+    }
+
+
+    const normalPrice =
+      Number(formData.price);
+
+
+    if (
+      Number.isNaN(normalPrice) ||
+      normalPrice < 0
+    ) {
+
+      alert(
+        "ราคาสินค้าไม่ถูกต้อง"
+      );
+
+      return;
+    }
+
+
+    /* -------------------------------------------------------
+       PROMOTION PRICE
+    ------------------------------------------------------- */
+
+    let promotionPrice = null;
+
+
+    if (
+      formData.promoPrice !== "" &&
+      formData.promoPrice !== null &&
+      formData.promoPrice !== undefined
+    ) {
+
+      promotionPrice =
+        Number(formData.promoPrice);
+
+
+      if (
+        Number.isNaN(
+          promotionPrice
+        ) ||
+        promotionPrice < 0
+      ) {
+
+        alert(
+          "ราคาโปรโมชั่นไม่ถูกต้อง"
+        );
+
+        return;
+      }
+
+
+      if (
+        promotionPrice >
+        normalPrice
+      ) {
+
+        alert(
+          "ราคาโปรโมชั่นไม่ควรมากกว่าราคาปกติ"
+        );
+
+        return;
+      }
+
+    }
+
+
+    /* -------------------------------------------------------
+       DOCUMENT ID
+    ------------------------------------------------------- */
+
+    let productId;
+
+
+    if (editingProduct) {
+
+      productId =
+        editingProduct.id;
+
+    } else {
+
+      productId =
+        formData.id?.trim();
+
+
+      if (!productId) {
+
+        productId =
+          `P${Date.now()}`;
+
+      }
+
+    }
+
+
+    /* -------------------------------------------------------
+       DATA
+    ------------------------------------------------------- */
 
     const productData = {
-
-      id: productId,
 
       name:
         formData.name.trim(),
 
       category:
-        formData.category,
+        formData.category ||
+        "ห้องนอน",
 
       price:
-        Number(formData.price),
+        normalPrice,
 
       promoPrice:
-        formData.promoPrice === ''
-          ? ''
-          : Number(formData.promoPrice),
+        promotionPrice,
 
       size:
-        formData.size.trim(),
+        formData.size?.trim() ||
+        "",
 
       location:
-        formData.location.trim(),
+        formData.location?.trim() ||
+        "",
 
       status:
-        formData.status,
+        formData.status ||
+        "มีสินค้าพร้อมส่ง",
 
       image:
-        formData.image || '',
+        formData.image ||
+        "",
 
       description:
-        formData.description.trim(),
+        formData.description?.trim() ||
+        "",
 
       updatedAt:
-        new Date().toISOString()
-
+        new Date().toISOString(),
     };
 
 
     console.log(
-      '========================================'
-    );
-
-    console.log(
-      '💾 กำลังบันทึกสินค้า'
-    );
-
-    console.log(
-      '🔥 Project:',
+      "🔥 Project ID:",
       db.app.options.projectId
     );
 
     console.log(
-      '🔥 Database:',
-      db.app.options.databaseId ||
-      '(default)'
+      "🔥 Collection:",
+      PRODUCTS_COLLECTION
     );
 
     console.log(
-      '🔥 Collection:',
-      FIRESTORE_COLLECTION
-    );
-
-    console.log(
-      '🔥 Document ID:',
+      "🔥 Document ID:",
       productId
     );
 
     console.log(
-      '🔥 Data:',
+      "📦 DATA:",
       productData
     );
 
-    console.log(
-      '========================================'
-    );
 
+    /* -------------------------------------------------------
+       FIRESTORE WRITE
+    ------------------------------------------------------- */
 
     try {
+
+      console.log(
+        "🟡 กำลังส่งข้อมูลไป Firestore..."
+      );
+
 
       await setDoc(
 
         doc(
           db,
-          FIRESTORE_COLLECTION,
+          PRODUCTS_COLLECTION,
           productId
         ),
 
@@ -684,58 +722,103 @@ export default function App() {
 
 
       console.log(
-        '✅ บันทึกสินค้าเข้า Firestore สำเร็จ:',
+        "================================="
+      );
+
+      console.log(
+        "✅ FIRESTORE SAVE SUCCESS"
+      );
+
+      console.log(
+        "Document:",
         productId
       );
 
+      console.log(
+        "================================="
+      );
 
-      setIsAddModalOpen(false);
 
-      setEditingProduct(null);
-
-      setFirebaseError('');
+      closeProductModal();
 
 
       showToast(
-        `บันทึกสินค้า ${productId} ลง Firebase สำเร็จ!`
+        editingProduct
+          ? "แก้ไขสินค้าสำเร็จ"
+          : "เพิ่มสินค้าสำเร็จ"
       );
 
 
     } catch (error) {
 
       console.error(
-        '❌ บันทึกสินค้าไม่สำเร็จ:',
-        error
+        "================================="
       );
 
       console.error(
-        '❌ Error Code:',
+        "❌ FIRESTORE SAVE ERROR"
+      );
+
+      console.error(
+        "Error Code:",
         error.code
       );
 
       console.error(
-        '❌ Error Message:',
+        "Error Message:",
         error.message
       );
 
+      console.error(
+        "Full Error:",
+        error
+      );
 
-      setFirebaseError(
-        `บันทึกสินค้าไม่สำเร็จ: ${error.message}`
+      console.error(
+        "================================="
       );
 
 
+      let message =
+        "ไม่สามารถบันทึกสินค้าได้";
+
+
+      if (
+        error.code ===
+        "permission-denied"
+      ) {
+
+        message =
+          "Firebase ไม่อนุญาตให้เขียนข้อมูล\n\n" +
+          "กรุณาตรวจสอบ Firestore Rules";
+
+      } else if (
+        error.code ===
+        "unavailable"
+      ) {
+
+        message =
+          "ไม่สามารถเชื่อมต่อ Firebase ได้\n" +
+          "กรุณาตรวจสอบอินเทอร์เน็ต";
+
+      } else if (
+        error.code ===
+        "invalid-argument"
+      ) {
+
+        message =
+          "ข้อมูลที่ส่งไป Firebase ไม่ถูกต้อง";
+
+      } else {
+
+        message =
+          `บันทึกสินค้าไม่สำเร็จ\n\n${error.message}`;
+
+      }
+
+
       alert(
-
-        `เกิดข้อผิดพลาดในการบันทึกสินค้า\n\n` +
-
-        `Code: ${
-          error.code || '-'
-        }\n` +
-
-        `Message: ${
-          error.message
-        }`
-
+        `❌ ${message}`
       );
 
     }
@@ -743,12 +826,12 @@ export default function App() {
   };
 
 
-  /* =========================================================
+  /* =======================================================
      DELETE PRODUCT
-  ========================================================= */
+  ======================================================= */
 
   const handleDeleteProduct = async (
-    id,
+    product,
     event
   ) => {
 
@@ -757,13 +840,23 @@ export default function App() {
     }
 
 
-    const confirmDelete =
+    if (!isLoggedIn) {
+
+      alert(
+        "กรุณาเข้าสู่ระบบพนักงานก่อน"
+      );
+
+      return;
+    }
+
+
+    const confirmed =
       window.confirm(
-        'คุณต้องการลบสินค้านี้ใช่หรือไม่?'
+        `ต้องการลบสินค้า "${product.name}" หรือไม่?`
       );
 
 
-    if (!confirmDelete) {
+    if (!confirmed) {
       return;
     }
 
@@ -774,40 +867,34 @@ export default function App() {
 
         doc(
           db,
-          FIRESTORE_COLLECTION,
-          id
+          PRODUCTS_COLLECTION,
+          product.id
         )
 
       );
 
 
       console.log(
-        '🗑️ ลบสินค้าจาก Firestore สำเร็จ:',
-        id
+        "✅ DELETE SUCCESS:",
+        product.id
       );
 
 
-      if (editingProduct) {
-        setEditingProduct(null);
-      }
-
-
       showToast(
-        'ลบสินค้าออกจากฐานข้อมูลเรียบร้อย'
+        "ลบสินค้าเรียบร้อย"
       );
 
 
     } catch (error) {
 
       console.error(
-        '❌ ลบสินค้าไม่สำเร็จ:',
+        "❌ DELETE ERROR:",
         error
       );
 
 
       alert(
-        'เกิดข้อผิดพลาดในการลบ: ' +
-        error.message
+        `ลบสินค้าไม่สำเร็จ\n\n${error.message}`
       );
 
     }
@@ -815,90 +902,169 @@ export default function App() {
   };
 
 
-  /* =========================================================
+  /* =======================================================
+     SHARE
+  ======================================================= */
+
+  const handleShare = async (
+    product,
+    event
+  ) => {
+
+    if (event) {
+      event.stopPropagation();
+    }
+
+
+    const url =
+      `${window.location.origin}${window.location.pathname}?product=${product.id}`;
+
+
+    const price =
+      product.promoPrice
+        ? `฿${Number(
+            product.promoPrice
+          ).toLocaleString()}`
+        : `฿${Number(
+            product.price
+          ).toLocaleString()}`;
+
+
+    const text =
+      `🪑 ${product.name}\n` +
+      `💰 ราคา ${price}\n` +
+      `📍 ราชาเฟอร์นิเจอร์ สาขาหาดใหญ่\n` +
+      `📦 โซนวาง: ${
+        product.location || "-"
+      }\n\n` +
+      `ดูรายละเอียดสินค้า:\n${url}`;
+
+
+    try {
+
+      if (
+        navigator.clipboard
+      ) {
+
+        await navigator.clipboard.writeText(
+          text
+        );
+
+
+        showToast(
+          "คัดลอกข้อมูลสินค้าแล้ว"
+        );
+
+      } else {
+
+        alert(text);
+
+      }
+
+    } catch (error) {
+
+      console.error(
+        "Share error:",
+        error
+      );
+
+      alert(text);
+
+    }
+
+  };
+
+
+  /* =======================================================
      FILTER PRODUCTS
-  ========================================================= */
+  ======================================================= */
 
   const filteredProducts =
     products
-
       .filter((product) => {
 
-        const matchesCategory =
+        /* Category */
+
+        const categoryMatch =
           selectedCategory
             ? product.category ===
               selectedCategory
             : true;
 
 
-        const productName =
-          String(
-            product.name || ''
-          );
-
-
-        const productId =
-          String(
-            product.id || ''
-          );
-
+        /* Search */
 
         const search =
-          searchTerm.toLowerCase();
+          searchTerm
+            .trim()
+            .toLowerCase();
 
 
-        const matchesSearch =
-          productName
-            .toLowerCase()
-            .includes(search)
-
-          ||
-
-          productId
-            .toLowerCase()
-            .includes(search);
+        const name =
+          String(
+            product.name || ""
+          ).toLowerCase();
 
 
-        const matchesPromo =
-          filterPromoOnly
+        const id =
+          String(
+            product.id || ""
+          ).toLowerCase();
+
+
+        const searchMatch =
+          search === "" ||
+          name.includes(search) ||
+          id.includes(search);
+
+
+        /* Promotion */
+
+        const promoMatch =
+          promoOnly
             ? Boolean(
                 product.promoPrice
               )
             : true;
 
 
-        const matchesStock =
-          filterInStockOnly
+        /* Stock */
+
+        const stockMatch =
+          stockOnly
             ? product.status !==
-              'สินค้าหมด'
+              "สินค้าหมด"
             : true;
 
 
         return (
-          matchesCategory &&
-          matchesSearch &&
-          matchesPromo &&
-          matchesStock
+          categoryMatch &&
+          searchMatch &&
+          promoMatch &&
+          stockMatch
         );
 
       })
-
       .sort((a, b) => {
 
         const priceA =
-          a.promoPrice
-            ? Number(a.promoPrice)
-            : Number(a.price);
+          Number(
+            a.promoPrice ||
+            a.price ||
+            0
+          );
 
 
         const priceB =
-          b.promoPrice
-            ? Number(b.promoPrice)
-            : Number(b.price);
+          Number(
+            b.promoPrice ||
+            b.price ||
+            0
+          );
 
 
         if (
-          sortByPrice === 'asc'
+          sortPrice === "low"
         ) {
 
           return priceA - priceB;
@@ -907,7 +1073,7 @@ export default function App() {
 
 
         if (
-          sortByPrice === 'desc'
+          sortPrice === "high"
         ) {
 
           return priceB - priceA;
@@ -920,41 +1086,62 @@ export default function App() {
       });
 
 
-  /* =========================================================
+  /* =======================================================
+     PRODUCT COUNT
+  ======================================================= */
+
+  const promotionCount =
+    products.filter(
+      (product) =>
+        Boolean(
+          product.promoPrice
+        )
+    ).length;
+
+
+  const stockCount =
+    products.filter(
+      (product) =>
+        product.status !==
+        "สินค้าหมด"
+    ).length;
+
+
+  /* =======================================================
      RENDER
-  ========================================================= */
+  ======================================================= */
 
   return (
 
-    <div className="min-h-screen bg-[#F8F6F0] text-gray-800 font-sans pb-10 relative">
+    <div className="min-h-screen bg-[#F8F6F0] text-gray-800">
 
 
-      {/* =====================================================
+      {/* ===================================================
           TOAST
-      ===================================================== */}
+      =================================================== */}
 
-      {toastMessage && (
+      {toast && (
 
-        <div className="fixed bottom-5 right-5 z-[100] bg-[#1B2A3A] text-[#D4AF37] px-5 py-3.5 rounded-xl shadow-2xl border border-[#D4AF37] flex items-center gap-3 text-sm font-semibold">
+        <div className="fixed bottom-5 right-5 z-[100]">
 
-          <Sparkles className="w-5 h-5" />
+          <div className="bg-[#1B2A3A] text-[#D4AF37] border border-[#D4AF37] px-5 py-3 rounded-xl shadow-xl font-bold text-sm">
 
-          <span>
-            {toastMessage}
-          </span>
+            {toast}
+
+          </div>
 
         </div>
 
       )}
 
 
-      {/* =====================================================
+      {/* ===================================================
           HEADER
-      ===================================================== */}
+      =================================================== */}
 
-      <header className="bg-[#1B2A3A] text-white shadow-md px-6 py-4 sticky top-0 z-30">
+      <header className="bg-[#1B2A3A] text-white px-6 py-4 shadow-md sticky top-0 z-40">
 
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-4">
 
 
           {/* LOGO */}
@@ -962,16 +1149,18 @@ export default function App() {
           <div
             className="flex items-center gap-3 cursor-pointer"
             onClick={() => {
-              setSelectedCategory(null);
-              setSearchTerm('');
+
+              setSelectedCategory("");
+              setSearchTerm("");
+
             }}
           >
 
             <div className="text-[#D4AF37]">
 
               <svg
-                width="42"
-                height="42"
+                width="44"
+                height="44"
                 viewBox="0 0 100 100"
                 fill="none"
                 stroke="currentColor"
@@ -980,9 +1169,7 @@ export default function App() {
                 strokeLinejoin="round"
               >
 
-                <path
-                  d="M15 70 L25 35 L40 55 L50 25 L60 55 L75 35 L85 70 Z"
-                />
+                <path d="M15 70 L25 35 L40 55 L50 25 L60 55 L75 35 L85 70 Z" />
 
                 <circle
                   cx="25"
@@ -1017,37 +1204,35 @@ export default function App() {
 
             <div>
 
-              <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex items-center gap-2">
 
-                <h1 className="text-2xl font-bold tracking-wide text-white">
+                <h1 className="text-xl md:text-2xl font-bold">
                   ราชาเฟอร์นิเจอร์
                 </h1>
 
 
                 <span
-                  className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                  className={`text-[10px] font-bold px-2 py-1 rounded-full ${
                     isLoggedIn
-                      ? 'bg-green-500 text-white'
-                      : 'bg-[#D4AF37] text-[#1B2A3A]'
+                      ? "bg-green-500 text-white"
+                      : "bg-[#D4AF37] text-[#1B2A3A]"
                   }`}
                 >
 
                   {isLoggedIn
-                    ? 'โหมดพนักงาน'
-                    : 'แคตตาล็อกออนไลน์'}
+                    ? "โหมดพนักงาน"
+                    : "แคตตาล็อกออนไลน์"}
 
                 </span>
 
               </div>
 
 
-              <div className="flex items-center gap-1.5 text-xs text-[#D4AF37]">
+              <div className="flex items-center gap-1 text-xs text-[#D4AF37]">
 
-                <MapPin className="w-3.5 h-3.5" />
+                <MapPin className="w-3 h-3" />
 
-                <span className="font-semibold">
-                  สาขาหาดใหญ่ (ถ.สามสิบเมตร)
-                </span>
+                สาขาหาดใหญ่ (ถ.สามสิบเมตร)
 
               </div>
 
@@ -1056,26 +1241,26 @@ export default function App() {
           </div>
 
 
-          {/* SEARCH + BUTTONS */}
+          {/* SEARCH */}
 
-          <div className="flex items-center gap-3 w-full md:w-auto">
+          <div className="flex items-center gap-2 w-full lg:w-auto">
 
 
-            <div className="relative w-full md:w-80">
+            <div className="relative w-full lg:w-80">
 
               <input
                 type="text"
-                placeholder="ค้นหาชื่อสินค้า หรือ รหัสสินค้า..."
                 value={searchTerm}
                 onChange={(event) =>
                   setSearchTerm(
                     event.target.value
                   )
                 }
-                className="w-full bg-white text-gray-800 pl-4 pr-10 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#D4AF37] text-sm shadow-inner"
+                placeholder="ค้นหาชื่อสินค้า หรือ รหัสสินค้า..."
+                className="w-full bg-white text-gray-800 pl-4 pr-10 py-2.5 rounded-lg outline-none text-sm"
               />
 
-              <Search className="absolute right-3 top-2.5 text-gray-400 w-4 h-4" />
+              <Search className="absolute right-3 top-3 text-gray-400 w-4 h-4" />
 
             </div>
 
@@ -1083,17 +1268,13 @@ export default function App() {
             {isLoggedIn && (
 
               <button
-                onClick={
-                  handleOpenAddModal
-                }
-                className="flex items-center gap-1.5 bg-[#2E7D32] hover:bg-[#25632A] text-white px-4 py-2 rounded-lg text-sm font-medium shadow-md whitespace-nowrap"
+                onClick={openAddProduct}
+                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 rounded-lg font-bold text-sm flex items-center gap-1 whitespace-nowrap"
               >
 
                 <Plus className="w-4 h-4" />
 
-                <span>
-                  เพิ่มสินค้าใหม่
-                </span>
+                เพิ่มสินค้า
 
               </button>
 
@@ -1104,14 +1285,10 @@ export default function App() {
 
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-1.5 bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg text-sm font-medium shadow-md whitespace-nowrap"
+                className="bg-red-600 hover:bg-red-700 text-white px-3 py-2.5 rounded-lg font-bold"
               >
 
                 <LogOut className="w-4 h-4" />
-
-                <span className="hidden sm:inline">
-                  ออกจากระบบ
-                </span>
 
               </button>
 
@@ -1119,17 +1296,17 @@ export default function App() {
 
               <button
                 onClick={() => {
-                  setIsLoginModalOpen(true);
-                  setLoginError('');
+
+                  setShowLoginModal(true);
+                  setLoginError("");
+
                 }}
-                className="flex items-center gap-1.5 bg-[#D4AF37] hover:bg-[#B5922B] text-[#1B2A3A] font-bold px-3 py-2 rounded-lg text-sm shadow-md whitespace-nowrap"
+                className="bg-[#D4AF37] hover:bg-[#B89425] text-[#1B2A3A] px-4 py-2.5 rounded-lg font-bold text-sm flex items-center gap-1 whitespace-nowrap"
               >
 
                 <Lock className="w-4 h-4" />
 
-                <span>
-                  สำหรับพนักงาน
-                </span>
+                สำหรับพนักงาน
 
               </button>
 
@@ -1142,130 +1319,107 @@ export default function App() {
       </header>
 
 
-      {/* =====================================================
+      {/* ===================================================
           MAIN
-      ===================================================== */}
+      =================================================== */}
 
-      <main className="max-w-7xl mx-auto p-6">
+      <main className="max-w-7xl mx-auto p-5 md:p-6">
 
 
         {/* FIREBASE ERROR */}
 
         {firebaseError && (
 
-          <div className="mb-6 bg-red-50 border border-red-300 text-red-800 rounded-xl p-4 shadow-sm">
+          <div className="mb-6 bg-red-50 border border-red-300 text-red-700 rounded-xl p-4">
 
-            <div className="font-bold mb-1">
-              ⚠️ Firebase มีปัญหา
+            <div className="font-bold">
+              ⚠️ Firebase Error
             </div>
 
-            <div className="text-sm break-words">
+            <div className="text-sm whitespace-pre-line mt-1">
               {firebaseError}
             </div>
 
-            <div className="text-xs mt-2 text-red-600">
-              เปิด F12 → Console เพื่อดูรายละเอียดเพิ่มเติม
-            </div>
-
           </div>
 
         )}
 
 
-        {/* ===================================================
+        {/* =================================================
             STAFF DASHBOARD
-        =================================================== */}
+        ================================================= */}
 
         {isLoggedIn && (
 
-          <div className="mb-8 bg-white p-5 rounded-2xl border border-amber-200 shadow-sm">
+          <div className="mb-8 bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
 
-            <div className="flex items-center justify-between mb-4 border-b border-gray-100 pb-2">
+            <div className="flex items-center gap-2 mb-4">
 
-              <div className="flex items-center gap-2">
+              <LayoutDashboard className="w-5 h-5 text-[#D4AF37]" />
 
-                <LayoutDashboard className="w-5 h-5 text-[#D4AF37]" />
-
-                <h2 className="font-bold text-[#1B2A3A] text-lg">
-                  ภาพรวมระบบจัดการสินค้า
-                </h2>
-
-              </div>
-
-
-              <span className="text-xs bg-amber-100 text-amber-900 font-bold px-2.5 py-1 rounded-full border border-amber-200">
-                📍 สาขาหาดใหญ่
-              </span>
+              <h2 className="font-bold text-[#1B2A3A] text-lg">
+                ภาพรวมระบบจัดการสินค้า
+              </h2>
 
             </div>
 
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid md:grid-cols-3 gap-4">
 
 
-              <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl flex items-center justify-between">
+              <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 flex justify-between">
 
                 <div>
 
-                  <p className="text-xs text-blue-600 font-semibold mb-1">
-                    สินค้าทั้งหมดในร้าน
+                  <p className="text-xs text-blue-600 font-bold">
+                    สินค้าทั้งหมด
                   </p>
 
                   <p className="text-2xl font-black text-blue-900">
-                    {products.length} รายการ
+                    {products.length}
                   </p>
 
                 </div>
 
-                <Package className="w-8 h-8 text-blue-400" />
+                <Package className="text-blue-400" />
 
               </div>
 
 
-              <div className="bg-red-50 border border-red-100 p-4 rounded-xl flex items-center justify-between">
+              <div className="bg-red-50 border border-red-100 rounded-xl p-4 flex justify-between">
 
                 <div>
 
-                  <p className="text-xs text-red-600 font-semibold mb-1">
-                    สินค้าโปรโมชั่น
+                  <p className="text-xs text-red-600 font-bold">
+                    โปรโมชั่น
                   </p>
 
                   <p className="text-2xl font-black text-red-900">
-                    {
-                      products.filter(
-                        p => p.promoPrice
-                      ).length
-                    } รายการ
+                    {promotionCount}
                   </p>
 
                 </div>
 
-                <Tag className="w-8 h-8 text-red-400" />
+                <Tag className="text-red-400" />
 
               </div>
 
 
-              <div className="bg-green-50 border border-green-100 p-4 rounded-xl flex items-center justify-between">
+              <div className="bg-green-50 border border-green-100 rounded-xl p-4 flex justify-between">
 
                 <div>
 
-                  <p className="text-xs text-green-600 font-semibold mb-1">
-                    พร้อมส่ง/ตัวโชว์
+                  <p className="text-xs text-green-600 font-bold">
+                    พร้อมขาย
                   </p>
 
                   <p className="text-2xl font-black text-green-900">
-                    {
-                      products.filter(
-                        p =>
-                          p.status !==
-                          'สินค้าหมด'
-                      ).length
-                    } รายการ
+                    {stockCount}
                   </p>
 
                 </div>
 
-                <CheckCircle className="w-8 h-8 text-green-400" />
+                <CheckCircle2 className="text-green-400" />
 
               </div>
 
@@ -1276,94 +1430,98 @@ export default function App() {
         )}
 
 
-        {/* ===================================================
-            CATEGORIES
-        =================================================== */}
+        {/* =================================================
+            CATEGORY PAGE
+        ================================================= */}
 
         {!selectedCategory &&
-          !searchTerm && (
+          searchTerm === "" && (
 
-            <>
+          <>
 
-              <div className="mb-6">
+            <div className="mb-6">
 
-                <h2 className="text-xl font-bold text-[#1B2A3A] border-b-2 border-[#D4AF37] inline-block pb-1">
-                  หมวดหมู่สินค้าเฟอร์นิเจอร์
-                </h2>
+              <h2 className="text-xl font-bold text-[#1B2A3A] border-b-2 border-[#D4AF37] inline-block pb-1">
+                หมวดหมู่สินค้าเฟอร์นิเจอร์
+              </h2>
 
-                <p className="text-xs text-gray-500 mt-1">
-                  เลือกหมวดหมู่เพื่อดูสินค้า
-                  สาขาหาดใหญ่ (ถ.สามสิบเมตร)
-                </p>
+              <p className="text-xs text-gray-500 mt-1">
+                เลือกหมวดหมู่เพื่อดูสินค้า
+              </p>
 
-              </div>
-
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
-
-                {categories.map(
-                  (category) => {
-
-                    const Icon =
-                      category.icon;
+            </div>
 
 
-                    return (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
 
-                      <button
-                        key={category.name}
-                        onClick={() =>
-                          setSelectedCategory(
-                            category.name
-                          )
-                        }
-                        className="flex items-center gap-4 p-4 bg-white rounded-xl border border-amber-100 shadow-sm hover:shadow-md hover:border-[#D4AF37] transition-all group text-left"
-                      >
+              {categories.map(
+                (category) => {
 
-                        <div className="p-3 bg-[#F4E8C1] text-[#1B2A3A] rounded-lg group-hover:bg-[#1B2A3A] group-hover:text-[#D4AF37]">
-
-                          <Icon className="w-6 h-6" />
-
-                        </div>
+                  const Icon =
+                    category.icon;
 
 
-                        <span className="font-semibold text-gray-700">
-                          {category.name}
-                        </span>
+                  return (
 
-                      </button>
+                    <button
+                      key={
+                        category.name
+                      }
+                      onClick={() =>
+                        setSelectedCategory(
+                          category.name
+                        )
+                      }
+                      className="bg-white border border-amber-100 hover:border-[#D4AF37] hover:shadow-md rounded-xl p-4 flex items-center gap-4 text-left transition"
+                    >
 
-                    );
+                      <div className="p-3 bg-[#F4E8C1] text-[#1B2A3A] rounded-lg">
 
-                  }
-                )}
+                        <Icon className="w-6 h-6" />
 
-              </div>
-
-            </>
-
-          )}
+                      </div>
 
 
-        {/* ===================================================
-            PRODUCT LIST
-        =================================================== */}
+                      <span className="font-bold">
+                        {category.name}
+                      </span>
+
+                    </button>
+
+                  );
+
+                }
+              )}
+
+            </div>
+
+          </>
+
+        )}
+
+
+        {/* =================================================
+            PRODUCT PAGE
+        ================================================= */}
 
         {(selectedCategory ||
-          searchTerm) && (
+          searchTerm !== "") && (
 
           <div>
 
 
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
+            {/* BACK */}
 
+            <div className="flex justify-between items-center mb-4">
 
               <button
                 onClick={() => {
-                  setSelectedCategory(null);
-                  setSearchTerm('');
+
+                  setSelectedCategory("");
+                  setSearchTerm("");
+
                 }}
-                className="flex items-center gap-2 bg-white text-[#1B2A3A] border border-gray-300 px-4 py-2 rounded-lg text-sm font-semibold shadow-sm"
+                className="bg-white border border-gray-300 px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-bold"
               >
 
                 <ArrowLeft className="w-4 h-4" />
@@ -1375,10 +1533,9 @@ export default function App() {
 
               {selectedCategory && (
 
-                <span className="bg-amber-100 text-[#1B2A3A] font-semibold text-sm px-3 py-1 rounded-full border border-amber-200">
+                <span className="bg-amber-100 text-amber-900 px-3 py-1.5 rounded-full text-xs font-bold">
 
-                  หมวด:
-                  {' '}
+                  หมวด:{" "}
                   {selectedCategory}
 
                 </span>
@@ -1390,52 +1547,48 @@ export default function App() {
 
             {/* FILTER */}
 
-            <div className="bg-white p-3 rounded-xl border border-gray-200 shadow-sm mb-6 flex flex-wrap items-center justify-between gap-3">
+            <div className="bg-white border border-gray-200 rounded-xl p-3 mb-6 flex flex-wrap justify-between gap-3">
 
 
-              <div className="flex items-center gap-2 flex-wrap">
-
-                <span className="text-xs font-bold text-gray-500">
-                  ตัวกรองด่วน:
-                </span>
+              <div className="flex flex-wrap gap-2">
 
 
                 <button
                   onClick={() =>
-                    setFilterPromoOnly(
-                      !filterPromoOnly
+                    setPromoOnly(
+                      !promoOnly
                     )
                   }
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold ${
-                    filterPromoOnly
-                      ? 'bg-red-600 text-white'
-                      : 'bg-gray-100 text-gray-600'
+                  className={`px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1 ${
+                    promoOnly
+                      ? "bg-red-600 text-white"
+                      : "bg-gray-100 text-gray-600"
                   }`}
                 >
 
                   <Flame className="w-3.5 h-3.5" />
 
-                  🔥 ลดพิเศษเฉพาะโปร
+                  🔥 ลดพิเศษ
 
                 </button>
 
 
                 <button
                   onClick={() =>
-                    setFilterInStockOnly(
-                      !filterInStockOnly
+                    setStockOnly(
+                      !stockOnly
                     )
                   }
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold ${
-                    filterInStockOnly
-                      ? 'bg-green-600 text-white'
-                      : 'bg-gray-100 text-gray-600'
+                  className={`px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1 ${
+                    stockOnly
+                      ? "bg-green-600 text-white"
+                      : "bg-gray-100 text-gray-600"
                   }`}
                 >
 
                   <CheckCircle2 className="w-3.5 h-3.5" />
 
-                  📦 พร้อมส่ง/ตัวโชว์
+                  📦 พร้อมส่ง
 
                 </button>
 
@@ -1444,28 +1597,28 @@ export default function App() {
 
               <div className="flex items-center gap-2">
 
-                <ArrowUpDown className="w-3.5 h-3.5 text-gray-400" />
+                <ArrowUpDown className="w-4 h-4 text-gray-400" />
 
                 <select
-                  value={sortByPrice}
+                  value={sortPrice}
                   onChange={(event) =>
-                    setSortByPrice(
+                    setSortPrice(
                       event.target.value
                     )
                   }
-                  className="bg-gray-50 border border-gray-300 text-gray-700 text-xs font-semibold rounded-lg p-1.5"
+                  className="border border-gray-300 rounded-lg px-2 py-1.5 text-xs"
                 >
 
                   <option value="none">
                     เรียงตามมาตรฐาน
                   </option>
 
-                  <option value="asc">
-                    ราคา: ต่ำ → สูง
+                  <option value="low">
+                    ราคาต่ำ → สูง
                   </option>
 
-                  <option value="desc">
-                    ราคา: สูง → ต่ำ
+                  <option value="high">
+                    ราคาสูง → ต่ำ
                   </option>
 
                 </select>
@@ -1477,14 +1630,14 @@ export default function App() {
 
             {/* LOADING */}
 
-            {isLoading && (
+            {loading && (
 
-              <div className="text-center py-16 bg-white rounded-xl border border-gray-200">
+              <div className="bg-white rounded-xl p-16 text-center">
 
-                <div className="w-8 h-8 border-4 border-[#D4AF37] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+                <div className="w-10 h-10 border-4 border-[#D4AF37] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
 
-                <p className="text-gray-500 text-sm font-semibold">
-                  กำลังเชื่อมต่อฐานข้อมูล Firebase...
+                <p className="text-gray-500 font-bold">
+                  กำลังโหลดสินค้าจาก Firebase...
                 </p>
 
               </div>
@@ -1492,173 +1645,119 @@ export default function App() {
             )}
 
 
-            {/* PRODUCTS */}
+            {/* PRODUCT GRID */}
 
-            {!isLoading &&
+            {!loading &&
               filteredProducts.length >
                 0 && (
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
 
-                  {filteredProducts.map(
-                    (product) => (
+                {filteredProducts.map(
+                  (product) => (
 
-                      <div
-                        key={product.id}
-                        onClick={() =>
-                          setViewingProduct(
-                            product
-                          )
-                        }
-                        className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-xl transition-all relative group cursor-pointer flex flex-col justify-between"
-                      >
+                    <div
+                      key={product.id}
+                      onClick={() =>
+                        setViewingProduct(
+                          product
+                        )
+                      }
+                      className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-xl transition cursor-pointer"
+                    >
 
 
-                        {/* PROMO */}
+                      {/* IMAGE */}
+
+                      <div className="relative h-56 bg-gray-50 flex items-center justify-center p-2">
+
+                        {product.image ? (
+
+                          <img
+                            src={
+                              product.image
+                            }
+                            alt={
+                              product.name
+                            }
+                            className="w-full h-full object-contain"
+                          />
+
+                        ) : (
+
+                          <ImageIcon className="w-12 h-12 text-gray-300" />
+
+                        )}
+
 
                         {product.promoPrice && (
 
-                          <div className="absolute top-3 left-3 z-10 bg-red-600 text-white font-bold text-[11px] px-2.5 py-1 rounded-md shadow-md flex items-center gap-1">
+                          <div className="absolute top-3 left-3 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-md">
 
-                            <Tag className="w-3 h-3" />
-
-                            ลดพิเศษ
+                            🔥 ลดพิเศษ
 
                           </div>
 
                         )}
 
 
-                        {/* STAFF ACTIONS */}
+                        <button
+                          onClick={(event) =>
+                            handleShare(
+                              product,
+                              event
+                            )
+                          }
+                          className="absolute right-3 bottom-3 bg-[#06C755] text-white px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1"
+                        >
 
-                        {isLoggedIn && (
+                          <Share2 className="w-3.5 h-3.5" />
 
-                          <div className="absolute top-3 right-3 flex gap-1.5 z-20">
+                          แชร์
 
-                            <button
-                              onClick={(event) =>
-                                handleOpenEditModal(
-                                  product,
-                                  event
-                                )
-                              }
-                              className="bg-white/90 hover:bg-white text-gray-800 p-2 rounded-full shadow-lg border border-gray-200"
-                            >
+                        </button>
 
-                              <Edit className="w-4 h-4" />
-
-                            </button>
+                      </div>
 
 
-                            <button
-                              onClick={(event) =>
-                                handleDeleteProduct(
-                                  product.id,
-                                  event
-                                )
-                              }
-                              className="bg-white/90 hover:bg-white text-red-600 p-2 rounded-full shadow-lg border border-gray-200"
-                            >
+                      {/* PRODUCT INFO */}
 
-                              <Trash2 className="w-4 h-4" />
-
-                            </button>
-
-                          </div>
-
-                        )}
+                      <div className="p-4">
 
 
-                        {/* IMAGE */}
+                        <div className="flex justify-between gap-2">
 
-                        <div className="relative h-56 bg-slate-900/5 p-2 flex items-center justify-center overflow-hidden">
-
-                          {product.image ? (
-
-                            <img
-                              src={product.image}
-                              alt={product.name}
-                              className="w-full h-full object-contain group-hover:scale-105 transition-transform"
-                            />
-
-                          ) : (
-
-                            <ImageIcon className="w-12 h-12 text-gray-300" />
-
-                          )}
+                          <h3 className="font-bold text-gray-800">
+                            {product.name}
+                          </h3>
 
 
-                          <button
-                            onClick={(event) =>
-                              handleShareProduct(
-                                product,
-                                event
-                              )
-                            }
-                            className="absolute bottom-3 right-3 bg-[#06C755] hover:bg-[#05b34c] text-white px-2.5 py-1.5 rounded-full shadow-md flex items-center gap-1 z-10 text-xs font-bold"
-                          >
-
-                            <Share2 className="w-3.5 h-3.5" />
-
-                            แชร์
-
-                          </button>
+                          <span className="bg-gray-100 text-gray-500 px-2 py-0.5 rounded text-[10px] font-mono h-fit">
+                            {product.id}
+                          </span>
 
                         </div>
 
 
-                        {/* INFO */}
+                        {/* PRICE */}
 
-                        <div className="p-4">
+                        <div className="mt-2">
 
-                          <div className="flex items-start justify-between gap-2 mb-2">
+                          {product.promoPrice ? (
 
-                            <h3 className="font-bold text-gray-800 text-base line-clamp-1">
+                            <div className="flex items-center gap-2">
 
-                              {product.name}
+                              <span className="text-2xl font-black text-red-600">
 
-                            </h3>
+                                ฿
+                                {Number(
+                                  product.promoPrice
+                                ).toLocaleString()}
 
-
-                            <span className="bg-gray-100 text-gray-500 text-[10px] font-mono px-2 py-0.5 rounded shrink-0">
-
-                              {product.id}
-
-                            </span>
-
-                          </div>
+                              </span>
 
 
-                          <div className="mb-3 flex items-baseline gap-2">
-
-                            {product.promoPrice ? (
-
-                              <>
-
-                                <span className="text-2xl font-black text-red-600">
-
-                                  ฿
-                                  {Number(
-                                    product.promoPrice
-                                  ).toLocaleString()}
-
-                                </span>
-
-
-                                <span className="text-xs text-gray-400 line-through">
-
-                                  ฿
-                                  {Number(
-                                    product.price
-                                  ).toLocaleString()}
-
-                                </span>
-
-                              </>
-
-                            ) : (
-
-                              <span className="text-2xl font-black text-[#1D4ED8]">
+                              <span className="text-xs text-gray-400 line-through">
 
                                 ฿
                                 {Number(
@@ -1667,33 +1766,49 @@ export default function App() {
 
                               </span>
 
-                            )}
+                            </div>
+
+                          ) : (
+
+                            <span className="text-2xl font-black text-blue-700">
+
+                              ฿
+                              {Number(
+                                product.price ||
+                                0
+                              ).toLocaleString()}
+
+                            </span>
+
+                          )}
+
+                        </div>
+
+
+                        {/* DETAILS */}
+
+                        <div className="border-t mt-3 pt-3 space-y-2 text-xs text-gray-500">
+
+                          <div className="flex gap-2">
+
+                            <Box className="w-4 h-4" />
+
+                            ขนาด:
+                            {" "}
+                            {product.size ||
+                              "-"}
 
                           </div>
 
 
-                          <div className="space-y-1.5 text-xs text-gray-500 mb-4 border-t border-gray-100 pt-3">
+                          <div className="flex gap-2">
 
-                            <div className="flex items-center gap-2">
+                            <MapPin className="w-4 h-4 text-amber-600" />
 
-                              <Box className="w-3.5 h-3.5" />
-
-                              ขนาด:
-                              {' '}
-                              {product.size || '-'}
-
-                            </div>
-
-
-                            <div className="flex items-center gap-2">
-
-                              <MapPin className="w-3.5 h-3.5 text-amber-600" />
-
-                              วางหน้าร้าน:
-                              {' '}
-                              {product.location || '-'}
-
-                            </div>
+                            วางหน้าร้าน:
+                            {" "}
+                            {product.location ||
+                              "-"}
 
                           </div>
 
@@ -1702,74 +1817,117 @@ export default function App() {
 
                         {/* STATUS */}
 
-                        <div className="p-4 pt-0">
+                        <div
+                          className={`mt-4 rounded-lg py-2 text-center text-xs font-bold border ${
+                            product.status ===
+                            "สินค้าหมด"
+                              ? "bg-red-50 text-red-600 border-red-200"
+                              : "bg-green-50 text-green-700 border-green-200"
+                          }`}
+                        >
 
-                          <div
-                            className={`text-xs font-semibold py-1.5 px-3 rounded-lg flex items-center justify-center gap-1.5 border ${
-                              product.status ===
-                              'สินค้าหมด'
+                          <CheckCircle2 className="inline w-4 h-4 mr-1" />
 
-                                ? 'bg-red-50 text-red-600 border-red-200'
-
-                                : 'bg-green-50 text-green-700 border-green-200'
-                            }`}
-                          >
-
-                            <CheckCircle2 className="w-3.5 h-3.5" />
-
-                            {product.status}
-
-                          </div>
+                          {product.status ||
+                            "มีสินค้าพร้อมส่ง"}
 
                         </div>
 
+
+                        {/* STAFF BUTTONS */}
+
+                        {isLoggedIn && (
+
+                          <div className="flex gap-2 mt-3">
+
+                            <button
+                              onClick={(event) =>
+                                openEditProduct(
+                                  product,
+                                  event
+                                )
+                              }
+                              className="flex-1 bg-blue-50 hover:bg-blue-100 text-blue-700 py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1"
+                            >
+
+                              <Edit className="w-4 h-4" />
+
+                              แก้ไข
+
+                            </button>
+
+
+                            <button
+                              onClick={(event) =>
+                                handleDeleteProduct(
+                                  product,
+                                  event
+                                )
+                              }
+                              className="flex-1 bg-red-50 hover:bg-red-100 text-red-600 py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1"
+                            >
+
+                              <Trash2 className="w-4 h-4" />
+
+                              ลบ
+
+                            </button>
+
+                          </div>
+
+                        )}
+
                       </div>
 
-                    )
-                  )}
+                    </div>
 
-                </div>
+                  )
+                )}
 
-              )}
+              </div>
+
+            )}
 
 
             {/* EMPTY */}
 
-            {!isLoading &&
+            {!loading &&
               filteredProducts.length ===
                 0 && (
 
-                <div className="text-center py-16 bg-white rounded-xl border border-dashed border-gray-300">
+              <div className="bg-white border border-dashed border-gray-300 rounded-xl p-16 text-center">
 
-                  <Package className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                <Package className="w-14 h-14 text-gray-300 mx-auto mb-4" />
 
-                  <p className="text-gray-500 font-semibold">
-                    ยังไม่มีสินค้าในหมวดหมู่นี้
-                  </p>
+                <h3 className="font-bold text-gray-600">
+                  ไม่พบสินค้า
+                </h3>
 
-                  <p className="text-xs text-gray-400 mt-1">
-                    สินค้าที่เพิ่มผ่านระบบจะปรากฏที่นี่
-                  </p>
+                <p className="text-xs text-gray-400 mt-1">
+                  ยังไม่มีสินค้าในหมวดหมู่นี้
+                </p>
 
 
-                  {isLoggedIn && (
+                {isLoggedIn && (
 
-                    <button
-                      onClick={
-                        handleOpenAddModal
-                      }
-                      className="mt-4 bg-[#1B2A3A] text-[#D4AF37] px-4 py-2 rounded-lg text-xs font-bold"
-                    >
+                  <button
+                    onClick={
+                      openAddProduct
+                    }
+                    className="mt-5 bg-[#1B2A3A] text-[#D4AF37] px-5 py-2.5 rounded-lg text-sm font-bold"
+                  >
 
-                      + เพิ่มสินค้าแรกในระบบ
+                    <Plus className="inline w-4 h-4 mr-1" />
 
-                    </button>
+                    เพิ่มสินค้า
 
-                  )}
+                  </button>
 
-                </div>
+                )}
 
-              )}
+              </div>
+
+            )}
 
           </div>
 
@@ -1778,314 +1936,22 @@ export default function App() {
       </main>
 
 
-      {/* =====================================================
-          PRODUCT DETAIL MODAL
-      ===================================================== */}
-
-      {viewingProduct && (
-
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-
-          <div className="bg-white rounded-2xl max-w-2xl w-full shadow-2xl overflow-hidden relative max-h-[90vh] flex flex-col">
-
-
-            <button
-              onClick={() =>
-                setViewingProduct(null)
-              }
-              className="absolute top-3 right-3 bg-white/90 text-gray-700 p-2 rounded-full z-20 shadow-md"
-            >
-
-              <X className="w-5 h-5" />
-
-            </button>
-
-
-            <div className="overflow-y-auto">
-
-
-              {/* IMAGE */}
-
-              <div className="w-full bg-slate-900/5 relative flex items-center justify-center p-3 min-h-[260px] max-h-[420px]">
-
-                {viewingProduct.image ? (
-
-                  <img
-                    src={
-                      viewingProduct.image
-                    }
-                    alt={
-                      viewingProduct.name
-                    }
-                    className="w-full h-full max-h-[380px] object-contain rounded-xl"
-                  />
-
-                ) : (
-
-                  <ImageIcon className="w-16 h-16 text-gray-300" />
-
-                )}
-
-              </div>
-
-
-              <div className="p-6">
-
-
-                <div className="flex justify-between items-start mb-2">
-
-                  <div>
-
-                    <span className="text-xs font-semibold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-md border border-amber-200 inline-block">
-
-                      {
-                        viewingProduct.category
-                      }
-
-                    </span>
-
-
-                    <h2 className="text-2xl font-bold text-gray-800 mt-2">
-
-                      {
-                        viewingProduct.name
-                      }
-
-                    </h2>
-
-                  </div>
-
-
-                  <span className="text-xs font-mono bg-gray-100 text-gray-500 px-2 py-1 rounded">
-
-                    {
-                      viewingProduct.id
-                    }
-
-                  </span>
-
-                </div>
-
-
-                {/* PRICE */}
-
-                <div className="mb-4 flex items-baseline gap-3">
-
-                  {viewingProduct.promoPrice ? (
-
-                    <>
-
-                      <span className="text-3xl font-black text-red-600">
-
-                        ฿
-                        {Number(
-                          viewingProduct.promoPrice
-                        ).toLocaleString()}
-
-                      </span>
-
-
-                      <span className="text-sm text-gray-400 line-through">
-
-                        ปกติ ฿
-                        {Number(
-                          viewingProduct.price
-                        ).toLocaleString()}
-
-                      </span>
-
-                    </>
-
-                  ) : (
-
-                    <span className="text-3xl font-black text-[#1D4ED8]">
-
-                      ฿
-                      {Number(
-                        viewingProduct.price
-                      ).toLocaleString()}
-
-                    </span>
-
-                  )}
-
-                </div>
-
-
-                {/* DESCRIPTION */}
-
-                {viewingProduct.description && (
-
-                  <p className="text-gray-600 text-sm mb-6 leading-relaxed bg-gray-50 p-3.5 rounded-xl">
-
-                    {
-                      viewingProduct.description
-                    }
-
-                  </p>
-
-                )}
-
-
-                {/* DETAILS */}
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6 text-sm text-gray-600">
-
-
-                  <div className="p-3 bg-gray-50 rounded-lg flex items-center gap-2">
-
-                    <Box className="w-4 h-4" />
-
-                    <span>
-
-                      <strong>
-                        ขนาด:
-                      </strong>
-
-                      {' '}
-
-                      {
-                        viewingProduct.size ||
-                        '-'
-                      }
-
-                    </span>
-
-                  </div>
-
-
-                  <div className="p-3 bg-gray-50 rounded-lg flex items-center gap-2">
-
-                    <CheckCircle2 className="w-4 h-4 text-green-600" />
-
-                    <span>
-
-                      <strong>
-                        สถานะ:
-                      </strong>
-
-                      {' '}
-
-                      {
-                        viewingProduct.status
-                      }
-
-                    </span>
-
-                  </div>
-
-
-                  <div className="p-3 bg-amber-50 rounded-lg flex items-center gap-2 col-span-1 sm:col-span-2 border border-amber-200">
-
-                    <MapPin className="w-4 h-4 text-amber-600" />
-
-                    <span className="text-amber-900">
-
-                      <strong>
-                        สถานที่ตั้ง:
-                      </strong>
-
-                      {' '}
-                      สาขาหาดใหญ่
-                      {' '}
-                      -
-                      {' '}
-                      โซนวาง:
-                      {' '}
-
-                      {
-                        viewingProduct.location ||
-                        '-'
-                      }
-
-                    </span>
-
-                  </div>
-
-                </div>
-
-
-                {/* LINE */}
-
-                <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-3.5 mb-4 text-emerald-900 text-xs leading-relaxed flex items-start gap-3">
-
-                  <div className="p-2 bg-emerald-500 text-white rounded-xl">
-
-                    <MessageCircle className="w-4 h-4" />
-
-                  </div>
-
-
-                  <div>
-
-                    <p className="font-bold text-emerald-800 text-sm mb-1">
-
-                      สนใจสั่งซื้อ หรือ สอบถามสินค้านี้?
-
-                    </p>
-
-                    <p className="text-emerald-700">
-
-                      ท่านสามารถ
-                      {' '}
-                      <strong>
-                        แคปภาพหน้าจอนี้
-                      </strong>
-                      {' '}
-                      <Camera className="w-3.5 h-3.5 inline" />
-                      {' '}
-                      หรือกดปุ่มสีเขียวด้านล่างเพื่อส่งข้อมูลแจ้งพนักงานใน LINE
-
-                    </p>
-
-                  </div>
-
-                </div>
-
-
-                <button
-                  onClick={() =>
-                    handleShareProduct(
-                      viewingProduct
-                    )
-                  }
-                  className="w-full bg-[#06C755] hover:bg-[#05b34c] text-white py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 shadow-md"
-                >
-
-                  <Share2 className="w-5 h-5" />
-
-                  แชร์สินค้าลง LINE เพื่อส่งให้พนักงาน
-
-                </button>
-
-
-              </div>
-
-            </div>
-
-          </div>
-
-        </div>
-
-      )}
-
-
-      {/* =====================================================
+      {/* ===================================================
           LOGIN MODAL
-      ===================================================== */}
+      =================================================== */}
 
-      {isLoginModalOpen && (
+      {showLoginModal && (
 
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
 
-          <div className="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl relative">
+          <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl p-6 relative">
 
 
             <button
               onClick={() =>
-                setIsLoginModalOpen(false)
+                setShowLoginModal(false)
               }
-              className="absolute top-4 right-4 text-gray-400"
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-700"
             >
 
               <X className="w-5 h-5" />
@@ -2095,57 +1961,48 @@ export default function App() {
 
             <div className="text-center mb-6">
 
-              <div className="w-12 h-12 bg-[#1B2A3A] text-[#D4AF37] rounded-full flex items-center justify-center mx-auto mb-3">
+              <div className="w-14 h-14 rounded-full bg-[#1B2A3A] text-[#D4AF37] flex items-center justify-center mx-auto mb-3">
 
-                <Phone className="w-6 h-6" />
+                <Lock className="w-6 h-6" />
 
               </div>
 
 
-              <h3 className="text-lg font-bold text-[#1B2A3A]">
-
+              <h2 className="font-bold text-lg text-[#1B2A3A]">
                 เข้าสู่ระบบพนักงาน
-
-              </h3>
+              </h2>
 
 
               <p className="text-xs text-gray-500 mt-1">
-
-                สาขาหาดใหญ่ (ถนนสามสิบเมตร)
-
+                ราชาเฟอร์นิเจอร์
               </p>
 
             </div>
 
 
             <form
-              onSubmit={
-                handleLoginSubmit
-              }
+              onSubmit={handleLogin}
               className="space-y-4"
             >
 
               <div>
 
-                <label className="block text-xs font-semibold text-gray-600 mb-1">
-
-                  กรอกเบอร์โทรศัพท์พนักงาน
-
+                <label className="text-xs font-bold text-gray-600">
+                  เบอร์โทรศัพท์
                 </label>
 
 
                 <input
                   type="tel"
-                  maxLength={10}
-                  placeholder="กรอกเบอร์โทรศัพท์"
-                  value={phoneInput}
+                  maxLength="10"
+                  value={phone}
                   onChange={(event) =>
-                    setPhoneInput(
+                    setPhone(
                       event.target.value
                     )
                   }
-                  className="w-full text-center text-[#1B2A3A] text-lg font-bold border-2 border-gray-300 rounded-xl py-2.5 outline-none"
-                  autoFocus
+                  placeholder="กรอกเบอร์โทรศัพท์"
+                  className="w-full border border-gray-300 rounded-xl px-4 py-3 mt-1 text-center text-lg font-bold outline-none focus:ring-2 focus:ring-[#D4AF37]"
                   required
                 />
 
@@ -2154,18 +2011,18 @@ export default function App() {
 
               {loginError && (
 
-                <p className="text-xs text-red-600 font-semibold text-center bg-red-50 py-1.5 rounded-lg border border-red-200">
+                <div className="bg-red-50 text-red-600 border border-red-200 rounded-lg p-2 text-xs text-center font-bold">
 
                   {loginError}
 
-                </p>
+                </div>
 
               )}
 
 
               <button
                 type="submit"
-                className="w-full bg-[#1B2A3A] text-[#D4AF37] font-bold py-3 rounded-xl shadow-md"
+                className="w-full bg-[#1B2A3A] text-[#D4AF37] py-3 rounded-xl font-bold"
               >
 
                 เข้าสู่ระบบ
@@ -2181,49 +2038,44 @@ export default function App() {
       )}
 
 
-      {/* =====================================================
+      {/* ===================================================
           ADD / EDIT PRODUCT MODAL
-      ===================================================== */}
+      =================================================== */}
 
-      {(isAddModalOpen ||
-        editingProduct) && (
+      {showProductModal && (
 
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
 
-          <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl flex flex-col max-h-[90vh]">
+          <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
 
 
-            <div className="p-4 border-b flex justify-between items-center bg-[#1B2A3A] text-white rounded-t-2xl">
+            {/* MODAL HEADER */}
+
+            <div className="bg-[#1B2A3A] text-white px-5 py-4 flex justify-between items-center">
 
               <div>
 
-                <h3 className="font-bold text-base text-[#D4AF37]">
+                <h2 className="font-bold text-[#D4AF37]">
 
                   {editingProduct
-                    ? 'แก้ไขข้อมูลสินค้า / โปรโมชั่น'
-                    : 'เพิ่มสินค้าใหม่'}
+                    ? "แก้ไขสินค้า"
+                    : "เพิ่มสินค้าใหม่"}
 
-                </h3>
+                </h2>
 
 
                 <p className="text-[10px] text-gray-300">
-
                   สาขาหาดใหญ่ (ถ.สามสิบเมตร)
-
                 </p>
 
               </div>
 
 
               <button
-                onClick={() => {
-
-                  setIsAddModalOpen(false);
-
-                  setEditingProduct(null);
-
-                }}
-                className="text-gray-300"
+                onClick={
+                  closeProductModal
+                }
+                className="text-gray-300 hover:text-white"
               >
 
                 <X className="w-5 h-5" />
@@ -2233,9 +2085,13 @@ export default function App() {
             </div>
 
 
+            {/* FORM */}
+
             <form
-              onSubmit={handleSubmit}
-              className="p-6 overflow-y-auto space-y-4 text-sm"
+              onSubmit={
+                handleSaveProduct
+              }
+              className="p-5 overflow-y-auto space-y-4"
             >
 
 
@@ -2243,30 +2099,32 @@ export default function App() {
 
               <div>
 
-                <label className="block text-xs font-semibold text-gray-600 mb-1">
+                <label className="block text-xs font-bold text-gray-600 mb-1">
 
-                  รหัสสินค้า (ID)
+                  รหัสสินค้า
 
                 </label>
 
 
                 <input
                   type="text"
-                  value={formData.id}
+                  value={
+                    formData.id
+                  }
                   onChange={(event) =>
                     setFormData({
                       ...formData,
-                      id: event.target.value
+                      id:
+                        event.target.value,
                     })
                   }
-                  placeholder="เช่น P001"
-                  required
                   disabled={
                     Boolean(
                       editingProduct
                     )
                   }
-                  className="w-full bg-gray-50 border border-gray-300 rounded-xl px-3 py-2 text-gray-800"
+                  placeholder="เช่น P001"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 bg-gray-50"
                 />
 
               </div>
@@ -2276,25 +2134,28 @@ export default function App() {
 
               <div>
 
-                <label className="block text-xs font-semibold text-gray-600 mb-1">
+                <label className="block text-xs font-bold text-gray-600 mb-1">
 
-                  ชื่อสินค้า
+                  ชื่อสินค้า *
 
                 </label>
 
 
                 <input
                   type="text"
-                  value={formData.name}
+                  value={
+                    formData.name
+                  }
                   onChange={(event) =>
                     setFormData({
                       ...formData,
-                      name: event.target.value
+                      name:
+                        event.target.value,
                     })
                   }
-                  placeholder="ชื่อเฟอร์นิเจอร์"
+                  placeholder="เช่น เตียงนอน 5 ฟุต"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5"
                   required
-                  className="w-full bg-gray-50 border border-gray-300 rounded-xl px-3 py-2 text-gray-800"
                 />
 
               </div>
@@ -2304,7 +2165,7 @@ export default function App() {
 
               <div>
 
-                <label className="block text-xs font-semibold text-gray-600 mb-1">
+                <label className="block text-xs font-bold text-gray-600 mb-1">
 
                   หมวดหมู่
 
@@ -2319,10 +2180,10 @@ export default function App() {
                     setFormData({
                       ...formData,
                       category:
-                        event.target.value
+                        event.target.value,
                     })
                   }
-                  className="w-full bg-gray-50 border border-gray-300 rounded-xl px-3 py-2 text-gray-800"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5"
                 >
 
                   {categories.map(
@@ -2358,9 +2219,9 @@ export default function App() {
 
                 <div>
 
-                  <label className="block text-xs font-semibold text-gray-600 mb-1">
+                  <label className="block text-xs font-bold text-gray-600 mb-1">
 
-                    ราคาปกติ (บาท)
+                    ราคาปกติ (บาท) *
 
                   </label>
 
@@ -2375,12 +2236,12 @@ export default function App() {
                       setFormData({
                         ...formData,
                         price:
-                          event.target.value
+                          event.target.value,
                       })
                     }
-                    placeholder="0"
+                    placeholder="16900"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5"
                     required
-                    className="w-full bg-gray-50 border border-gray-300 rounded-xl px-3 py-2 text-gray-800"
                   />
 
                 </div>
@@ -2388,7 +2249,7 @@ export default function App() {
 
                 <div>
 
-                  <label className="block text-xs font-semibold text-gray-600 mb-1">
+                  <label className="block text-xs font-bold text-gray-600 mb-1">
 
                     ราคาโปรโมชั่น
 
@@ -2405,11 +2266,11 @@ export default function App() {
                       setFormData({
                         ...formData,
                         promoPrice:
-                          event.target.value
+                          event.target.value,
                       })
                     }
                     placeholder="ถ้าไม่มีให้เว้นว่าง"
-                    className="w-full bg-gray-50 border border-gray-300 rounded-xl px-3 py-2 text-gray-800"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5"
                   />
 
                 </div>
@@ -2417,14 +2278,14 @@ export default function App() {
               </div>
 
 
-              {/* SIZE + STATUS */}
+              {/* SIZE / STATUS */}
 
               <div className="grid grid-cols-2 gap-3">
 
 
                 <div>
 
-                  <label className="block text-xs font-semibold text-gray-600 mb-1">
+                  <label className="block text-xs font-bold text-gray-600 mb-1">
 
                     ขนาด
 
@@ -2440,11 +2301,11 @@ export default function App() {
                       setFormData({
                         ...formData,
                         size:
-                          event.target.value
+                          event.target.value,
                       })
                     }
-                    placeholder="เช่น 6 ฟุต"
-                    className="w-full bg-gray-50 border border-gray-300 rounded-xl px-3 py-2 text-gray-800"
+                    placeholder="เช่น 5 ฟุต"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5"
                   />
 
                 </div>
@@ -2452,7 +2313,7 @@ export default function App() {
 
                 <div>
 
-                  <label className="block text-xs font-semibold text-gray-600 mb-1">
+                  <label className="block text-xs font-bold text-gray-600 mb-1">
 
                     สถานะสินค้า
 
@@ -2467,10 +2328,10 @@ export default function App() {
                       setFormData({
                         ...formData,
                         status:
-                          event.target.value
+                          event.target.value,
                       })
                     }
-                    className="w-full bg-gray-50 border border-gray-300 rounded-xl px-3 py-2 text-gray-800"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5"
                   >
 
                     <option value="มีสินค้าพร้อมส่ง">
@@ -2496,7 +2357,7 @@ export default function App() {
 
               <div>
 
-                <label className="block text-xs font-semibold text-gray-600 mb-1">
+                <label className="block text-xs font-bold text-gray-600 mb-1">
 
                   โซนวางหน้าร้าน
 
@@ -2512,11 +2373,11 @@ export default function App() {
                     setFormData({
                       ...formData,
                       location:
-                        event.target.value
+                        event.target.value,
                     })
                   }
-                  placeholder="เช่น โซน A ชั้น 1"
-                  className="w-full bg-gray-50 border border-gray-300 rounded-xl px-3 py-2 text-gray-800"
+                  placeholder="เช่น 6 - 1"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5"
                 />
 
               </div>
@@ -2526,28 +2387,21 @@ export default function App() {
 
               <div>
 
-                <label className="block text-xs font-semibold text-gray-600 mb-1">
+                <label className="block text-xs font-bold text-gray-600 mb-1">
 
                   รูปภาพสินค้า
 
                 </label>
 
 
-                <div className="flex items-center gap-3">
+                <div className="flex gap-3 items-center">
 
 
-                  <label className="flex-1 cursor-pointer bg-gray-50 border border-dashed border-gray-300 rounded-xl p-3 text-center text-xs text-gray-600 flex items-center justify-center gap-2">
+                  <label className="flex-1 border border-dashed border-gray-300 rounded-lg p-3 cursor-pointer bg-gray-50 hover:bg-gray-100 flex justify-center items-center gap-2 text-xs font-bold text-gray-600">
 
                     <Upload className="w-4 h-4" />
 
-                    <span>
-
-                      {formData.image
-                        ? 'เปลี่ยนรูปภาพ'
-                        : 'อัปโหลดรูปภาพ'}
-
-                    </span>
-
+                    เปลี่ยนรูปภาพ
 
                     <input
                       type="file"
@@ -2563,21 +2417,22 @@ export default function App() {
 
                   {formData.image && (
 
-                    <div className="w-12 h-12 rounded-lg border overflow-hidden shrink-0">
-
-                      <img
-                        src={
-                          formData.image
-                        }
-                        alt="Preview"
-                        className="w-full h-full object-cover"
-                      />
-
-                    </div>
+                    <img
+                      src={
+                        formData.image
+                      }
+                      alt="Preview"
+                      className="w-14 h-14 object-cover rounded-lg border"
+                    />
 
                   )}
 
                 </div>
+
+
+                <p className="text-[10px] text-gray-400 mt-1">
+                  แนะนำรูปไม่เกิน 2 MB
+                </p>
 
               </div>
 
@@ -2586,7 +2441,7 @@ export default function App() {
 
               <div>
 
-                <label className="block text-xs font-semibold text-gray-600 mb-1">
+                <label className="block text-xs font-bold text-gray-600 mb-1">
 
                   รายละเอียดเพิ่มเติม
 
@@ -2594,6 +2449,7 @@ export default function App() {
 
 
                 <textarea
+                  rows="3"
                   value={
                     formData.description
                   }
@@ -2601,31 +2457,26 @@ export default function App() {
                     setFormData({
                       ...formData,
                       description:
-                        event.target.value
+                        event.target.value,
                     })
                   }
-                  rows="3"
-                  placeholder="วัสดุ, คุณสมบัติพิเศษ ฯลฯ"
-                  className="w-full bg-gray-50 border border-gray-300 rounded-xl px-3 py-2 text-gray-800"
+                  placeholder="วัสดุ คุณสมบัติพิเศษ ฯลฯ"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 resize-none"
                 />
 
               </div>
 
 
-              {/* BUTTONS */}
+              {/* BUTTON */}
 
-              <div className="pt-2 flex gap-3">
+              <div className="flex gap-3 pt-2">
 
 
                 <button
                   type="button"
-                  onClick={() => {
-
-                    setIsAddModalOpen(false);
-
-                    setEditingProduct(null);
-
-                  }}
+                  onClick={
+                    closeProductModal
+                  }
                   className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 rounded-xl font-bold"
                 >
 
@@ -2636,18 +2487,286 @@ export default function App() {
 
                 <button
                   type="submit"
-                  className="flex-1 bg-[#1B2A3A] hover:bg-[#111B25] text-[#D4AF37] py-3 rounded-xl font-bold shadow-md"
+                  className="flex-1 bg-[#1B2A3A] hover:bg-[#111B25] text-[#D4AF37] py-3 rounded-xl font-bold"
                 >
 
                   {editingProduct
-                    ? 'บันทึกการแก้ไข'
-                    : 'บันทึกข้อมูล'}
+                    ? "บันทึกการแก้ไข"
+                    : "บันทึกข้อมูล"}
 
                 </button>
 
               </div>
 
             </form>
+
+          </div>
+
+        </div>
+
+      )}
+
+
+      {/* ===================================================
+          PRODUCT DETAIL
+      =================================================== */}
+
+      {viewingProduct && (
+
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+
+          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto relative shadow-2xl">
+
+
+            <button
+              onClick={() =>
+                setViewingProduct(
+                  null
+                )
+              }
+              className="absolute top-4 right-4 z-10 bg-white rounded-full p-2 shadow"
+            >
+
+              <X className="w-5 h-5" />
+
+            </button>
+
+
+            {/* IMAGE */}
+
+            <div className="bg-gray-50 min-h-[280px] flex items-center justify-center p-5">
+
+              {viewingProduct.image ? (
+
+                <img
+                  src={
+                    viewingProduct.image
+                  }
+                  alt={
+                    viewingProduct.name
+                  }
+                  className="max-h-[400px] max-w-full object-contain"
+                />
+
+              ) : (
+
+                <ImageIcon className="w-16 h-16 text-gray-300" />
+
+              )}
+
+            </div>
+
+
+            <div className="p-6">
+
+
+              <span className="text-xs bg-amber-100 text-amber-800 px-2.5 py-1 rounded-md font-bold">
+
+                {
+                  viewingProduct.category
+                }
+
+              </span>
+
+
+              <div className="flex justify-between gap-3 mt-3">
+
+                <h2 className="text-2xl font-black">
+                  {
+                    viewingProduct.name
+                  }
+                </h2>
+
+
+                <span className="text-xs bg-gray-100 h-fit px-2 py-1 rounded font-mono">
+                  {
+                    viewingProduct.id
+                  }
+                </span>
+
+              </div>
+
+
+              {/* PRICE */}
+
+              <div className="mt-3 mb-5">
+
+                {viewingProduct.promoPrice ? (
+
+                  <div className="flex items-center gap-3">
+
+                    <span className="text-3xl font-black text-red-600">
+
+                      ฿
+                      {Number(
+                        viewingProduct.promoPrice
+                      ).toLocaleString()}
+
+                    </span>
+
+
+                    <span className="text-sm text-gray-400 line-through">
+
+                      ฿
+                      {Number(
+                        viewingProduct.price
+                      ).toLocaleString()}
+
+                    </span>
+
+                  </div>
+
+                ) : (
+
+                  <span className="text-3xl font-black text-blue-700">
+
+                    ฿
+                    {Number(
+                      viewingProduct.price ||
+                      0
+                    ).toLocaleString()}
+
+                  </span>
+
+                )}
+
+              </div>
+
+
+              {/* INFO */}
+
+              <div className="grid sm:grid-cols-2 gap-3">
+
+
+                <div className="bg-gray-50 rounded-lg p-3 text-sm">
+
+                  <Box className="inline w-4 h-4 mr-2" />
+
+                  ขนาด:
+                  {" "}
+                  {viewingProduct.size ||
+                    "-"}
+
+                </div>
+
+
+                <div className="bg-gray-50 rounded-lg p-3 text-sm">
+
+                  <CheckCircle2 className="inline w-4 h-4 mr-2 text-green-600" />
+
+                  สถานะ:
+                  {" "}
+                  {
+                    viewingProduct.status
+                  }
+
+                </div>
+
+
+                <div className="sm:col-span-2 bg-amber-50 rounded-lg p-3 text-sm">
+
+                  <MapPin className="inline w-4 h-4 mr-2 text-amber-600" />
+
+                  โซนวางหน้าร้าน:
+                  {" "}
+                  {
+                    viewingProduct.location ||
+                    "-"
+                  }
+
+                </div>
+
+              </div>
+
+
+              {/* DESCRIPTION */}
+
+              {viewingProduct.description && (
+
+                <div className="mt-4 bg-gray-50 rounded-lg p-4 text-sm text-gray-600">
+
+                  {
+                    viewingProduct.description
+                  }
+
+                </div>
+
+              )}
+
+
+              {/* LINE */}
+
+              <div className="mt-5 bg-green-50 border border-green-200 rounded-xl p-4">
+
+                <div className="flex gap-3">
+
+                  <MessageCircle className="text-green-600 w-5 h-5 shrink-0" />
+
+                  <div>
+
+                    <p className="font-bold text-green-800 text-sm">
+                      สนใจสินค้านี้?
+                    </p>
+
+                    <p className="text-xs text-green-700 mt-1">
+
+                      แคปหน้าจอสินค้า
+                      <Camera className="inline w-3.5 h-3.5 mx-1" />
+                      หรือแชร์ข้อมูลให้พนักงาน
+
+                    </p>
+
+                  </div>
+
+                </div>
+
+              </div>
+
+
+              <button
+                onClick={() =>
+                  handleShare(
+                    viewingProduct
+                  )
+                }
+                className="w-full mt-4 bg-[#06C755] hover:bg-[#05B34C] text-white py-3.5 rounded-xl font-bold flex items-center justify-center gap-2"
+              >
+
+                <Share2 className="w-5 h-5" />
+
+                แชร์สินค้าลง LINE
+
+              </button>
+
+
+              {/* STAFF EDIT */}
+
+              {isLoggedIn && (
+
+                <button
+                  onClick={() => {
+
+                    setViewingProduct(
+                      null
+                    );
+
+                    openEditProduct(
+                      viewingProduct
+                    );
+
+                  }}
+                  className="w-full mt-3 bg-blue-50 text-blue-700 py-3 rounded-xl font-bold"
+                >
+
+                  <Edit className="inline w-4 h-4 mr-1" />
+
+                  แก้ไขสินค้า
+
+                </button>
+
+              )}
+
+            </div>
 
           </div>
 
