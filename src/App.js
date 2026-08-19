@@ -41,6 +41,7 @@ import {
   Filter,
   Bookmark,
   AlertCircle,
+  Phone,
 } from "lucide-react";
 
 
@@ -55,7 +56,9 @@ export default function App() {
   ======================================================= */
 
   const PRODUCTS_COLLECTION = "products";
-  const STAFF_PHONE = "0822810874";
+  
+  // รหัสผ่านเข้าสู่ระบบพนักงาน
+  const STORE_PASSWORD = "1234";
 
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -77,6 +80,9 @@ export default function App() {
 
   const [sortPrice, setSortPrice] = useState("none");
 
+  // ตัวกรองขนาดย่อยสำหรับห้องนอนและห้องอาหาร
+  const [subFilterSize, setSubFilterSize] = useState("ทั้งหมด");
+
 
   /* =======================================================
      LOGIN
@@ -85,7 +91,7 @@ export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
 
-  const [phone, setPhone] = useState("");
+  const [passwordInput, setPasswordInput] = useState("");
   const [loginError, setLoginError] = useState("");
 
 
@@ -222,14 +228,14 @@ export default function App() {
 
   const handleLogin = (event) => {
     event.preventDefault();
-    if (phone === STAFF_PHONE) {
+    if (passwordInput === STORE_PASSWORD) {
       setIsLoggedIn(true);
       setShowLoginModal(false);
-      setPhone("");
+      setPasswordInput("");
       setLoginError("");
       showToast("เข้าสู่ระบบพนักงานสำเร็จ");
     } else {
-      setLoginError("เบอร์โทรศัพท์ไม่ถูกต้อง");
+      setLoginError("รหัสผ่านไม่ถูกต้อง");
     }
   };
 
@@ -466,7 +472,7 @@ export default function App() {
 
 
   /* =======================================================
-     IMAGE BADGE (ป้ายเด่นบนรูปภาพ)
+     IMAGE BADGE
   ======================================================= */
 
   const renderImageBadge = (status) => {
@@ -500,7 +506,7 @@ export default function App() {
 
 
   /* =======================================================
-     BOTTOM BADGE (ป้ายสถานะด้านล่างแบบปรับสีให้เข้มขึ้น)
+     BOTTOM BADGE
   ======================================================= */
 
   const renderBottomBadge = (status) => {
@@ -556,7 +562,17 @@ export default function App() {
       const minMatch = minPrice === "" || actualPrice >= Number(minPrice);
       const maxMatch = maxPrice === "" || actualPrice <= Number(maxPrice);
 
-      return categoryMatch && searchMatch && promoMatch && stockMatch && minMatch && maxMatch;
+      // ตัวกรองย่อยขนาดสำหรับห้องนอน และที่นั่งสำหรับห้องอาหาร
+      let subFilterMatch = true;
+      if (selectedCategory === "ห้องนอน" && subFilterSize !== "ทั้งหมด") {
+        const sizeStr = String(product.size || "") + String(product.name || "");
+        subFilterMatch = sizeStr.includes(subFilterSize);
+      } else if (selectedCategory === "ห้องอาหาร/ห้องครัว" && subFilterSize !== "ทั้งหมด") {
+        const sizeStr = String(product.size || "") + String(product.name || "") + String(product.description || "");
+        subFilterMatch = sizeStr.includes(subFilterSize);
+      }
+
+      return categoryMatch && searchMatch && promoMatch && stockMatch && minMatch && maxMatch && subFilterMatch;
     })
     .sort((a, b) => {
       const priceA = Number(a.promoPrice || a.price || 0);
@@ -593,6 +609,7 @@ export default function App() {
             onClick={() => {
               setSelectedCategory("");
               setSearchTerm("");
+              setSubFilterSize("ทั้งหมด");
             }}
           >
             <div className="text-[#D4AF37]">
@@ -611,10 +628,15 @@ export default function App() {
                   {isLoggedIn ? "โหมดพนักงาน" : "แคตตาล็อกออนไลน์"}
                 </span>
               </div>
-              <div className="flex items-center gap-1 text-xs text-[#D4AF37]">
-                <MapPin className="w-3 h-3" /> สาขาหาดใหญ่ (ถ.สามสิบเมตร) 
-                 <h3> โทร.074-244665 , 086-4906582</h3>          
-
+              
+              {/* ปรับปรุง: เว้นบรรทัดเบอร์โทรศัพท์ลงมาจากสาขา */}
+              <div className="flex flex-col text-xs text-[#D4AF37] mt-0.5 space-y-0.5">
+                <div className="flex items-center gap-1">
+                  <MapPin className="w-3 h-3 shrink-0" /> สาขาหาดใหญ่ (ถ.สามสิบเมตร)
+                </div>
+                <div className="flex items-center gap-1 font-sans">
+                  <Phone className="w-3 h-3 shrink-0" /> โทร. 074-244665 , 086-4906582
+                </div>
               </div>
             </div>
           </div>
@@ -716,7 +738,10 @@ export default function App() {
                 return (
                   <button
                     key={category.name}
-                    onClick={() => setSelectedCategory(category.name)}
+                    onClick={() => {
+                      setSelectedCategory(category.name);
+                      setSubFilterSize("ทั้งหมด");
+                    }}
                     className="bg-white border border-amber-100 hover:border-[#D4AF37] hover:shadow-md rounded-xl p-4 flex items-center justify-between text-left transition"
                   >
                     <div className="flex items-center gap-4">
@@ -746,8 +771,9 @@ export default function App() {
                 onClick={() => {
                   setSelectedCategory("");
                   setSearchTerm("");
+                  setSubFilterSize("ทั้งหมด");
                 }}
-                className="bg-white border border-gray-300 px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-bold"
+                className="bg-[#1B2A3A] text-[#D4AF37] border border-[#D4AF37] px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-bold shadow-sm hover:bg-[#111B25] transition"
               >
                 <ArrowLeft className="w-4 h-4" /> ย้อนกลับไปหน้าหมวดหมู่
               </button>
@@ -757,6 +783,50 @@ export default function App() {
                 </span>
               )}
             </div>
+
+            {/* ปุ่มค้นหาฟิลเตอร์ย่อยสำหรับหมวดหมู่ "ห้องนอน" */}
+            {selectedCategory === "ห้องนอน" && (
+              <div className="bg-amber-50/80 border border-amber-200 rounded-xl p-3.5 mb-4 flex flex-wrap items-center gap-2">
+                <span className="text-xs font-bold text-amber-900 flex items-center gap-1 mr-2">
+                  <Bed className="w-4 h-4 text-amber-700" /> ค้นหาขนาดเตียง:
+                </span>
+                {["ทั้งหมด", "3.5 ฟุต", "5 ฟุต", "6 ฟุต"].map((sizeOption) => (
+                  <button
+                    key={sizeOption}
+                    onClick={() => setSubFilterSize(sizeOption)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+                      subFilterSize === sizeOption
+                        ? "bg-[#1B2A3A] text-[#D4AF37] shadow"
+                        : "bg-white text-gray-700 border border-gray-300 hover:border-amber-400"
+                    }`}
+                  >
+                    {sizeOption}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* ปุ่มค้นหาฟิลเตอร์ย่อยสำหรับหมวดหมู่ "ห้องอาหาร/ห้องครัว" */}
+            {selectedCategory === "ห้องอาหาร/ห้องครัว" && (
+              <div className="bg-amber-50/80 border border-amber-200 rounded-xl p-3.5 mb-4 flex flex-wrap items-center gap-2">
+                <span className="text-xs font-bold text-amber-900 flex items-center gap-1 mr-2">
+                  <Utensils className="w-4 h-4 text-amber-700" /> ค้นหาจำนวนที่นั่ง:
+                </span>
+                {["ทั้งหมด", "2 ที่นั่ง", "4 ที่นั่ง", "6 ที่นั่ง"].map((seatOption) => (
+                  <button
+                    key={seatOption}
+                    onClick={() => setSubFilterSize(seatOption)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+                      subFilterSize === seatOption
+                        ? "bg-[#1B2A3A] text-[#D4AF37] shadow"
+                        : "bg-white text-gray-700 border border-gray-300 hover:border-amber-400"
+                    }`}
+                  >
+                    {seatOption}
+                  </button>
+                ))}
+              </div>
+            )}
 
             {/* FILTER BAR */}
             <div className="bg-white border border-gray-200 rounded-xl p-3 mb-6 flex flex-wrap items-center justify-between gap-3">
@@ -843,7 +913,6 @@ export default function App() {
                         <ImageIcon className="w-12 h-12 text-gray-300" />
                       )}
 
-                      {/* 1. ป้ายสถานะเด่นบนรูปภาพ (มุมซ้ายบน) */}
                       <div className="absolute top-3 left-3 flex flex-col gap-1 items-start">
                         {renderImageBadge(product.status)}
                         {product.promoPrice && (
@@ -853,7 +922,6 @@ export default function App() {
                         )}
                       </div>
 
-                      {/* 2. ปุ่มแชร์ลง LINE เดิมกลับมาแล้ว */}
                       <button
                         onClick={(e) => handleShare(product, e)}
                         className="absolute right-3 bottom-3 bg-[#06C755] hover:bg-[#05b34c] text-white px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1 shadow-md"
@@ -892,7 +960,6 @@ export default function App() {
                         </div>
                       </div>
 
-                      {/* 3. ป้ายสถานะด้านล่างปรับสีข้อความและพื้นหลังให้เด่นจัดๆ */}
                       {renderBottomBadge(product.status)}
 
                       {isLoggedIn && (
@@ -933,7 +1000,7 @@ export default function App() {
         )}
       </main>
 
-      {/* LOGIN MODAL */}
+      {/* LOGIN MODAL (ปรับปรุงข้อความและใช้ระบบ Password) */}
       {showLoginModal && (
         <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl p-6 relative">
@@ -949,13 +1016,12 @@ export default function App() {
             </div>
             <form onSubmit={handleLogin} className="space-y-4">
               <div>
-                <label className="text-xs font-bold text-gray-600">เบอร์โทรศัพท์</label>
+                <label className="text-xs font-bold text-gray-600">กรุณากรอกรหัสผ่านของร้าน</label>
                 <input
-                  type="tel"
-                  maxLength="10"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="กรอกเบอร์โทรศัพท์"
+                  type="password"
+                  value={passwordInput}
+                  onChange={(e) => setPasswordInput(e.target.value)}
+                  placeholder="กรอกรหัสผ่าน"
                   className="w-full border border-gray-300 rounded-xl px-4 py-3 mt-1 text-center text-lg font-bold outline-none focus:ring-2 focus:ring-[#D4AF37]"
                   required
                 />
@@ -1067,7 +1133,7 @@ export default function App() {
                     type="text"
                     value={formData.size}
                     onChange={(e) => setFormData({ ...formData, size: e.target.value })}
-                    placeholder="เช่น 5 ฟุต"
+                    placeholder="เช่น 5 ฟุต หรือ 6 ที่นั่ง"
                     className="w-full border border-gray-300 rounded-lg px-3 py-2.5"
                   />
                 </div>
@@ -1192,23 +1258,25 @@ export default function App() {
                 </div>
               )}
 
+              {/* ปรับปรุงกล่องคำแนะนำ */}
               <div className="mt-5 bg-green-50 border border-green-200 rounded-xl p-4">
                 <div className="flex gap-3">
                   <MessageCircle className="text-green-600 w-5 h-5 shrink-0" />
                   <div>
                     <p className="font-bold text-green-800 text-sm">สนใจสินค้านี้?</p>
                     <p className="text-xs text-green-700 mt-1">
-                      แคปหน้าจอสินค้า <Camera className="inline w-3.5 h-3.5 mx-1" /> หรือแชร์ข้อมูลให้พนักงาน
+                      แคปหน้าจอสินค้า <Camera className="inline w-3.5 h-3.5 mx-1" /> หรือคัดลอกข้อมูลให้พนักงานในไลน์
                     </p>
                   </div>
                 </div>
               </div>
 
+              {/* ปุ่มคัดลอกข้อมูลสินค้า */}
               <button
                 onClick={() => handleShare(viewingProduct)}
                 className="w-full mt-4 bg-[#06C755] hover:bg-[#05B34C] text-white py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 shadow-md"
               >
-                <Share2 className="w-5 h-5" /> แชร์ข้อมูลสินค้า
+                <Share2 className="w-5 h-5" /> คัดลอกข้อมูลสินค้า
               </button>
 
               {isLoggedIn && (
