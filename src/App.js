@@ -20,7 +20,7 @@ import {
   Image as ImageIcon,
   Lock,
   LogOut,
-  KeyRound,
+  Phone,
   Share2,
   Package,
   CheckCircle,
@@ -44,10 +44,11 @@ export default function App() {
   // Authentication States
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const [pinInput, setPinInput] = useState('');
+  const [phoneInput, setPhoneInput] = useState('');
   const [loginError, setLoginError] = useState('');
 
-  const ADMIN_PIN = '1234';
+  // เบอร์โทรสำหรับเข้าสู่ระบบของพนักงาน
+  const STAFF_PHONE = '0822810874';
 
   // Modal & Detail States
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -134,7 +135,7 @@ export default function App() {
 
   const showToast = (msg) => {
     setToastMessage(msg);
-    setTimeout(() => setToastMessage(''), 3000);
+    setTimeout(() => setToastMessage(''), 3500);
   };
 
   const handleShareProduct = (product, e) => {
@@ -151,16 +152,17 @@ export default function App() {
     }
   };
 
+  // 1. เข้าสู่ระบบด้วยเบอร์โทรพนักงาน
   const handleLoginSubmit = (e) => {
     e.preventDefault();
-    if (pinInput === ADMIN_PIN) {
+    if (phoneInput.trim() === STAFF_PHONE) {
       setIsLoggedIn(true);
       setIsLoginModalOpen(false);
-      setPinInput('');
+      setPhoneInput('');
       setLoginError('');
-      showToast('เข้าสู่ระบบผู้ดูแลเรียบร้อยแล้ว');
+      showToast('ยินดีต้อนรับ! เข้าสู่ระบบพนักงานสำเร็จ');
     } else {
-      setLoginError('รหัส PIN ไม่ถูกต้อง');
+      setLoginError('เบอร์โทรศัพท์ไม่ถูกต้อง');
     }
   };
 
@@ -214,6 +216,7 @@ export default function App() {
     }
   };
 
+  // 2. เพิ่มสินค้าสำเร็จ & 3. แก้ไขสินค้าสำเร็จ
   const handleSubmit = (e) => {
     e.preventDefault();
     const updatedData = {
@@ -225,11 +228,11 @@ export default function App() {
     if (editingProduct) {
       setProducts(products.map(p => p.id === editingProduct.id ? updatedData : p));
       setEditingProduct(null);
-      showToast('อัปเดตข้อมูลสินค้าและโปรโมชั่นแล้ว');
+      showToast('แก้ไขและอัปเดตข้อมูลสินค้าสำเร็จ!');
     } else {
       setProducts([...products, updatedData]);
       setIsAddModalOpen(false);
-      showToast('เพิ่มสินค้าใหม่เรียบร้อยแล้ว');
+      showToast('เพิ่มสินค้าสำเร็จแล้ว!');
     }
   };
 
@@ -251,9 +254,9 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#F8F6F0] text-gray-800 font-sans pb-10 relative">
       
-      {/* Toast Alert */}
+      {/* Toast Alert แจ้งเตือน */}
       {toastMessage && (
-        <div className="fixed bottom-5 right-5 z-50 bg-[#1B2A3A] text-[#D4AF37] px-4 py-3 rounded-xl shadow-2xl border border-[#D4AF37] flex items-center gap-2 text-sm font-semibold animate-bounce">
+        <div className="fixed bottom-5 right-5 z-50 bg-[#1B2A3A] text-[#D4AF37] px-5 py-3.5 rounded-xl shadow-2xl border border-[#D4AF37] flex items-center gap-3 text-sm font-semibold animate-bounce">
           <Sparkles className="w-5 h-5 text-[#D4AF37]" />
           <span>{toastMessage}</span>
         </div>
@@ -279,7 +282,7 @@ export default function App() {
                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                   isLoggedIn ? 'bg-green-500 text-white' : 'bg-[#D4AF37] text-[#1B2A3A]'
                 }`}>
-                  {isLoggedIn ? 'ผู้ดูแลระบบ' : 'แคตตาล็อกออนไลน์'}
+                  {isLoggedIn ? 'โหมดพนักงาน' : 'แคตตาล็อกออนไลน์'}
                 </span>
               </div>
               <div className="flex items-center gap-1.5 text-xs text-[#D4AF37]">
@@ -315,7 +318,7 @@ export default function App() {
               <button
                 onClick={handleLogout}
                 className="flex items-center gap-1.5 bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg text-sm font-medium shadow-md transition-all whitespace-nowrap cursor-pointer"
-                title="ออกจากระบบจัดการ"
+                title="ออกจากระบบพนักงาน"
               >
                 <LogOut className="w-4 h-4" />
                 <span className="hidden sm:inline">ออกจากระบบ</span>
@@ -326,7 +329,7 @@ export default function App() {
                 className="flex items-center gap-1.5 bg-[#D4AF37] hover:bg-[#B5922B] text-[#1B2A3A] font-bold px-3 py-2 rounded-lg text-sm shadow-md transition-all whitespace-nowrap cursor-pointer"
               >
                 <Lock className="w-4 h-4" />
-                <span>สำหรับเจ้าของร้าน</span>
+                <span>สำหรับพนักงาน</span>
               </button>
             )}
           </div>
@@ -337,13 +340,13 @@ export default function App() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto p-6">
 
-        {/* Dashboard */}
+        {/* Dashboard พนักงาน */}
         {isLoggedIn && (
           <div className="mb-8 bg-white p-5 rounded-2xl border border-amber-200 shadow-sm">
             <div className="flex items-center justify-between mb-4 border-b border-gray-100 pb-2">
               <div className="flex items-center gap-2">
                 <LayoutDashboard className="w-5 h-5 text-[#D4AF37]" />
-                <h2 className="font-bold text-[#1B2A3A] text-lg">ภาพรวมระบบจัดการสินค้า (Admin Dashboard)</h2>
+                <h2 className="font-bold text-[#1B2A3A] text-lg">ภาพรวมระบบจัดการสินค้า (Staff Dashboard)</h2>
               </div>
               <span className="text-xs bg-amber-100 text-amber-900 font-bold px-2.5 py-1 rounded-full border border-amber-200">
                 📍 สาขาหาดใหญ่ (ถ.สามสิบเมตร)
@@ -681,7 +684,7 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* 📌 กล่องคำแนะนำวิธีสั่งซื้อ / แจ้งพนักงาน */}
+                {/* กล่องคำแนะนำวิธีสั่งซื้อ / แจ้งพนักงาน */}
                 <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-3.5 mb-4 text-emerald-900 text-xs leading-relaxed flex items-start gap-3 shadow-sm">
                   <div className="p-2 bg-emerald-500 text-white rounded-xl shrink-0 mt-0.5">
                     <MessageCircle className="w-4 h-4" />
@@ -710,7 +713,7 @@ export default function App() {
         </div>
       )}
 
-      {/* Modal Login */}
+      {/* Modal Login สำหรับพนักงาน (กรอกเบอร์โทรศัพท์) */}
       {isLoginModalOpen && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl relative">
@@ -723,21 +726,22 @@ export default function App() {
 
             <div className="text-center mb-6">
               <div className="w-12 h-12 bg-[#1B2A3A] text-[#D4AF37] rounded-full flex items-center justify-center mx-auto mb-3 shadow-md">
-                <KeyRound className="w-6 h-6" />
+                <Phone className="w-6 h-6" />
               </div>
-              <h3 className="text-lg font-bold text-[#1B2A3A]">เข้าสู่ระบบจัดการสินค้า</h3>
+              <h3 className="text-lg font-bold text-[#1B2A3A]">เข้าสู่ระบบพนักงาน</h3>
               <p className="text-xs text-gray-500 mt-1">สาขาหาดใหญ่ (ถนนสามสิบเมตร)</p>
             </div>
 
             <form onSubmit={handleLoginSubmit} className="space-y-4">
               <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">กรอกเบอร์โทรศัพท์พนักงาน</label>
                 <input 
-                  type="password" 
-                  maxLength={4}
-                  placeholder="กรอก PIN (1234)" 
-                  value={pinInput}
-                  onChange={(e) => setPinInput(e.target.value)}
-                  className="w-full text-center text-2xl tracking-[0.5em] font-bold border-2 border-gray-300 rounded-xl py-3 focus:ring-2 focus:ring-[#D4AF37] outline-none"
+                  type="tel" 
+                  maxLength={10}
+                  placeholder="0822810874" 
+                  value={phoneInput}
+                  onChange={(e) => setPhoneInput(e.target.value)}
+                  className="w-full text-center text-xl font-bold border-2 border-gray-300 rounded-xl py-2.5 focus:ring-2 focus:ring-[#D4AF37] outline-none text-gray-800"
                   autoFocus
                   required
                 />
@@ -751,7 +755,7 @@ export default function App() {
 
               <button 
                 type="submit" 
-                className="w-full bg-[#1B2A3A] hover:bg-[#111B25] text-[#D4AF37] font-bold py-3 rounded-xl shadow-md cursor-pointer transition-colors"
+                className="w-full bg-[#1B2A3A] hover:bg-[#111B25] text-[#D4AF37] font-bold py-3 rounded-xl shadow-md cursor-pointer transition-colors text-sm"
               >
                 เข้าสู่ระบบ
               </button>
@@ -760,7 +764,7 @@ export default function App() {
         </div>
       )}
 
-      {/* Modal เพิ่ม/แก้ไข */}
+      {/* Modal เพิ่ม/แก้ไข สินค้า */}
       {(isAddModalOpen || editingProduct) && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl flex flex-col max-h-[90vh]">
