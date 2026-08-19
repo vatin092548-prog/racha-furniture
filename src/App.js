@@ -434,9 +434,14 @@ export default function App() {
                     </button>
 
                     <div>
-                      <div className="relative h-48 bg-gray-100 flex items-center justify-center overflow-hidden">
+                      {/* ปรับปรุงตรงนี้: เปลี่ยนเป็น object-contain เพื่อแสดงภาพเต็ม 100% ไม่โดนตัดขอบ */}
+                      <div className="relative h-56 bg-slate-900/5 p-2 flex items-center justify-center overflow-hidden">
                         {product.image ? (
-                          <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                          <img 
+                            src={product.image} 
+                            alt={product.name} 
+                            className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300" 
+                          />
                         ) : (
                           <ImageIcon className="w-12 h-12 text-gray-300" />
                         )}
@@ -492,7 +497,7 @@ export default function App() {
         )}
       </main>
 
-      {/* Modal ดูรายละเอียดสินค้า (รูปภาพเต็มใบ + ปุ่มแชร์ LINE ปรับปรุงใหม่) */}
+      {/* Modal ดูรายละเอียดสินค้า */}
       {viewingProduct && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl max-w-2xl w-full shadow-2xl overflow-hidden relative max-h-[90vh] flex flex-col">
@@ -505,7 +510,6 @@ export default function App() {
 
             <div className="overflow-y-auto">
               
-              {/* แสดงรูปภาพแบบเต็มใบ ไม่โดนซูมตัดขอบ */}
               <div className="w-full bg-slate-900/5 relative flex items-center justify-center p-3 min-h-[260px] max-h-[420px]">
                 {viewingProduct.image ? (
                   <img 
@@ -560,7 +564,6 @@ export default function App() {
                   )}
                 </div>
 
-                {/* ปุ่มแชร์เข้า LINE แบบเต็มปุ่ม */}
                 <div className="pt-4 border-t border-gray-100">
                   <button
                     onClick={() => handleShareProduct(viewingProduct)}
