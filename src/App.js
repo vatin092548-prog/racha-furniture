@@ -615,126 +615,136 @@ export default function App() {
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-4 space-y-3 overflow-y-auto">
+            <form onSubmit={handleSubmit} className="p-6 overflow-y-auto space-y-4 text-sm">
               <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1">หมวดหมู่สินค้า</label>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">รหัสสินค้า (ID)</label>
+                <input
+                  type="text"
+                  value={formData.id}
+                  onChange={(e) => setFormData({ ...formData, id: e.target.value })}
+                  placeholder="เช่น P001"
+                  required
+                  disabled={Boolean(editingProduct)}
+                  className="w-full bg-gray-50 border border-gray-300 rounded-xl px-3 py-2 text-gray-800 outline-none focus:ring-2 focus:ring-[#D4AF37]"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">ชื่อสินค้า</label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="ชื่อเฟอร์นิเจอร์"
+                  required
+                  className="w-full bg-gray-50 border border-gray-300 rounded-xl px-3 py-2 text-gray-800 outline-none focus:ring-2 focus:ring-[#D4AF37]"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">หมวดหมู่</label>
                 <select
                   value={formData.category}
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  className="w-full bg-gray-50 border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-[#D4AF37] outline-none"
+                  className="w-full bg-gray-50 border border-gray-300 rounded-xl px-3 py-2 text-gray-800 outline-none focus:ring-2 focus:ring-[#D4AF37]"
                 >
                   {categories.map((cat, idx) => (
                     <option key={idx} value={cat.name}>{cat.name}</option>
                   ))}
                 </select>
               </div>
-
-              <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1">ชื่อสินค้า *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="เช่น โซฟาผ้าปรับนอน 3 ที่นั่ง"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-[#D4AF37] outline-none"
-                />
-              </div>
-
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1">ราคาปกติ (บาท) *</label>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1">ราคาปกติ (บาท)</label>
                   <input
                     type="number"
-                    required
-                    placeholder="9900"
                     value={formData.price}
                     onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                    className="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-[#D4AF37] outline-none"
+                    placeholder="0"
+                    required
+                    className="w-full bg-gray-50 border border-gray-300 rounded-xl px-3 py-2 text-gray-800 outline-none focus:ring-2 focus:ring-[#D4AF37]"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-red-600 mb-1">ราคาโปรโมชั่น (ถ้ามี)</label>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1">ราคาโปรโมชั่น (ถ้ามี)</label>
                   <input
                     type="number"
-                    placeholder="7900"
                     value={formData.promoPrice}
                     onChange={(e) => setFormData({ ...formData, promoPrice: e.target.value })}
-                    className="w-full border border-red-200 bg-red-50/30 rounded-lg p-2 text-sm focus:ring-2 focus:ring-red-500 outline-none"
+                    placeholder="0"
+                    className="w-full bg-gray-50 border border-gray-300 rounded-xl px-3 py-2 text-gray-800 outline-none focus:ring-2 focus:ring-[#D4AF37]"
                   />
                 </div>
               </div>
-
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1">ขนาดสินค้า</label>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1">ขนาด</label>
                   <input
                     type="text"
-                    placeholder="ก180 x ย90 x ส85 ซม."
                     value={formData.size}
                     onChange={(e) => setFormData({ ...formData, size: e.target.value })}
-                    className="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-[#D4AF37] outline-none"
+                    placeholder="เช่น 6 ฟุต, 120x60 cm"
+                    className="w-full bg-gray-50 border border-gray-300 rounded-xl px-3 py-2 text-gray-800 outline-none focus:ring-2 focus:ring-[#D4AF37]"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1">ตำแหน่งโซนวางหน้าร้าน</label>
-                  <input
-                    type="text"
-                    placeholder="โซน A / ชั้น 2"
-                    value={formData.location}
-                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                    className="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-[#D4AF37] outline-none"
-                  />
+                  <label className="block text-xs font-semibold text-gray-600 mb-1">สถานะสินค้า</label>
+                  <select
+                    value={formData.status}
+                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                    className="w-full bg-gray-50 border border-gray-300 rounded-xl px-3 py-2 text-gray-800 outline-none focus:ring-2 focus:ring-[#D4AF37]"
+                  >
+                    <option value="มีสินค้าพร้อมส่ง">มีสินค้าพร้อมส่ง</option>
+                    <option value="สินค้าตัวโชว์หน้าร้าน">สินค้าตัวโชว์หน้าร้าน</option>
+                    <option value="สินค้าหมด">สินค้าหมด</option>
+                  </select>
                 </div>
               </div>
-
               <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1">สถานะสินค้า</label>
-                <select
-                  value={formData.status}
-                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                  className="w-full bg-gray-50 border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-[#D4AF37] outline-none"
-                >
-                  <option value="มีสินค้าพร้อมส่ง">มีสินค้าพร้อมส่ง</option>
-                  <option value="ตัวโชว์หน้าร้าน">ตัวโชว์หน้าร้าน</option>
-                  <option value="สินค้าหมด">สินค้าหมด</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1">รูปภาพสินค้า</label>
-                <div className="flex items-center gap-2">
-                  <label className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg text-xs font-semibold cursor-pointer border border-gray-300 transition-colors">
-                    <Upload className="w-4 h-4" />
-                    <span>อัปโหลดรูปภาพ</span>
-                    <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
-                  </label>
-                  {formData.image && <span className="text-xs text-green-600 font-semibold">✓ แนบรูปแล้ว</span>}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1">รายละเอียดเพิ่มเติม</label>
-                <textarea
-                  rows={3}
-                  placeholder="รายละเอียดวัสดุ การรับประกัน..."
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg p-2 text-sm focus:ring-2 focus:ring-[#D4AF37] outline-none"
+                <label className="block text-xs font-semibold text-gray-600 mb-1">โซนวางหน้าร้าน (ถ.สามสิบเมตร)</label>
+                <input
+                  type="text"
+                  value={formData.location}
+                  onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                  placeholder="เช่น โซน A ชั้น 1, หน้าร้านฝั่งซ้าย"
+                  className="w-full bg-gray-50 border border-gray-300 rounded-xl px-3 py-2 text-gray-800 outline-none focus:ring-2 focus:ring-[#D4AF37]"
                 />
               </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">รูปภาพสินค้า</label>
+                <div className="flex items-center gap-3">
+                  <label className="flex-1 cursor-pointer bg-gray-50 border border-dashed border-gray-300 hover:border-[#D4AF37] rounded-xl p-3 text-center text-xs text-gray-600 flex items-center justify-center gap-2 transition-all">
+                    <Upload className="w-4 h-4 text-gray-400" />
+                    <span>{formData.image ? 'เปลี่ยนรูปภาพ' : 'อัปโหลดรูปภาพ'}</span>
+                    <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+                  </label>
+                  {formData.image && (
+                    <div className="w-12 h-12 rounded-lg border overflow-hidden shrink-0 bg-gray-100 flex items-center justify-center">
+                      <img src={formData.image} alt="Preview" className="w-full h-full object-cover" />
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">รายละเอียดเพิ่มเติม</label>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  rows="3"
+                  placeholder="วัสดุ, คุณสมบัติพิเศษ ฯลฯ"
+                  className="w-full bg-gray-50 border border-gray-300 rounded-xl px-3 py-2 text-gray-800 outline-none focus:ring-2 focus:ring-[#D4AF37]"
+                ></textarea>
+              </div>
 
-              <div className="pt-2 border-t flex justify-end gap-2">
+              <div className="pt-2 flex gap-3">
                 <button
                   type="button"
                   onClick={() => { setIsAddModalOpen(false); setEditingProduct(null); }}
-                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-xs font-bold hover:bg-gray-50 cursor-pointer"
+                  className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 rounded-xl font-bold cursor-pointer transition-colors"
                 >
                   ยกเลิก
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-[#1B2A3A] text-[#D4AF37] font-bold rounded-lg text-xs hover:bg-[#111B25] cursor-pointer shadow-md"
+                  className="flex-1 bg-[#1B2A3A] hover:bg-[#111B25] text-[#D4AF37] py-3 rounded-xl font-bold shadow-md cursor-pointer transition-colors"
                 >
                   บันทึกข้อมูล
                 </button>
