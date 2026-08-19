@@ -39,8 +39,6 @@ import {
   MessageCircle,
   Camera,
   Filter,
-  Bookmark,
-  AlertCircle,
 } from "lucide-react";
 
 
@@ -51,19 +49,10 @@ import {
 export default function App() {
 
   /* =======================================================
-     CONFIG / SETUP
+     FIREBASE
   ======================================================= */
 
   const PRODUCTS_COLLECTION = "products";
-  const STAFF_PHONE = "0822810874";
-  
-  // 🟢 ลิงก์ LINE OA ของร้าน (เปลี่ยนเป็น ID ของร้านคุณได้เลย)
-  const LINE_OA_URL = "https://line.me/ti/p/@rachafurniture"; 
-
-
-  /* =======================================================
-     FIREBASE & STATES
-  ======================================================= */
 
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -80,7 +69,7 @@ export default function App() {
   const [promoOnly, setPromoOnly] = useState(false);
   const [stockOnly, setStockOnly] = useState(false);
 
-  // สเตตสำหรับกรองช่วงราคา
+  // สเตตสำหรับกรองช่วงราคา (Price Range)
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
 
@@ -96,6 +85,8 @@ export default function App() {
 
   const [phone, setPhone] = useState("");
   const [loginError, setLoginError] = useState("");
+
+  const STAFF_PHONE = "0822810874";
 
 
   /* =======================================================
@@ -449,69 +440,33 @@ export default function App() {
 
 
   /* =======================================================
-     LINE DIRECT LINK / SHARE
+     SHARE
   ======================================================= */
 
-  const handleContactLine = (product, event) => {
+  const handleShare = async (product, event) => {
     if (event) event.stopPropagation();
-    
+    const url = `${window.location.origin}${window.location.pathname}?product=${product.id}`;
     const price = product.promoPrice
       ? `฿${Number(product.promoPrice).toLocaleString()}`
       : `฿${Number(product.price).toLocaleString()}`;
 
-    const text = `สวัสดีครับ/ค่ะ สนใจสอบถามสินค้าเฟอร์นิเจอร์ครับ:\n` +
-      `🪑 ชื่อสินค้า: ${product.name}\n` +
-      `📌 รหัสสินค้า: ${product.id}\n` +
-      `💰 ราคา: ${price}\n` +
-      `📍 โซนวาง: ${product.location || "-"}\n\n` +
-      `ขอสอบถามรายละเอียดเพิ่มเติมครับ`;
+    const text = `🪑 ${product.name}\n💰 ราคา ${price}\n📍 ราชาเฟอร์นิเจอร์ สาขาหาดใหญ่\n📦 โซนวาง: ${product.location || "-"}\n\nดูรายละเอียดสินค้า:\n${url}`;
 
-    // เปิด LINE แอปพลิเคชันพร้อมแนบข้อความสอบถาม
-    const lineUrl = `${LINE_OA_URL}?text=${encodeURIComponent(text)}`;
-    window.open(lineUrl, "_blank");
-  };
-
-
-  /* =======================================================
-     BADGE COLOR RENDER
-  ======================================================= */
-
-  const renderStatusBadge = (status) => {
-    switch (status) {
-      case "สินค้าตัวโชว์หน้าร้าน":
-        return (
-          <div className="mt-4 rounded-lg py-2 text-center text-xs font-bold border bg-amber-50 text-amber-700 border-amber-200">
-            <Sparkles className="inline w-3.5 h-3.5 mr-1 text-amber-600" />
-            สินค้าตัวโชว์หน้าร้าน (ราคาพิเศษ)
-          </div>
-        );
-      case "สินค้าติดจอง":
-        return (
-          <div className="mt-4 rounded-lg py-2 text-center text-xs font-bold border bg-purple-50 text-purple-700 border-purple-200">
-            <Bookmark className="inline w-3.5 h-3.5 mr-1 text-purple-600" />
-            สินค้าติดจอง
-          </div>
-        );
-      case "สินค้าหมด":
-        return (
-          <div className="mt-4 rounded-lg py-2 text-center text-xs font-bold border bg-red-50 text-red-600 border-red-200">
-            <AlertCircle className="inline w-3.5 h-3.5 mr-1" />
-            สินค้าหมด
-          </div>
-        );
-      default:
-        return (
-          <div className="mt-4 rounded-lg py-2 text-center text-xs font-bold border bg-green-50 text-green-700 border-green-200">
-            <CheckCircle2 className="inline w-3.5 h-3.5 mr-1" />
-            มีสินค้าพร้อมส่ง
-          </div>
-        );
+    try {
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(text);
+        showToast("คัดลอกข้อมูลสินค้าแล้ว");
+      } else {
+        alert(text);
+      }
+    } catch (error) {
+      alert(text);
     }
   };
 
 
   /* =======================================================
-     FILTER PRODUCTS
+     FILTER PRODUCTS (เพิ่มการกรองช่วงราคา)
   ======================================================= */
 
   const filteredProducts = products
@@ -524,8 +479,10 @@ export default function App() {
       const promoMatch = promoOnly ? Boolean(product.promoPrice) : true;
       const stockMatch = stockOnly ? product.status !== "สินค้าหมด" : true;
 
+      // คำนวณราคาขายจริง (ถ้ามีโปรโมชั่น ใช้ราคาโปรโมชั่น)
       const actualPrice = Number(product.promoPrice || product.price || 0);
 
+      // กรองช่วงราคา
       const minMatch = minPrice === "" || actualPrice >= Number(minPrice);
       const maxMatch = maxPrice === "" || actualPrice <= Number(maxPrice);
 
@@ -729,7 +686,7 @@ export default function App() {
               )}
             </div>
 
-            {/* FILTER BAR */}
+            {/* FILTER BAR (เพิ่มฟิลเตอร์ช่วงราคา) */}
             <div className="bg-white border border-gray-200 rounded-xl p-3 mb-6 flex flex-wrap items-center justify-between gap-3">
               <div className="flex flex-wrap items-center gap-2">
                 <button
@@ -745,7 +702,7 @@ export default function App() {
                   <CheckCircle2 className="w-3.5 h-3.5" /> 📦 พร้อมส่ง
                 </button>
 
-                {/* PRICE RANGE */}
+                {/* ส่วนการกรองตามช่วงราคา (Price Range) */}
                 <div className="flex items-center gap-1 bg-gray-50 border border-gray-200 rounded-lg px-2 py-1">
                   <Filter className="w-3.5 h-3.5 text-gray-400" />
                   <span className="text-xs text-gray-500 font-bold">ราคา:</span>
@@ -818,13 +775,11 @@ export default function App() {
                           🔥 ลดพิเศษ
                         </div>
                       )}
-                      
-                      {/* ปุ่มสั่งซื้อผ่าน LINE */}
                       <button
-                        onClick={(e) => handleContactLine(product, e)}
-                        className="absolute right-3 bottom-3 bg-[#06C755] hover:bg-[#05b34c] text-white px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1 shadow-md"
+                        onClick={(e) => handleShare(product, e)}
+                        className="absolute right-3 bottom-3 bg-[#06C755] text-white px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1"
                       >
-                        <MessageCircle className="w-3.5 h-3.5" /> สั่งซื้อผ่าน LINE
+                        <Share2 className="w-3.5 h-3.5" /> แชร์
                       </button>
                     </div>
 
@@ -858,8 +813,10 @@ export default function App() {
                         </div>
                       </div>
 
-                      {/* แสดง BADGE สถานะแบบแยกสีตามเงื่อนไข */}
-                      {renderStatusBadge(product.status)}
+                      <div className={`mt-4 rounded-lg py-2 text-center text-xs font-bold border ${product.status === "สินค้าหมด" ? "bg-red-50 text-red-600 border-red-200" : "bg-green-50 text-green-700 border-green-200"}`}>
+                        <CheckCircle2 className="inline w-4 h-4 mr-1" />
+                        {product.status || "มีสินค้าพร้อมส่ง"}
+                      </div>
 
                       {isLoggedIn && (
                         <div className="flex gap-2 mt-3">
@@ -1037,19 +994,16 @@ export default function App() {
                     className="w-full border border-gray-300 rounded-lg px-3 py-2.5"
                   />
                 </div>
-
-                {/* ตัวเลือกสถานะสินค้า (เพิ่ม ตัวโชว์/ติดจอง) */}
                 <div>
                   <label className="block text-xs font-bold text-gray-600 mb-1">สถานะสินค้า</label>
                   <select
                     value={formData.status}
                     onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5 font-bold"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5"
                   >
-                    <option value="มีสินค้าพร้อมส่ง">🟢 มีสินค้าพร้อมส่ง</option>
-                    <option value="สินค้าตัวโชว์หน้าร้าน">🟡 สินค้าตัวโชว์หน้าร้าน</option>
-                    <option value="สินค้าติดจอง">🟣 สินค้าติดจอง</option>
-                    <option value="สินค้าหมด">🔴 สินค้าหมด</option>
+                    <option value="มีสินค้าพร้อมส่ง">มีสินค้าพร้อมส่ง</option>
+                    <option value="สินค้าตัวโชว์หน้าร้าน">สินค้าตัวโชว์หน้าร้าน</option>
+                    <option value="สินค้าหมด">สินค้าหมด</option>
                   </select>
                 </div>
               </div>
@@ -1159,25 +1113,23 @@ export default function App() {
                 </div>
               )}
 
-              {/* ปรับปรุงกล่องแชตแจ้งเตือน */}
               <div className="mt-5 bg-green-50 border border-green-200 rounded-xl p-4">
                 <div className="flex gap-3">
                   <MessageCircle className="text-green-600 w-5 h-5 shrink-0" />
                   <div>
-                    <p className="font-bold text-green-800 text-sm">สนใจสั่งซื้อ หรือสอบถามเพิ่มเติม?</p>
+                    <p className="font-bold text-green-800 text-sm">สนใจสินค้านี้?</p>
                     <p className="text-xs text-green-700 mt-1">
-                      กดปุ่มด้านล่างเพื่อทักแชตคุยกับพนักงานหน้าร้านผ่าน LINE ได้ทันที
+                      แคปหน้าจอสินค้า <Camera className="inline w-3.5 h-3.5 mx-1" /> หรือแชร์ข้อมูลให้พนักงาน
                     </p>
                   </div>
                 </div>
               </div>
 
-              {/* ปุ่มสอบถาม/สั่งซื้อผ่าน LINE Direct Link */}
               <button
-                onClick={() => handleContactLine(viewingProduct)}
-                className="w-full mt-4 bg-[#06C755] hover:bg-[#05B34C] text-white py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 shadow-md"
+                onClick={() => handleShare(viewingProduct)}
+                className="w-full mt-4 bg-[#06C755] hover:bg-[#05B34C] text-white py-3.5 rounded-xl font-bold flex items-center justify-center gap-2"
               >
-                <MessageCircle className="w-5 h-5" /> ทักแชตสั่งซื้อผ่าน LINE
+                <Share2 className="w-5 h-5" /> แชร์สินค้าลง LINE
               </button>
 
               {isLoggedIn && (
