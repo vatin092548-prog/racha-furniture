@@ -20,7 +20,15 @@ import {
   Image as ImageIcon,
   Lock,
   LogOut,
-  KeyRound
+  KeyRound,
+  Share2,
+  Phone,
+  MessageCircle,
+  Package,
+  CheckCircle,
+  AlertCircle,
+  LayoutDashboard,
+  Eye
 } from 'lucide-react';
 
 export default function App() {
@@ -35,11 +43,13 @@ export default function App() {
 
   const ADMIN_PIN = '1234';
 
-  // Modal States
+  // Modal & Detail States
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
+  const [viewingProduct, setViewingProduct] = useState(null); // สำหรับดูรายละเอียดสินค้า
+  const [toastMessage, setToastMessage] = useState('');
 
-  // ข้อมูลเริ่มต้นเผื่อยังไม่มีข้อมูลใน localStorage
+  // ข้อมูลสินค้าเริ่มต้น
   const initialProducts = [
     {
       id: 'P001',
@@ -49,26 +59,45 @@ export default function App() {
       size: '200 x 215 x 110 ซม.',
       location: 'โซน B ชั้น 2',
       status: 'มีสินค้าพร้อมส่ง',
-      image: 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=500&auto=format&fit=crop&q=60'
+      image: 'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=500&auto=format&fit=crop&q=60',
+      description: 'เตียงนอนไม้สักทองแท้ โครงสร้างแข็งแรง ทนทาน ดีไซน์สไตล์มินิมอลโมเดิร์น เคลือบกันปลวกและเชื้อราอย่างดี'
+    },
+    {
+      id: 'P002',
+      name: 'โซฟาหนัง L-Shape พรีเมียม',
+      category: 'ห้องนั่งเล่น',
+      price: 32000,
+      size: '280 x 160 x 90 ซม.',
+      location: 'โซน A ชั้น 1',
+      status: 'มีสินค้าพร้อมส่ง',
+      image: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=500&auto=format&fit=crop&q=60',
+      description: 'โซฟาหนังแท้สัมผัส นุ่มสบาย เบาะมีความยืดหยุ่นสูง รองรับสรีระได้ดีเยี่ยม'
     }
   ];
 
-  // โหลดข้อมูลจาก localStorage เมื่อเปิดเว็บ
+  // โหลดและบันทึกข้อมูลสินค้าใน localStorage
   const [products, setProducts] = useState(() => {
     const savedProducts = localStorage.getItem('racha_products');
     if (savedProducts) {
-      try {
-        return JSON.parse(savedProducts);
-      } catch (e) {
-        return initialProducts;
-      }
+      try { return JSON.parse(savedProducts); } catch (e) { return initialProducts; }
     }
     return initialProducts;
   });
 
-  // บันทึกข้อมูลลง localStorage ทุกครั้งที่ข้อมูล products เปลี่ยนแปลง
   useEffect(() => {
     localStorage.setItem('racha_products', JSON.stringify(products));
+  }, [products]);
+
+  // ระบบตรวจจับ URL Direct Link (เช่น ?product=P001)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const productId = params.get('product');
+    if (productId) {
+      const found = products.find(p => p.id === productId);
+      if (found) {
+        setViewingProduct(found);
+      }
+    }
   }, [products]);
 
   // Form States
@@ -80,7 +109,8 @@ export default function App() {
     size: '',
     location: '',
     status: 'มีสินค้าพร้อมส่ง',
-    image: ''
+    image: '',
+    description: ''
   });
 
   const categories = [
@@ -93,6 +123,26 @@ export default function App() {
     { name: 'ของตกแต่ง', icon: Flower2 },
   ];
 
+  // แสดง Toast แจ้งเตือน
+  const showToast = (msg) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(''), 3000);
+  };
+
+  // ฟังก์ชันแชร์สินค้า (LINE / คัดลอกลิงก์)
+  const handleShareProduct = (product, e) => {
+    if (e) e.stopPropagation();
+    const shareUrl = `${window.location.origin}${window.location.pathname}?product=${product.id}`;
+    const shareText = `🪑 ${product.name}\n💰 ราคา: ฿${Number(product.price).toLocaleString()}\n📍 สถานะ: ${product.status}\n\nดูรายละเอียดเพิ่มเติมได้ที่นี่:\n${shareUrl}`;
+
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(shareText);
+      showToast('คัดลอกลิงก์และรายละเอียดสินค้าเรียบร้อย! นำไปวางใน LINE ได้เลย');
+    } else {
+      showToast('ไม่สามารถคัดลอกข้อความได้อัตโนมัติ');
+    }
+  };
+
   const handleLoginSubmit = (e) => {
     e.preventDefault();
     if (pinInput === ADMIN_PIN) {
@@ -100,13 +150,15 @@ export default function App() {
       setIsLoginModalOpen(false);
       setPinInput('');
       setLoginError('');
+      showToast('เข้าสู่ระบบผู้ดูแลเรียบร้อยแล้ว');
     } else {
-      setLoginError('รหัส PIN ไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง');
+      setLoginError('รหัส PIN ไม่ถูกต้อง');
     }
   };
 
   const handleLogout = () => {
     setIsLoggedIn(false);
+    showToast('ออกจากระบบเรียบร้อย');
   };
 
   const handleImageUpload = (e) => {
@@ -129,20 +181,24 @@ export default function App() {
       size: '',
       location: '',
       status: 'มีสินค้าพร้อมส่ง',
-      image: ''
+      image: '',
+      description: ''
     });
     setIsAddModalOpen(true);
   };
 
-  const handleOpenEditModal = (product) => {
+  const handleOpenEditModal = (product, e) => {
+    if (e) e.stopPropagation();
     setEditingProduct(product);
     setFormData(product);
   };
 
-  const handleDeleteProduct = (id) => {
+  const handleDeleteProduct = (id, e) => {
+    if (e) e.stopPropagation();
     if (window.confirm('คุณต้องการลบสินค้านี้ใช่หรือไม่?')) {
       setProducts(products.filter(p => p.id !== id));
       if (editingProduct) setEditingProduct(null);
+      showToast('ลบสินค้าเรียบร้อย');
     }
   };
 
@@ -151,9 +207,11 @@ export default function App() {
     if (editingProduct) {
       setProducts(products.map(p => p.id === editingProduct.id ? { ...formData, price: Number(formData.price) } : p));
       setEditingProduct(null);
+      showToast('อัปเดตข้อมูลสินค้าแล้ว');
     } else {
       setProducts([...products, { ...formData, price: Number(formData.price) }]);
       setIsAddModalOpen(false);
+      showToast('เพิ่มสินค้าใหม่เรียบร้อยแล้ว');
     }
   };
 
@@ -165,11 +223,21 @@ export default function App() {
   });
 
   return (
-    <div className="min-h-screen bg-[#F8F6F0] text-gray-800 font-sans pb-10">
+    <div className="min-h-screen bg-[#F8F6F0] text-gray-800 font-sans pb-10 relative">
+      
+      {/* Toast Alert */}
+      {toastMessage && (
+        <div className="fixed bottom-5 right-5 z-50 bg-[#1B2A3A] text-[#D4AF37] px-4 py-3 rounded-xl shadow-2xl border border-[#D4AF37] flex items-center gap-2 text-sm font-semibold animate-bounce">
+          <Sparkles className="w-5 h-5 text-[#D4AF37]" />
+          <span>{toastMessage}</span>
+        </div>
+      )}
+
       {/* Header Bar */}
-      <header className="bg-[#1B2A3A] text-white shadow-md px-6 py-4">
+      <header className="bg-[#1B2A3A] text-white shadow-md px-6 py-4 sticky top-0 z-30">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-3 cursor-pointer" onClick={() => setSelectedCategory(null)}>
+          
+          <div className="flex items-center gap-3 cursor-pointer" onClick={() => { setSelectedCategory(null); setSearchTerm(''); }}>
             <div className="text-[#D4AF37]">
               <svg width="42" height="42" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M15 70 L25 35 L40 55 L50 25 L60 55 L75 35 L85 70 Z" fill="none" />
@@ -185,7 +253,7 @@ export default function App() {
                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                   isLoggedIn ? 'bg-green-500 text-white' : 'bg-[#D4AF37] text-[#1B2A3A]'
                 }`}>
-                  {isLoggedIn ? 'ผู้ดูแลระบบ' : 'โหมดดูสินค้า'}
+                  {isLoggedIn ? 'ผู้ดูแลระบบ' : 'แคตตาล็อกออนไลน์'}
                 </span>
               </div>
               <p className="text-xs text-[#D4AF37] tracking-widest font-semibold uppercase">RACHA FURNITURE</p>
@@ -229,24 +297,67 @@ export default function App() {
                 className="flex items-center gap-1.5 bg-[#D4AF37] hover:bg-[#B5922B] text-[#1B2A3A] font-bold px-3 py-2 rounded-lg text-sm shadow-md transition-all whitespace-nowrap cursor-pointer"
               >
                 <Lock className="w-4 h-4" />
-                <span>จัดการสินค้า</span>
+                <span>สำหรับเจ้าของร้าน</span>
               </button>
             )}
           </div>
+
         </div>
       </header>
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto p-6">
+
+        {/* Dashboard สำหรับ แอดมิน / เจ้าของร้าน */}
+        {isLoggedIn && (
+          <div className="mb-8 bg-white p-5 rounded-2xl border border-amber-200 shadow-sm">
+            <div className="flex items-center gap-2 mb-4 border-b border-gray-100 pb-2">
+              <LayoutDashboard className="w-5 h-5 text-[#D4AF37]" />
+              <h2 className="font-bold text-[#1B2A3A] text-lg">ภาพรวมระบบจัดการสินค้า (Admin Dashboard)</h2>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-blue-600 font-semibold mb-1">สินค้าทั้งหมดในร้าน</p>
+                  <p className="text-2xl font-black text-blue-900">{products.length} รายการ</p>
+                </div>
+                <Package className="w-8 h-8 text-blue-400" />
+              </div>
+
+              <div className="bg-green-50 border border-green-100 p-4 rounded-xl flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-green-600 font-semibold mb-1">พร้อมส่ง/ตัวโชว์</p>
+                  <p className="text-2xl font-black text-green-900">
+                    {products.filter(p => p.status !== 'สินค้าหมด').length} รายการ
+                  </p>
+                </div>
+                <CheckCircle className="w-8 h-8 text-green-400" />
+              </div>
+
+              <div className="bg-red-50 border border-red-100 p-4 rounded-xl flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-red-600 font-semibold mb-1">สินค้าหมด</p>
+                  <p className="text-2xl font-black text-red-900">
+                    {products.filter(p => p.status === 'สินค้าหมด').length} รายการ
+                  </p>
+                </div>
+                <AlertCircle className="w-8 h-8 text-red-400" />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* หมวดหมู่สินค้า */}
         {!selectedCategory && !searchTerm && (
           <>
             <div className="mb-6">
               <h2 className="text-xl font-bold text-[#1B2A3A] border-b-2 border-[#D4AF37] inline-block pb-1">
-                ค้นหาตามหมวดหมู่
+                หมวดหมู่สินค้าเฟอร์นิเจอร์
               </h2>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
               {categories.map((cat, index) => {
                 const IconComponent = cat.icon;
                 return (
@@ -268,6 +379,7 @@ export default function App() {
           </>
         )}
 
+        {/* รายการสินค้า */}
         {(selectedCategory || searchTerm) && (
           <div>
             <div className="flex items-center justify-between mb-6">
@@ -289,18 +401,24 @@ export default function App() {
             {filteredProducts.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {filteredProducts.map((product) => (
-                  <div key={product.id} className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 relative group">
+                  <div 
+                    key={product.id} 
+                    onClick={() => setViewingProduct(product)}
+                    className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 relative group cursor-pointer flex flex-col justify-between"
+                  >
+                    
+                    {/* ปุ่มสำหรับ แอดมิน */}
                     {isLoggedIn && (
-                      <div className="absolute top-3 right-3 flex gap-1.5 z-10">
+                      <div className="absolute top-3 left-3 flex gap-1.5 z-10">
                         <button 
-                          onClick={() => handleOpenEditModal(product)}
+                          onClick={(e) => handleOpenEditModal(product, e)}
                           className="bg-white/90 hover:bg-white text-gray-700 p-2 rounded-full shadow-md transition-all cursor-pointer"
                           title="แก้ไขสินค้า"
                         >
                           <Edit className="w-4 h-4 text-[#1B2A3A]" />
                         </button>
                         <button 
-                          onClick={() => handleDeleteProduct(product.id)}
+                          onClick={(e) => handleDeleteProduct(product.id, e)}
                           className="bg-white/90 hover:bg-white text-red-600 p-2 rounded-full shadow-md transition-all cursor-pointer"
                           title="ลบสินค้า"
                         >
@@ -309,37 +427,53 @@ export default function App() {
                       </div>
                     )}
 
-                    <div className="relative h-48 bg-gray-100 flex items-center justify-center overflow-hidden">
-                      {product.image ? (
-                        <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
-                      ) : (
-                        <ImageIcon className="w-12 h-12 text-gray-300" />
-                      )}
+                    {/* ปุ่ม 📤 แชร์สินค้า (LINE/Copy Link) */}
+                    <button
+                      onClick={(e) => handleShareProduct(product, e)}
+                      className="absolute top-3 right-3 bg-[#06C755] hover:bg-[#05b34c] text-white px-2.5 py-1.5 rounded-full shadow-md transition-all cursor-pointer flex items-center gap-1 z-10 text-xs font-bold"
+                      title="ส่งลิงก์สินค้าให้ลูกค้าใน LINE"
+                    >
+                      <Share2 className="w-3.5 h-3.5" />
+                      <span>แชร์</span>
+                    </button>
+
+                    <div>
+                      <div className="relative h-48 bg-gray-100 flex items-center justify-center overflow-hidden">
+                        {product.image ? (
+                          <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                        ) : (
+                          <ImageIcon className="w-12 h-12 text-gray-300" />
+                        )}
+                      </div>
+                      
+                      <div className="p-4">
+                        <div className="flex items-start justify-between gap-2 mb-2">
+                          <h3 className="font-bold text-gray-800 text-base group-hover:text-[#1D4ED8] transition-colors">{product.name}</h3>
+                          <span className="bg-gray-100 text-gray-500 text-[10px] font-mono px-2 py-0.5 rounded shrink-0">
+                            {product.id}
+                          </span>
+                        </div>
+
+                        <p className="text-2xl font-black text-[#1D4ED8] mb-3">
+                          ฿{Number(product.price).toLocaleString()}
+                        </p>
+
+                        <div className="space-y-1.5 text-xs text-gray-500 mb-4 border-t border-gray-100 pt-3">
+                          <div className="flex items-center gap-2">
+                            <Box className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                            <span className="truncate">ขนาด: {product.size || '-'}</span>
+                          </div>
+                          {isLoggedIn && (
+                            <div className="flex items-center gap-2">
+                              <MapPin className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                              <span className="font-semibold text-amber-800">วางหน้าร้าน: {product.location || '-'}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                    
-                    <div className="p-4">
-                      <div className="flex items-start justify-between gap-2 mb-2 pr-6">
-                        <h3 className="font-bold text-gray-800 text-lg">{product.name}</h3>
-                        <span className="bg-gray-100 text-gray-500 text-[10px] font-mono px-2 py-0.5 rounded">
-                          {product.id}
-                        </span>
-                      </div>
 
-                      <p className="text-2xl font-black text-[#1D4ED8] mb-3">
-                        ฿{Number(product.price).toLocaleString()}
-                      </p>
-
-                      <div className="space-y-1.5 text-xs text-gray-500 mb-4 border-t border-gray-100 pt-3">
-                        <div className="flex items-center gap-2">
-                          <Box className="w-3.5 h-3.5 text-gray-400" />
-                          <span>ขนาด: {product.size || '-'}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <MapPin className="w-3.5 h-3.5 text-gray-400" />
-                          <span>วางหน้าร้าน: {product.location || '-'}</span>
-                        </div>
-                      </div>
-
+                    <div className="p-4 pt-0">
                       <div className={`text-xs font-semibold py-1.5 px-3 rounded-lg flex items-center justify-center gap-1.5 border ${
                         product.status === 'สินค้าหมด' 
                           ? 'bg-red-50 text-red-600 border-red-200' 
@@ -349,6 +483,7 @@ export default function App() {
                         <span>{product.status}</span>
                       </div>
                     </div>
+
                   </div>
                 ))}
               </div>
@@ -360,6 +495,93 @@ export default function App() {
           </div>
         )}
       </main>
+
+      {/* Modal ดูรายละเอียดสินค้า (สำหรับลูกค้า & พนักงาน) */}
+      {viewingProduct && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl max-w-2xl w-full shadow-2xl overflow-hidden relative max-h-[90vh] flex flex-col">
+            <button 
+              onClick={() => setViewingProduct(null)}
+              className="absolute top-3 right-3 bg-white/80 hover:bg-white text-gray-700 p-2 rounded-full z-20 shadow-md cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="overflow-y-auto">
+              <div className="h-64 sm:h-80 bg-gray-100 relative">
+                {viewingProduct.image ? (
+                  <img src={viewingProduct.image} alt={viewingProduct.name} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <ImageIcon className="w-16 h-16 text-gray-300" />
+                  </div>
+                )}
+              </div>
+
+              <div className="p-6">
+                <div className="flex justify-between items-start mb-2">
+                  <div>
+                    <span className="text-xs font-semibold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-md border border-amber-200 mb-2 inline-block">
+                      {viewingProduct.category}
+                    </span>
+                    <h2 className="text-2xl font-bold text-gray-800">{viewingProduct.name}</h2>
+                  </div>
+                  <span className="text-xs font-mono bg-gray-100 text-gray-500 px-2 py-1 rounded">
+                    {viewingProduct.id}
+                  </span>
+                </div>
+
+                <p className="text-3xl font-black text-[#1D4ED8] mb-4">
+                  ฿{Number(viewingProduct.price).toLocaleString()}
+                </p>
+
+                {viewingProduct.description && (
+                  <p className="text-gray-600 text-sm mb-6 leading-relaxed bg-gray-50 p-3 rounded-xl border border-gray-100">
+                    {viewingProduct.description}
+                  </p>
+                )}
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6 text-sm text-gray-600">
+                  <div className="p-3 bg-gray-50 rounded-lg flex items-center gap-2">
+                    <Box className="w-4 h-4 text-gray-400" />
+                    <span><strong>ขนาด:</strong> {viewingProduct.size || '-'}</span>
+                  </div>
+                  <div className="p-3 bg-gray-50 rounded-lg flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-green-600" />
+                    <span><strong>สถานะ:</strong> {viewingProduct.status}</span>
+                  </div>
+                  {isLoggedIn && (
+                    <div className="p-3 bg-amber-50 rounded-lg flex items-center gap-2 col-span-2 border border-amber-200">
+                      <MapPin className="w-4 h-4 text-amber-600" />
+                      <span className="text-amber-900"><strong>ตำแหน่งวางหน้าร้าน:</strong> {viewingProduct.location || '-'}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* ปุ่มติดต่อร้านสำหรับลูกค้า */}
+                <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-100">
+                  <button
+                    onClick={() => handleShareProduct(viewingProduct)}
+                    className="flex-1 bg-[#06C755] hover:bg-[#05b34c] text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 shadow-md cursor-pointer transition-colors"
+                  >
+                    <Share2 className="w-5 h-5" />
+                    <span>แชร์สินค้าลง LINE</span>
+                  </button>
+
+                  <a 
+                    href="tel:0812345678" 
+                    className="flex-1 bg-[#1B2A3A] hover:bg-[#111B25] text-[#D4AF37] py-3 rounded-xl font-bold flex items-center justify-center gap-2 shadow-md cursor-pointer transition-colors text-center"
+                  >
+                    <Phone className="w-5 h-5" />
+                    <span>โทรสอบถาม / สั่งซื้อ</span>
+                  </a>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal ป๊อปอัพ เข้าสู่ระบบด้วย PIN */}
       {isLoginModalOpen && (
@@ -377,7 +599,7 @@ export default function App() {
                 <KeyRound className="w-6 h-6" />
               </div>
               <h3 className="text-lg font-bold text-[#1B2A3A]">เข้าสู่ระบบจัดการสินค้า</h3>
-              <p className="text-xs text-gray-500 mt-1">กรอกรหัส PIN 4 หลักเพื่อปลดล็อกสิทธิ์การแก้ไข</p>
+              <p className="text-xs text-gray-500 mt-1">กรอกรหัส PIN 4 หลักเพื่อเข้าสิทธิ์เจ้าของร้าน</p>
             </div>
 
             <form onSubmit={handleLoginSubmit} className="space-y-4">
@@ -385,10 +607,10 @@ export default function App() {
                 <input 
                   type="password" 
                   maxLength={4}
-                  placeholder="กรอกรหัส PIN (เช่น 1234)" 
+                  placeholder="กรอก PIN (1234)" 
                   value={pinInput}
                   onChange={(e) => setPinInput(e.target.value)}
-                  className="w-full text-center text-2xl tracking-[0.5em] font-bold border-2 border-gray-300 rounded-xl py-3 focus:ring-2 focus:ring-[#D4AF37] focus:border-[#D4AF37] outline-none"
+                  className="w-full text-center text-2xl tracking-[0.5em] font-bold border-2 border-gray-300 rounded-xl py-3 focus:ring-2 focus:ring-[#D4AF37] outline-none"
                   autoFocus
                   required
                 />
@@ -404,7 +626,7 @@ export default function App() {
                 type="submit" 
                 className="w-full bg-[#1B2A3A] hover:bg-[#111B25] text-[#D4AF37] font-bold py-3 rounded-xl shadow-md cursor-pointer transition-colors"
               >
-                ยืนยันรหัส PIN
+                เข้าสู่ระบบ
               </button>
             </form>
           </div>
@@ -512,6 +734,17 @@ export default function App() {
               </div>
 
               <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">รายละเอียดสินค้าเพิ่มเติม</label>
+                <textarea 
+                  rows={2}
+                  placeholder="อธิบายวัสดุ หรือจุดเด่นของสินค้า..."
+                  value={formData.description || ''} 
+                  onChange={e => setFormData({...formData, description: e.target.value})}
+                  className="w-full border rounded-lg p-2 focus:ring-2 focus:ring-[#D4AF37] outline-none text-xs" 
+                />
+              </div>
+
+              <div>
                 <label className="block text-xs font-semibold text-gray-600 mb-1">รูปภาพสินค้า</label>
                 {formData.image && (
                   <div className="relative mb-2 h-28 rounded-lg overflow-hidden border border-gray-200">
@@ -559,6 +792,7 @@ export default function App() {
           </div>
         </div>
       )}
+
     </div>
   );
 }
