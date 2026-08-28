@@ -489,7 +489,7 @@ export default function App() {
       `ดูรูปและรายละเอียดสินค้าเพิ่มเติมได้ที่:\n` +
       `${productUrl}`;
 
-    // คัดลอกรูปภาพลง Clipboard ให้อัตโนมัติ (สำหรับกด Paste วางรูปส่งเข้า LINE)
+    // คัดลอกไฟล์รูปภาพลง Clipboard ให้อัตโนมัติ (ถ้าเครื่องรองรับ)
     try {
       if (product.image && product.image.startsWith("data:image") && window.ClipboardItem) {
         const response = await fetch(product.image);
@@ -502,7 +502,7 @@ export default function App() {
       console.log("Clipboard image copy not supported/allowed in this context");
     }
 
-    // สั่งเด้งเปิดแอป LINE
+    // คำสั่งเด้งเปิดแอป LINE
     const lineShareUrl = `line://msg/text/${encodeURIComponent(shareText)}`;
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
@@ -592,7 +592,7 @@ export default function App() {
 
 
   /* =======================================================
-     FILTER PRODUCTS
+     FILTER PRODUCTS (แก้ไขระบบกรองขนาดฟุตให้แม่นยำ 100%)
   ======================================================= */
 
   const filteredProducts = products
@@ -610,12 +610,20 @@ export default function App() {
       const minMatch = minPrice === "" || actualPrice >= Number(minPrice);
       const maxMatch = maxPrice === "" || actualPrice <= Number(maxPrice);
 
+      // --- ระบบตรวจจับขนาดเตียงที่แม่นยำ (ป้องกัน 3.5 ฟุต โผล่ในหมวด 5 ฟุต) ---
       let subFilterMatch = true;
       if (selectedCategory === "ห้องนอน" && subFilterSize !== "ทั้งหมด") {
-        const sizeStr = String(product.size || "") + String(product.name || "");
-        subFilterMatch = sizeStr.includes(subFilterSize);
+        const sizeStr = `${product.size || ""} ${product.name || ""} ${product.description || ""}`;
+        
+        if (subFilterSize === "5 ฟุต") {
+          subFilterMatch = /5\s*ฟุต/.test(sizeStr) && !/3\.5\s*ฟุต/.test(sizeStr);
+        } else if (subFilterSize === "3.5 ฟุต") {
+          subFilterMatch = /3\.5\s*ฟุต/.test(sizeStr);
+        } else if (subFilterSize === "6 ฟุต") {
+          subFilterMatch = /6\s*ฟุต/.test(sizeStr);
+        }
       } else if (selectedCategory === "ห้องอาหาร/ห้องครัว" && subFilterSize !== "ทั้งหมด") {
-        const sizeStr = String(product.size || "") + String(product.name || "") + String(product.description || "");
+        const sizeStr = `${product.size || ""} ${product.name || ""} ${product.description || ""}`;
         subFilterMatch = sizeStr.includes(subFilterSize);
       }
 
