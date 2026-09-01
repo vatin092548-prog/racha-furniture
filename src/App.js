@@ -20,13 +20,11 @@ import {
   Search,
   Plus,
   ArrowLeft,
-  Box,
   MapPin,
   CheckCircle2,
   Edit,
   Trash2,
   X,
-  Upload,
   Image as ImageIcon,
   Lock,
   LogOut,
@@ -35,40 +33,25 @@ import {
   Tag,
   LayoutDashboard,
   Flame,
-  ArrowUpDown,
-  MessageCircle,
-  Camera,
-  Filter,
   Bookmark,
   AlertCircle,
   Phone,
 } from "lucide-react";
 
-
-/* =========================================================
-   APP
-========================================================= */
-
 export default function App() {
-
   /* =======================================================
      CONFIG & FIREBASE
   ======================================================= */
-
   const PRODUCTS_COLLECTION = "products";
-  
-  // รหัสผ่านเข้าสู่ระบบพนักงาน
   const STORE_PASSWORD = "1234";
 
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [firebaseError, setFirebaseError] = useState("");
 
-
   /* =======================================================
      SEARCH / FILTER
   ======================================================= */
-
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
 
@@ -79,42 +62,32 @@ export default function App() {
   const [maxPrice, setMaxPrice] = useState("");
 
   const [sortPrice, setSortPrice] = useState("none");
-
-  // ตัวกรองขนาดย่อยสำหรับห้องนอนและห้องอาหาร
   const [subFilterSize, setSubFilterSize] = useState("ทั้งหมด");
-
 
   /* =======================================================
      LOGIN
   ======================================================= */
-
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
 
   const [passwordInput, setPasswordInput] = useState("");
   const [loginError, setLoginError] = useState("");
 
-
   /* =======================================================
      PRODUCT MODAL
   ======================================================= */
-
   const [showProductModal, setShowProductModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [viewingProduct, setViewingProduct] = useState(null);
 
-
   /* =======================================================
      TOAST
   ======================================================= */
-
   const [toast, setToast] = useState("");
-
 
   /* =======================================================
      CATEGORIES & PREFIX MAP
   ======================================================= */
-
   const categoryPrefixMap = {
     "ห้องนอน": "A",
     "ห้องนั่งเล่น": "T",
@@ -135,11 +108,9 @@ export default function App() {
     { name: "ห้องทั่วไป", icon: LayoutGrid, prefix: "B" },
   ];
 
-
   /* =======================================================
      FORM
   ======================================================= */
-
   const emptyForm = {
     id: "",
     name: "",
@@ -155,17 +126,17 @@ export default function App() {
 
   const [formData, setFormData] = useState(emptyForm);
 
-
   /* =======================================================
      AUTO GENERATE ID
   ======================================================= */
-
   const generateNextId = (categoryName, currentProducts) => {
     const prefix = categoryPrefixMap[categoryName] || "A";
-    const categoryProducts = currentProducts.filter(p => p.category === categoryName || p.id?.startsWith(prefix));
+    const categoryProducts = currentProducts.filter(
+      (p) => p.category === categoryName || p.id?.startsWith(prefix)
+    );
 
     let maxNum = 0;
-    categoryProducts.forEach(p => {
+    categoryProducts.forEach((p) => {
       const match = p.id?.match(new RegExp(`^${prefix}(\\d+)$`));
       if (match) {
         const num = parseInt(match[1], 10);
@@ -176,11 +147,9 @@ export default function App() {
     return `${prefix}${maxNum + 1}`;
   };
 
-
   /* =======================================================
      FIRESTORE REALTIME
   ======================================================= */
-
   useEffect(() => {
     setLoading(true);
     setFirebaseError("");
@@ -209,11 +178,9 @@ export default function App() {
     return () => unsubscribe();
   }, []);
 
-
   /* =======================================================
      OPEN PRODUCT AUTOMATICALLY FROM URL PARAMETER (?product=A1)
   ======================================================= */
-
   useEffect(() => {
     if (products.length > 0) {
       const urlParams = new URLSearchParams(window.location.search);
@@ -230,11 +197,9 @@ export default function App() {
     }
   }, [products]);
 
-
   /* =======================================================
      TOAST
   ======================================================= */
-
   const showToast = (message) => {
     setToast(message);
     setTimeout(() => {
@@ -242,11 +207,9 @@ export default function App() {
     }, 3000);
   };
 
-
   /* =======================================================
      LOGIN / LOGOUT
   ======================================================= */
-
   const handleLogin = (event) => {
     event.preventDefault();
     if (passwordInput === STORE_PASSWORD) {
@@ -265,11 +228,9 @@ export default function App() {
     showToast("ออกจากระบบเรียบร้อย");
   };
 
-
   /* =======================================================
      PRODUCT MODAL CONTROLS
   ======================================================= */
-
   const openAddProduct = () => {
     setEditingProduct(null);
     const targetCategory = selectedCategory || "ห้องนอน";
@@ -307,11 +268,9 @@ export default function App() {
     setFormData(emptyForm);
   };
 
-
   /* =======================================================
-     IMAGE COMPRESSOR & UPLOAD
+     IMAGE COMPRESSOR & UPLOAD & REMOVE
   ======================================================= */
-
   const compressImage = (file, maxWidth = 800, quality = 0.7) => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -362,11 +321,17 @@ export default function App() {
     }
   };
 
+  const handleRemoveImage = () => {
+    setFormData((previous) => ({
+      ...previous,
+      image: "",
+    }));
+    showToast("ลบรูปภาพเรียบร้อย");
+  };
 
   /* =======================================================
      SAVE PRODUCT
   ======================================================= */
-
   const handleSaveProduct = async (event) => {
     event.preventDefault();
 
@@ -380,28 +345,40 @@ export default function App() {
       return;
     }
 
-    if (formData.price === "" || formData.price === null || formData.price === undefined) {
-      alert("กรุณากรอกราคาสินค้า");
+    const hasNormalPrice = formData.price !== "" && formData.price !== null && formData.price !== undefined;
+    const hasPromoPrice = formData.promoPrice !== "" && formData.promoPrice !== null && formData.promoPrice !== undefined;
+
+    if (!hasNormalPrice && !hasPromoPrice) {
+      alert("กรุณากรอกราคาสินค้า อย่างน้อย 1 ช่อง (ราคาปกติ หรือ ราคาลดพิเศษ)");
       return;
     }
 
-    const normalPrice = Number(formData.price);
-    if (Number.isNaN(normalPrice) || normalPrice < 0) {
-      alert("ราคาสินค้าไม่ถูกต้อง");
-      return;
-    }
-
+    let normalPrice = null;
     let promotionPrice = null;
-    if (formData.promoPrice !== "" && formData.promoPrice !== null && formData.promoPrice !== undefined) {
+
+    if (hasNormalPrice) {
+      normalPrice = Number(formData.price);
+      if (Number.isNaN(normalPrice) || normalPrice < 0) {
+        alert("ราคาสินค้าไม่ถูกต้อง");
+        return;
+      }
+    }
+
+    if (hasPromoPrice) {
       promotionPrice = Number(formData.promoPrice);
       if (Number.isNaN(promotionPrice) || promotionPrice < 0) {
         alert("ราคาโปรโมชั่นไม่ถูกต้อง");
         return;
       }
-      if (promotionPrice > normalPrice) {
-        alert("ราคาโปรโมชั่นไม่ควรมากกว่าราคาปกติ");
-        return;
-      }
+    }
+
+    if (normalPrice === null && promotionPrice !== null) {
+      normalPrice = promotionPrice;
+    }
+
+    if (hasNormalPrice && hasPromoPrice && promotionPrice > normalPrice) {
+      alert("ราคาลดพิเศษไม่ควรมากกว่าราคาปกติ");
+      return;
     }
 
     const newProductId = formData.id?.trim() || `P${Date.now()}`;
@@ -442,11 +419,9 @@ export default function App() {
     }
   };
 
-
   /* =======================================================
      DELETE PRODUCT
   ======================================================= */
-
   const handleDeleteProduct = async (product, event) => {
     if (event) event.stopPropagation();
     if (!isLoggedIn) {
@@ -465,11 +440,9 @@ export default function App() {
     }
   };
 
-
   /* =======================================================
-     SHARE (คัดลอกรูปภาพลง Clipboard + เด้งเปิด LINE)
+     SHARE
   ======================================================= */
-
   const handleShare = async (product, event) => {
     if (event) event.stopPropagation();
 
@@ -480,11 +453,11 @@ export default function App() {
       ? `฿${Number(product.promoPrice).toLocaleString()}`
       : `฿${Number(product.price).toLocaleString()}`;
 
-    const shareText = 
+    const shareText =
       `🪑 ${product.name}\n` +
       `💰 ราคา ${price}\n` +
       `📍 ราชาเฟอร์นิเจอร์ สาขาหาดใหญ่\n` +
-      `📦 สถานะ: ${product.status || 'มีสินค้าพร้อมส่ง'}\n` +
+      `📦 สถานะ: ${product.status || "มีสินค้าพร้อมส่ง"}\n` +
       `📍 โซนวาง: ${product.location || "-"}\n\n` +
       `ดูรูปและรายละเอียดสินค้าเพิ่มเติมได้ที่:\n` +
       `${productUrl}`;
@@ -493,16 +466,16 @@ export default function App() {
       if (product.image && product.image.startsWith("data:image") && window.ClipboardItem) {
         const response = await fetch(product.image);
         const blob = await response.blob();
-        await navigator.clipboard.write([
-          new ClipboardItem({ [blob.type]: blob })
-        ]);
+        await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
       }
     } catch (err) {
-      console.log("Clipboard image copy not supported/allowed in this context");
+      console.log("Clipboard image copy not supported");
     }
 
     const lineShareUrl = `line://msg/text/${encodeURIComponent(shareText)}`;
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+      navigator.userAgent
+    );
 
     if (isMobile) {
       window.location.href = lineShareUrl;
@@ -516,11 +489,9 @@ export default function App() {
     }
   };
 
-
   /* =======================================================
      IMAGE BADGE
   ======================================================= */
-
   const renderImageBadge = (status) => {
     switch (status) {
       case "สินค้าตัวโชว์หน้าร้าน":
@@ -550,11 +521,9 @@ export default function App() {
     }
   };
 
-
   /* =======================================================
      BOTTOM BADGE
   ======================================================= */
-
   const renderBottomBadge = (status) => {
     switch (status) {
       case "สินค้าตัวโชว์หน้าร้าน":
@@ -588,11 +557,9 @@ export default function App() {
     }
   };
 
-
   /* =======================================================
      FILTER PRODUCTS
   ======================================================= */
-
   const filteredProducts = products
     .filter((product) => {
       const categoryMatch = selectedCategory ? product.category === selectedCategory : true;
@@ -611,7 +578,6 @@ export default function App() {
       let subFilterMatch = true;
       if (selectedCategory === "ห้องนอน" && subFilterSize !== "ทั้งหมด") {
         const sizeStr = `${product.size || ""} ${product.name || ""} ${product.description || ""}`;
-        
         if (subFilterSize === "5 ฟุต") {
           subFilterMatch = /5\s*ฟุต/.test(sizeStr) && !/3\.5\s*ฟุต/.test(sizeStr);
         } else if (subFilterSize === "3.5 ฟุต") {
@@ -624,7 +590,15 @@ export default function App() {
         subFilterMatch = sizeStr.includes(subFilterSize);
       }
 
-      return categoryMatch && searchMatch && promoMatch && stockMatch && minMatch && maxMatch && subFilterMatch;
+      return (
+        categoryMatch &&
+        searchMatch &&
+        promoMatch &&
+        stockMatch &&
+        minMatch &&
+        maxMatch &&
+        subFilterMatch
+      );
     })
     .sort((a, b) => {
       const priceA = Number(a.promoPrice || a.price || 0);
@@ -637,11 +611,9 @@ export default function App() {
   const promotionCount = products.filter((product) => Boolean(product.promoPrice)).length;
   const stockCount = products.filter((product) => product.status !== "สินค้าหมด").length;
 
-
   /* =======================================================
      RENDER
   ======================================================= */
-
   return (
     <div className="min-h-screen bg-[#F8F6F0] text-gray-800">
       {/* TOAST */}
@@ -666,7 +638,16 @@ export default function App() {
             }}
           >
             <div className="text-[#D4AF37]">
-              <svg width="44" height="44" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round">
+              <svg
+                width="44"
+                height="44"
+                viewBox="0 0 100 100"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
                 <path d="M15 70 L25 35 L40 55 L50 25 L60 55 L75 35 L85 70 Z" />
                 <circle cx="25" cy="30" r="4" fill="currentColor" />
                 <circle cx="50" cy="20" r="4" fill="currentColor" />
@@ -677,11 +658,15 @@ export default function App() {
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-xl md:text-2xl font-bold">ราชาเฟอร์นิเจอร์</h1>
-                <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${isLoggedIn ? "bg-green-500 text-white" : "bg-[#D4AF37] text-[#1B2A3A]"}`}>
+                <span
+                  className={`text-[10px] font-bold px-2 py-1 rounded-full ${
+                    isLoggedIn ? "bg-green-500 text-white" : "bg-[#D4AF37] text-[#1B2A3A]"
+                  }`}
+                >
                   {isLoggedIn ? "โหมดพนักงาน" : "แคตตาล็อกออนไลน์"}
                 </span>
               </div>
-              
+
               <div className="flex flex-col text-xs text-[#D4AF37] mt-0.5 space-y-0.5">
                 <div className="flex items-center gap-1">
                   <MapPin className="w-3 h-3 shrink-0" /> สาขาหาดใหญ่ (ถ.สามสิบเมตร)
@@ -715,7 +700,10 @@ export default function App() {
             )}
 
             {isLoggedIn ? (
-              <button onClick={handleLogout} className="bg-red-600 hover:bg-red-700 text-white px-3 py-2.5 rounded-lg font-bold">
+              <button
+                onClick={handleLogout}
+                className="bg-red-600 hover:bg-red-700 text-white px-3 py-2.5 rounded-lg font-bold"
+              >
                 <LogOut className="w-4 h-4" />
               </button>
             ) : (
@@ -832,7 +820,8 @@ export default function App() {
               </button>
               {selectedCategory && (
                 <span className="bg-amber-100 text-amber-900 px-3 py-1.5 rounded-full text-xs font-bold">
-                  หมวด: {selectedCategory} {isLoggedIn && `(${categoryPrefixMap[selectedCategory]})`}
+                  หมวด: {selectedCategory}{" "}
+                  {isLoggedIn && `(${categoryPrefixMap[selectedCategory]})`}
                 </span>
               )}
             </div>
@@ -1005,9 +994,11 @@ export default function App() {
                               <span className="text-lg font-black text-red-600">
                                 ฿{Number(product.promoPrice).toLocaleString()}
                               </span>
-                              <span className="text-xs text-gray-400 line-through">
-                                ฿{Number(product.price).toLocaleString()}
-                              </span>
+                              {product.price && product.price !== product.promoPrice && (
+                                <span className="text-xs text-gray-400 line-through">
+                                  ฿{Number(product.price).toLocaleString()}
+                                </span>
+                              )}
                             </>
                           ) : (
                             <span className="text-lg font-black text-[#1B2A3A]">
@@ -1099,9 +1090,11 @@ export default function App() {
                     <span className="text-3xl font-black text-red-600">
                       ฿{Number(viewingProduct.promoPrice).toLocaleString()}
                     </span>
-                    <span className="text-base text-gray-400 line-through">
-                      ฿{Number(viewingProduct.price).toLocaleString()}
-                    </span>
+                    {viewingProduct.price && viewingProduct.price !== viewingProduct.promoPrice && (
+                      <span className="text-base text-gray-400 line-through">
+                        ฿{Number(viewingProduct.price).toLocaleString()}
+                      </span>
+                    )}
                   </>
                 ) : (
                   <span className="text-3xl font-black text-[#1B2A3A]">
@@ -1112,14 +1105,24 @@ export default function App() {
 
               <div className="space-y-2 border-t border-b border-gray-100 py-4 my-4 text-sm text-gray-600">
                 {viewingProduct.size && (
-                  <p><strong>ขนาด:</strong> {viewingProduct.size}</p>
+                  <p>
+                    <strong>ขนาด:</strong> {viewingProduct.size}
+                  </p>
                 )}
                 {viewingProduct.location && (
-                  <p><strong>โซนที่จัดวาง:</strong> {viewingProduct.location}</p>
+                  <p>
+                    <strong>โซนที่จัดวาง:</strong> {viewingProduct.location}
+                  </p>
                 )}
-                <p><strong>สถานะ:</strong> {viewingProduct.status}</p>
+                <p>
+                  <strong>สถานะ:</strong> {viewingProduct.status}
+                </p>
                 {viewingProduct.description && (
-                  <p className="whitespace-pre-line pt-2"><strong>รายละเอียดเพิ่มเติม:</strong><br />{viewingProduct.description}</p>
+                  <p className="whitespace-pre-line pt-2">
+                    <strong>รายละเอียดเพิ่มเติม:</strong>
+                    <br />
+                    {viewingProduct.description}
+                  </p>
                 )}
               </div>
 
@@ -1164,7 +1167,9 @@ export default function App() {
                   className="w-full border border-gray-300 rounded-lg p-2 text-sm outline-none"
                 >
                   {categories.map((c) => (
-                    <option key={c.name} value={c.name}>{c.name}</option>
+                    <option key={c.name} value={c.name}>
+                      {c.name}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -1202,24 +1207,32 @@ export default function App() {
                 />
               </div>
 
+              {/* ส่วนราคาที่แก้ไข required แล้ว */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-gray-600 mb-1">ราคาปกติ (บาท) *</label>
+                  <label className="block text-xs font-bold text-gray-600 mb-1">
+                    ราคาปกติ (บาท)
+                  </label>
                   <input
                     type="number"
-                    required
+                    placeholder="ถ้าไม่มี ไม่ต้องกรอก"
                     value={formData.price}
                     onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                    className="w-full border border-gray-300 rounded-lg p-2 text-sm outline-none"
+                    required={!formData.promoPrice}
+                    className="w-full border border-gray-300 rounded-lg p-2 text-sm outline-none focus:border-[#D4AF37]"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-gray-600 mb-1">ราคาลดพิเศษ (บาท)</label>
+                  <label className="block text-xs font-bold text-gray-600 mb-1">
+                    ราคาลดพิเศษ (บาท)
+                  </label>
                   <input
                     type="number"
+                    placeholder="ราคาโปรโมชั่น"
                     value={formData.promoPrice}
                     onChange={(e) => setFormData({ ...formData, promoPrice: e.target.value })}
-                    className="w-full border border-gray-300 rounded-lg p-2 text-sm outline-none"
+                    required={!formData.price}
+                    className="w-full border border-gray-300 rounded-lg p-2 text-sm outline-none focus:border-[#D4AF37]"
                   />
                 </div>
               </div>
@@ -1250,23 +1263,39 @@ export default function App() {
                 </div>
               </div>
 
+              {/* ส่วนรูปภาพ พร้อมปุ่มลบรูปภาพ */}
               <div>
                 <label className="block text-xs font-bold text-gray-600 mb-1">รูปภาพสินค้า</label>
-                <div className="flex items-center gap-3">
-                  {formData.image && (
-                    <img src={formData.image} alt="Preview" className="w-16 h-16 object-cover rounded-lg border" />
-                  )}
+                {formData.image ? (
+                  <div className="relative inline-block mb-2">
+                    <img
+                      src={formData.image}
+                      alt="Preview"
+                      className="w-24 h-24 object-cover rounded-xl border border-gray-200"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleRemoveImage}
+                      className="absolute -top-2 -right-2 bg-red-600 hover:bg-red-700 text-white p-1.5 rounded-full shadow-md transition"
+                      title="ลบรูปภาพนี้"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ) : (
                   <input
                     type="file"
                     accept="image/*"
                     onChange={handleImageUpload}
-                    className="text-xs text-gray-500"
+                    className="w-full text-xs text-gray-500 border border-gray-300 rounded-lg p-2"
                   />
-                </div>
+                )}
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-600 mb-1">รายละเอียดสินค้าเพิ่มเติม</label>
+                <label className="block text-xs font-bold text-gray-600 mb-1">
+                  รายละเอียดสินค้าเพิ่มเติม
+                </label>
                 <textarea
                   rows="3"
                   value={formData.description}
