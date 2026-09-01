@@ -489,7 +489,6 @@ export default function App() {
       `ดูรูปและรายละเอียดสินค้าเพิ่มเติมได้ที่:\n` +
       `${productUrl}`;
 
-    // คัดลอกไฟล์รูปภาพลง Clipboard ให้อัตโนมัติ (ถ้าเครื่องรองรับ)
     try {
       if (product.image && product.image.startsWith("data:image") && window.ClipboardItem) {
         const response = await fetch(product.image);
@@ -502,7 +501,6 @@ export default function App() {
       console.log("Clipboard image copy not supported/allowed in this context");
     }
 
-    // คำสั่งเด้งเปิดแอป LINE
     const lineShareUrl = `line://msg/text/${encodeURIComponent(shareText)}`;
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
@@ -592,7 +590,7 @@ export default function App() {
 
 
   /* =======================================================
-     FILTER PRODUCTS (แก้ไขระบบกรองขนาดฟุตให้แม่นยำ 100%)
+     FILTER PRODUCTS
   ======================================================= */
 
   const filteredProducts = products
@@ -610,7 +608,6 @@ export default function App() {
       const minMatch = minPrice === "" || actualPrice >= Number(minPrice);
       const maxMatch = maxPrice === "" || actualPrice <= Number(maxPrice);
 
-      // --- ระบบตรวจจับขนาดเตียงที่แม่นยำ (ป้องกัน 3.5 ฟุต โผล่ในหมวด 5 ฟุต) ---
       let subFilterMatch = true;
       if (selectedCategory === "ห้องนอน" && subFilterSize !== "ทั้งหมด") {
         const sizeStr = `${product.size || ""} ${product.name || ""} ${product.description || ""}`;
@@ -889,271 +886,320 @@ export default function App() {
               <div className="flex flex-wrap items-center gap-2">
                 <button
                   onClick={() => setPromoOnly(!promoOnly)}
-                  className={`px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1 ${promoOnly ? "bg-red-600 text-white" : "bg-gray-100 text-gray-600"}`}
+                  className={`px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1 ${
+                    promoOnly ? "bg-red-600 text-white" : "bg-gray-100 text-gray-600"
+                  }`}
                 >
                   <Flame className="w-3.5 h-3.5" /> 🔥 ลดพิเศษ
                 </button>
                 <button
                   onClick={() => setStockOnly(!stockOnly)}
-                  className={`px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1 ${stockOnly ? "bg-green-600 text-white" : "bg-gray-100 text-gray-600"}`}
+                  className={`px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1 ${
+                    stockOnly ? "bg-emerald-600 text-white" : "bg-gray-100 text-gray-600"
+                  }`}
                 >
-                  <CheckCircle2 className="w-3.5 h-3.5" /> 📦 พร้อมส่ง
+                  <CheckCircle2 className="w-3.5 h-3.5" /> มีสินค้าพร้อมส่ง
                 </button>
+              </div>
 
-                {/* PRICE RANGE */}
-                <div className="flex items-center gap-1 bg-gray-50 border border-gray-200 rounded-lg px-2 py-1">
-                  <Filter className="w-3.5 h-3.5 text-gray-400" />
-                  <span className="text-xs text-gray-500 font-bold">ราคา:</span>
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="flex items-center gap-1 text-xs">
+                  <span className="text-gray-500 font-bold">ราคา:</span>
                   <input
                     type="number"
                     placeholder="ต่ำสุด"
                     value={minPrice}
                     onChange={(e) => setMinPrice(e.target.value)}
-                    className="w-16 bg-white border border-gray-300 rounded px-1.5 py-0.5 text-xs text-center outline-none"
+                    className="w-16 bg-gray-50 border border-gray-200 rounded px-2 py-1 text-xs"
                   />
-                  <span className="text-xs text-gray-400">-</span>
+                  <span>-</span>
                   <input
                     type="number"
                     placeholder="สูงสุด"
                     value={maxPrice}
                     onChange={(e) => setMaxPrice(e.target.value)}
-                    className="w-16 bg-white border border-gray-300 rounded px-1.5 py-0.5 text-xs text-center outline-none"
+                    className="w-16 bg-gray-50 border border-gray-200 rounded px-2 py-1 text-xs"
                   />
-                  {(minPrice || maxPrice) && (
-                    <button
-                      onClick={() => {
-                        setMinPrice("");
-                        setMaxPrice("");
-                      }}
-                      className="text-xs text-red-500 font-bold ml-1 hover:underline"
-                    >
-                      ล้าง
-                    </button>
-                  )}
                 </div>
-              </div>
 
-              <div className="flex items-center gap-2">
-                <ArrowUpDown className="w-4 h-4 text-gray-400" />
                 <select
                   value={sortPrice}
                   onChange={(e) => setSortPrice(e.target.value)}
-                  className="border border-gray-300 rounded-lg px-2 py-1.5 text-xs"
+                  className="bg-gray-50 border border-gray-200 text-xs font-bold rounded-lg px-2 py-1.5 outline-none"
                 >
-                  <option value="none">เรียงตามมาตรฐาน</option>
-                  <option value="low">ราคาต่ำ → สูง</option>
-                  <option value="high">ราคาสูง → ต่ำ</option>
+                  <option value="none">เรียงลำดับราคา</option>
+                  <option value="low">น้อยไปมาก</option>
+                  <option value="high">มากไปน้อย</option>
                 </select>
               </div>
             </div>
 
-            {loading && (
-              <div className="bg-white rounded-xl p-16 text-center">
-                <div className="w-10 h-10 border-4 border-[#D4AF37] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-                <p className="text-gray-500 font-bold">กำลังโหลดสินค้าจาก Firebase...</p>
+            {/* PRODUCT CARDS LIST */}
+            {loading ? (
+              <div className="text-center py-12 text-gray-500">กำลังโหลดข้อมูลสินค้า...</div>
+            ) : filteredProducts.length === 0 ? (
+              <div className="text-center py-12 text-gray-400 bg-white rounded-2xl border border-dashed border-gray-300">
+                ไม่พบรายการสินค้าตรงกับเงื่อนไขที่ค้นหา
               </div>
-            )}
-
-            {!loading && filteredProducts.length > 0 && (
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
                 {filteredProducts.map((product) => (
                   <div
                     key={product.id}
                     onClick={() => setViewingProduct(product)}
-                    className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-xl transition cursor-pointer"
+                    className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl transition-all cursor-pointer flex flex-col justify-between overflow-hidden group"
                   >
-                    <div className="relative h-56 bg-gray-50 flex items-center justify-center p-2">
-                      {product.image ? (
-                        <img src={product.image} alt={product.name} className="w-full h-full object-contain" />
-                      ) : (
-                        <ImageIcon className="w-12 h-12 text-gray-300" />
-                      )}
+                    <div>
+                      {/* Product Image Box */}
+                      <div className="relative aspect-4/3 bg-gray-100 overflow-hidden">
+                        {product.image ? (
+                          <img
+                            src={product.image}
+                            alt={product.name}
+                            className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-gray-300">
+                            <ImageIcon className="w-12 h-12" />
+                          </div>
+                        )}
 
-                      <div className="absolute top-3 left-3 flex flex-col gap-1 items-start">
-                        {renderImageBadge(product.status)}
+                        <div className="absolute top-2 left-2 flex flex-col gap-1">
+                          {renderImageBadge(product.status)}
+                        </div>
+
                         {product.promoPrice && (
-                          <div className="bg-red-600 text-white text-xs font-bold px-2 py-0.5 rounded-md shadow">
-                            🔥 ลดพิเศษ
+                          <div className="absolute top-2 right-2 bg-red-600 text-white font-black text-xs px-2.5 py-1 rounded-lg shadow-md animate-bounce">
+                            PROMOTION
                           </div>
                         )}
                       </div>
 
-                      <button
-                        onClick={(e) => handleShare(product, e)}
-                        className="absolute right-3 bottom-3 bg-[#06C755] hover:bg-[#05b34c] text-white px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1 shadow-md"
-                      >
-                        <Share2 className="w-3.5 h-3.5" /> แชร์
-                      </button>
+                      {/* Product Content */}
+                      <div className="p-4">
+                        <div className="flex justify-between items-start mb-1">
+                          <span className="font-mono text-xs font-bold text-gray-400">
+                            ID: {product.id}
+                          </span>
+                          {product.size && (
+                            <span className="text-[11px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded font-bold">
+                              {product.size}
+                            </span>
+                          )}
+                        </div>
+
+                        <h3 className="font-bold text-gray-800 text-base line-clamp-1 group-hover:text-[#D4AF37] transition">
+                          {product.name}
+                        </h3>
+
+                        {product.location && (
+                          <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                            <MapPin className="w-3 h-3 text-amber-600 shrink-0" />
+                            โซน: {product.location}
+                          </p>
+                        )}
+
+                        <div className="mt-3 flex items-baseline gap-2">
+                          {product.promoPrice ? (
+                            <>
+                              <span className="text-lg font-black text-red-600">
+                                ฿{Number(product.promoPrice).toLocaleString()}
+                              </span>
+                              <span className="text-xs text-gray-400 line-through">
+                                ฿{Number(product.price).toLocaleString()}
+                              </span>
+                            </>
+                          ) : (
+                            <span className="text-lg font-black text-[#1B2A3A]">
+                              ฿{Number(product.price).toLocaleString()}
+                            </span>
+                          )}
+                        </div>
+                      </div>
                     </div>
 
-                    <div className="p-4">
-                      <div className="flex justify-between gap-2">
-                        <h3 className="font-bold text-gray-800">{product.name}</h3>
-                        {isLoggedIn && (
-                          <span className="bg-gray-100 text-gray-500 px-2 py-0.5 rounded text-[10px] font-mono h-fit">
-                            {product.id}
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="mt-2">
-                        {product.promoPrice ? (
-                          <div className="flex items-center gap-2">
-                            <span className="text-2xl font-black text-red-600">฿{Number(product.promoPrice).toLocaleString()}</span>
-                            <span className="text-xs text-gray-400 line-through">฿{Number(product.price).toLocaleString()}</span>
-                          </div>
-                        ) : (
-                          <span className="text-2xl font-black text-blue-700">฿{Number(product.price || 0).toLocaleString()}</span>
-                        )}
-                      </div>
-
-                      <div className="border-t mt-3 pt-3 space-y-2 text-xs text-gray-500">
-                        <div className="flex gap-2">
-                          <Box className="w-4 h-4" /> ขนาด: {product.size || "-"}
-                        </div>
-                        <div className="flex gap-2">
-                          <MapPin className="w-4 h-4 text-amber-600" /> วางหน้าร้าน: {product.location || "-"}
-                        </div>
-                      </div>
-
+                    {/* Bottom Badge & Share Actions */}
+                    <div className="p-4 pt-0">
                       {renderBottomBadge(product.status)}
 
-                      {isLoggedIn && (
-                        <div className="flex gap-2 mt-3">
-                          <button
-                            onClick={(e) => openEditProduct(product, e)}
-                            className="flex-1 bg-blue-50 hover:bg-blue-100 text-blue-700 py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1"
-                          >
-                            <Edit className="w-4 h-4" /> แก้ไข
-                          </button>
-                          <button
-                            onClick={(e) => handleDeleteProduct(product, e)}
-                            className="flex-1 bg-red-50 hover:bg-red-100 text-red-600 py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1"
-                          >
-                            <Trash2 className="w-4 h-4" /> ลบ
-                          </button>
-                        </div>
-                      )}
+                      <div className="mt-3 flex items-center justify-between gap-2 border-t pt-3">
+                        <button
+                          onClick={(e) => handleShare(product, e)}
+                          className="flex-1 bg-green-50 hover:bg-green-100 text-green-700 py-1.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1 border border-green-200 transition"
+                        >
+                          <Share2 className="w-3.5 h-3.5" /> แชร์ไป LINE
+                        </button>
+
+                        {isLoggedIn && (
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={(e) => openEditProduct(product, e)}
+                              className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={(e) => handleDeleteProduct(product, e)}
+                              className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
-              </div>
-            )}
-
-            {!loading && filteredProducts.length === 0 && (
-              <div className="bg-white border border-dashed border-gray-300 rounded-xl p-16 text-center">
-                <Package className="w-14 h-14 text-gray-300 mx-auto mb-4" />
-                <h3 className="font-bold text-gray-600">ไม่พบสินค้า</h3>
-                <p className="text-xs text-gray-400 mt-1">ไม่มีสินค้าตรงกับเงื่อนไขการค้นหาของคุณ</p>
-                {isLoggedIn && (
-                  <button onClick={openAddProduct} className="mt-5 bg-[#1B2A3A] text-[#D4AF37] px-5 py-2.5 rounded-lg text-sm font-bold">
-                    <Plus className="inline w-4 h-4 mr-1" /> เพิ่มสินค้า
-                  </button>
-                )}
               </div>
             )}
           </div>
         )}
       </main>
 
-      {/* LOGIN MODAL */}
-      {showLoginModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl p-6 relative">
-            <button onClick={() => setShowLoginModal(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-700">
+      {/* ==================== VIEW PRODUCT MODAL ==================== */}
+      {viewingProduct && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl relative">
+            <button
+              onClick={() => setViewingProduct(null)}
+              className="absolute top-4 right-4 z-10 bg-white/80 hover:bg-white p-2 rounded-full shadow-md text-gray-700 transition"
+            >
               <X className="w-5 h-5" />
             </button>
-            <div className="text-center mb-6">
-              <div className="w-14 h-14 rounded-full bg-[#1B2A3A] text-[#D4AF37] flex items-center justify-center mx-auto mb-3">
-                <Lock className="w-6 h-6" />
-              </div>
-              <h2 className="font-bold text-lg text-[#1B2A3A]">เข้าสู่ระบบพนักงาน</h2>
-              <p className="text-xs text-gray-500 mt-1">ราชาเฟอร์นิเจอร์</p>
-            </div>
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div>
-                <label className="text-xs font-bold text-gray-600">กรุณากรอกรหัสผ่านของร้าน</label>
-                <input
-                  type="password"
-                  value={passwordInput}
-                  onChange={(e) => setPasswordInput(e.target.value)}
-                  placeholder="กรอกรหัสผ่าน"
-                  className="w-full border border-gray-300 rounded-xl px-4 py-3 mt-1 text-center text-lg font-bold outline-none focus:ring-2 focus:ring-[#D4AF37]"
-                  required
+
+            <div className="aspect-4/3 bg-gray-100 relative">
+              {viewingProduct.image ? (
+                <img
+                  src={viewingProduct.image}
+                  alt={viewingProduct.name}
+                  className="w-full h-full object-contain bg-black/5"
                 />
-              </div>
-              {loginError && (
-                <div className="bg-red-50 text-red-600 border border-red-200 rounded-lg p-2 text-xs text-center font-bold">
-                  {loginError}
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-gray-300">
+                  <ImageIcon className="w-16 h-16" />
                 </div>
               )}
-              <button type="submit" className="w-full bg-[#1B2A3A] text-[#D4AF37] py-3 rounded-xl font-bold">
-                เข้าสู่ระบบ
-              </button>
-            </form>
+            </div>
+
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-2">
+                <span className="font-mono text-xs font-bold text-gray-400 bg-gray-100 px-2.5 py-1 rounded-md">
+                  ID: {viewingProduct.id}
+                </span>
+                <span className="text-xs font-bold text-amber-800 bg-amber-100 px-3 py-1 rounded-full">
+                  {viewingProduct.category}
+                </span>
+              </div>
+
+              <h2 className="text-2xl font-bold text-gray-800">{viewingProduct.name}</h2>
+
+              <div className="my-4 flex items-baseline gap-3">
+                {viewingProduct.promoPrice ? (
+                  <>
+                    <span className="text-3xl font-black text-red-600">
+                      ฿{Number(viewingProduct.promoPrice).toLocaleString()}
+                    </span>
+                    <span className="text-base text-gray-400 line-through">
+                      ฿{Number(viewingProduct.price).toLocaleString()}
+                    </span>
+                  </>
+                ) : (
+                  <span className="text-3xl font-black text-[#1B2A3A]">
+                    ฿{Number(viewingProduct.price).toLocaleString()}
+                  </span>
+                )}
+              </div>
+
+              <div className="space-y-2 border-t border-b border-gray-100 py-4 my-4 text-sm text-gray-600">
+                {viewingProduct.size && (
+                  <p><strong>ขนาด:</strong> {viewingProduct.size}</p>
+                )}
+                {viewingProduct.location && (
+                  <p><strong>โซนที่จัดวาง:</strong> {viewingProduct.location}</p>
+                )}
+                <p><strong>สถานะ:</strong> {viewingProduct.status}</p>
+                {viewingProduct.description && (
+                  <p className="whitespace-pre-line pt-2"><strong>รายละเอียดเพิ่มเติม:</strong><br />{viewingProduct.description}</p>
+                )}
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={(e) => handleShare(viewingProduct, e)}
+                  className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 shadow-md transition"
+                >
+                  <Share2 className="w-5 h-5" /> แชร์รายละเอียดลง LINE
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
 
-      {/* ADD / EDIT MODAL */}
+      {/* ==================== ADD / EDIT PRODUCT MODAL ==================== */}
       {showProductModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
-            <div className="bg-[#1B2A3A] text-white px-5 py-4 flex justify-between items-center">
-              <div>
-                <h2 className="font-bold text-[#D4AF37]">{editingProduct ? "แก้ไขสินค้า" : "เพิ่มสินค้าใหม่"}</h2>
-                <p className="text-[10px] text-gray-300">สาขาหาดใหญ่ (ถ.สามสิบเมตร)</p>
-              </div>
-              <button onClick={closeProductModal} className="text-gray-300 hover:text-white">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6 shadow-2xl relative">
+            <button
+              onClick={closeProductModal}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 p-2"
+            >
+              <X className="w-5 h-5" />
+            </button>
 
-            <form onSubmit={handleSaveProduct} className="p-5 overflow-y-auto space-y-4">
+            <h2 className="text-xl font-bold text-[#1B2A3A] mb-4">
+              {editingProduct ? "แก้ไขข้อมูลสินค้า" : "เพิ่มสินค้าใหม่"}
+            </h2>
+
+            <form onSubmit={handleSaveProduct} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-gray-600 mb-1">
-                  รหัสสินค้า (รันให้อัตโนมัติ หรือพิมพ์แก้ไขได้)
-                </label>
-                <input
-                  type="text"
-                  value={formData.id}
-                  onChange={(e) => setFormData({ ...formData, id: e.target.value })}
-                  placeholder="เช่น A1, T2"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 font-mono font-bold text-blue-700 focus:ring-2 focus:ring-[#D4AF37] outline-none"
-                />
+                <label className="block text-xs font-bold text-gray-600 mb-1">หมวดหมู่สินค้า</label>
+                <select
+                  value={formData.category}
+                  onChange={(e) => {
+                    const cat = e.target.value;
+                    const nextId = editingProduct ? formData.id : generateNextId(cat, products);
+                    setFormData({ ...formData, category: cat, id: nextId });
+                  }}
+                  className="w-full border border-gray-300 rounded-lg p-2 text-sm outline-none"
+                >
+                  {categories.map((c) => (
+                    <option key={c.name} value={c.name}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-gray-600 mb-1">รหัสสินค้า</label>
+                  <input
+                    type="text"
+                    value={formData.id}
+                    onChange={(e) => setFormData({ ...formData, id: e.target.value })}
+                    className="w-full border border-gray-300 rounded-lg p-2 text-sm outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-600 mb-1">ขนาด (ถ้ามี)</label>
+                  <input
+                    type="text"
+                    placeholder="เช่น 5 ฟุต"
+                    value={formData.size}
+                    onChange={(e) => setFormData({ ...formData, size: e.target.value })}
+                    className="w-full border border-gray-300 rounded-lg p-2 text-sm outline-none"
+                  />
+                </div>
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-gray-600 mb-1">ชื่อสินค้า *</label>
                 <input
                   type="text"
+                  required
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="เช่น เตียงนอน 5 ฟุต"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5"
-                  required
+                  className="w-full border border-gray-300 rounded-lg p-2 text-sm outline-none"
                 />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-gray-600 mb-1">หมวดหมู่</label>
-                <select
-                  value={formData.category}
-                  onChange={(e) => {
-                    const newCat = e.target.value;
-                    const autoId = editingProduct ? formData.id : generateNextId(newCat, products);
-                    setFormData({
-                      ...formData,
-                      category: newCat,
-                      id: autoId,
-                    });
-                  }}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5"
-                >
-                  {categories.map((category) => (
-                    <option key={category.name} value={category.name}>{category.name}</option>
-                  ))}
-                </select>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -1161,95 +1207,87 @@ export default function App() {
                   <label className="block text-xs font-bold text-gray-600 mb-1">ราคาปกติ (บาท) *</label>
                   <input
                     type="number"
-                    min="0"
+                    required
                     value={formData.price}
                     onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                    placeholder="16900"
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5"
-                    required
+                    className="w-full border border-gray-300 rounded-lg p-2 text-sm outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-gray-600 mb-1">ราคาโปรโมชั่น</label>
+                  <label className="block text-xs font-bold text-gray-600 mb-1">ราคาลดพิเศษ (บาท)</label>
                   <input
                     type="number"
-                    min="0"
                     value={formData.promoPrice}
                     onChange={(e) => setFormData({ ...formData, promoPrice: e.target.value })}
-                    placeholder="ถ้าไม่มีให้เว้นว่าง"
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5"
+                    className="w-full border border-gray-300 rounded-lg p-2 text-sm outline-none"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-gray-600 mb-1">ขนาด</label>
-                  <input
-                    type="text"
-                    value={formData.size}
-                    onChange={(e) => setFormData({ ...formData, size: e.target.value })}
-                    placeholder="เช่น 5 ฟุต หรือ 6 ที่นั่ง"
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5"
-                  />
-                </div>
-
-                <div>
                   <label className="block text-xs font-bold text-gray-600 mb-1">สถานะสินค้า</label>
                   <select
                     value={formData.status}
                     onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2.5 font-bold"
+                    className="w-full border border-gray-300 rounded-lg p-2 text-sm outline-none"
                   >
-                    <option value="มีสินค้าพร้อมส่ง">🟢 มีสินค้าพร้อมส่ง</option>
-                    <option value="สินค้าตัวโชว์หน้าร้าน">🟡 สินค้าตัวโชว์หน้าร้าน</option>
-                    <option value="สินค้าติดจอง">🟣 สินค้าติดจอง</option>
-                    <option value="สินค้าหมด">🔴 สินค้าหมด</option>
+                    <option value="มีสินค้าพร้อมส่ง">มีสินค้าพร้อมส่ง</option>
+                    <option value="สินค้าตัวโชว์หน้าร้าน">สินค้าตัวโชว์หน้าร้าน</option>
+                    <option value="สินค้าติดจอง">สินค้าติดจอง</option>
+                    <option value="สินค้าหมด">สินค้าหมด</option>
                   </select>
                 </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-gray-600 mb-1">โซนวางหน้าร้าน</label>
-                <input
-                  type="text"
-                  value={formData.location}
-                  onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                  placeholder="เช่น 6 - 1"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5"
-                />
+                <div>
+                  <label className="block text-xs font-bold text-gray-600 mb-1">โซนวางสินค้า</label>
+                  <input
+                    type="text"
+                    placeholder="เช่น โซน A2"
+                    value={formData.location}
+                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                    className="w-full border border-gray-300 rounded-lg p-2 text-sm outline-none"
+                  />
+                </div>
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-gray-600 mb-1">รูปภาพสินค้า</label>
-                <div className="flex gap-3 items-center">
-                  <label className="flex-1 border border-dashed border-gray-300 rounded-lg p-3 cursor-pointer bg-gray-50 hover:bg-gray-100 flex justify-center items-center gap-2 text-xs font-bold text-gray-600">
-                    <Upload className="w-4 h-4" /> เปลี่ยนรูปภาพ
-                    <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
-                  </label>
+                <div className="flex items-center gap-3">
                   {formData.image && (
-                    <img src={formData.image} alt="Preview" className="w-14 h-14 object-cover rounded-lg border" />
+                    <img src={formData.image} alt="Preview" className="w-16 h-16 object-cover rounded-lg border" />
                   )}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="text-xs text-gray-500"
+                  />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-600 mb-1">รายละเอียดเพิ่มเติม</label>
+                <label className="block text-xs font-bold text-gray-600 mb-1">รายละเอียดสินค้าเพิ่มเติม</label>
                 <textarea
                   rows="3"
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="วัสดุ คุณสมบัติพิเศษ ฯลฯ"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 resize-none"
-                />
+                  className="w-full border border-gray-300 rounded-lg p-2 text-sm outline-none"
+                ></textarea>
               </div>
 
-              <div className="flex gap-3 pt-2">
-                <button type="button" onClick={closeProductModal} className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 rounded-xl font-bold">
+              <div className="flex justify-end gap-2 pt-3">
+                <button
+                  type="button"
+                  onClick={closeProductModal}
+                  className="px-4 py-2 text-gray-500 hover:bg-gray-100 rounded-lg font-bold text-sm"
+                >
                   ยกเลิก
                 </button>
-                <button type="submit" className="flex-1 bg-[#1B2A3A] hover:bg-[#111B25] text-[#D4AF37] py-3 rounded-xl font-bold">
-                  {editingProduct ? "บันทึกการแก้ไข" : "บันทึกข้อมูล"}
+                <button
+                  type="submit"
+                  className="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-lg font-bold text-sm shadow-md"
+                >
+                  บันทึกสินค้า
                 </button>
               </div>
             </form>
@@ -1257,101 +1295,46 @@ export default function App() {
         </div>
       )}
 
-      {/* PRODUCT DETAIL MODAL */}
-      {viewingProduct && (
-        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto relative shadow-2xl">
+      {/* ==================== LOGIN MODAL ==================== */}
+      {showLoginModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl relative">
             <button
-              onClick={() => {
-                setViewingProduct(null);
-                window.history.pushState({}, "", window.location.pathname);
-              }}
-              className="absolute top-4 right-4 z-10 bg-white rounded-full p-2 shadow"
+              onClick={() => setShowLoginModal(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
             >
               <X className="w-5 h-5" />
             </button>
 
-            <div className="bg-gray-50 min-h-[280px] flex items-center justify-center p-5">
-              {viewingProduct.image ? (
-                <img src={viewingProduct.image} alt={viewingProduct.name} className="max-h-[400px] max-w-full object-contain" />
-              ) : (
-                <ImageIcon className="w-16 h-16 text-gray-300" />
-              )}
+            <div className="text-center mb-5">
+              <div className="w-12 h-12 bg-amber-100 text-[#D4AF37] rounded-full flex items-center justify-center mx-auto mb-2">
+                <Lock className="w-6 h-6" />
+              </div>
+              <h2 className="text-lg font-bold text-[#1B2A3A]">เข้าสู่ระบบพนักงาน</h2>
+              <p className="text-xs text-gray-500 mt-1">ป้อนรหัสผ่านเพื่อจัดการข้อมูลสินค้า</p>
             </div>
 
-            <div className="p-6">
-              <span className="text-xs bg-amber-100 text-amber-800 px-2.5 py-1 rounded-md font-bold">
-                {viewingProduct.category}
-              </span>
-
-              <div className="flex justify-between gap-3 mt-3">
-                <h2 className="text-2xl font-black">{viewingProduct.name}</h2>
-                {isLoggedIn && (
-                  <span className="text-xs bg-gray-100 h-fit px-2 py-1 rounded font-mono">{viewingProduct.id}</span>
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div>
+                <input
+                  type="password"
+                  placeholder="รหัสผ่านพนักงาน"
+                  value={passwordInput}
+                  onChange={(e) => setPasswordInput(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg p-2.5 text-center text-sm outline-none focus:border-[#D4AF37]"
+                />
+                {loginError && (
+                  <p className="text-xs text-red-500 font-bold mt-1 text-center">{loginError}</p>
                 )}
               </div>
 
-              <div className="mt-3 mb-5">
-                {viewingProduct.promoPrice ? (
-                  <div className="flex items-center gap-3">
-                    <span className="text-3xl font-black text-red-600">฿{Number(viewingProduct.promoPrice).toLocaleString()}</span>
-                    <span className="text-sm text-gray-400 line-through">฿{Number(viewingProduct.price).toLocaleString()}</span>
-                  </div>
-                ) : (
-                  <span className="text-3xl font-black text-blue-700">฿{Number(viewingProduct.price || 0).toLocaleString()}</span>
-                )}
-              </div>
-
-              <div className="grid sm:grid-cols-2 gap-3">
-                <div className="bg-gray-50 rounded-lg p-3 text-sm">
-                  <Box className="inline w-4 h-4 mr-2" /> ขนาด: {viewingProduct.size || "-"}
-                </div>
-                <div className="bg-gray-50 rounded-lg p-3 text-sm">
-                  <CheckCircle2 className="inline w-4 h-4 mr-2 text-green-600" /> สถานะ: {viewingProduct.status}
-                </div>
-                <div className="sm:col-span-2 bg-amber-50 rounded-lg p-3 text-sm">
-                  <MapPin className="inline w-4 h-4 mr-2 text-amber-600" /> โซนวางหน้าร้าน: {viewingProduct.location || "-"}
-                </div>
-              </div>
-
-              {viewingProduct.description && (
-                <div className="mt-4 bg-gray-50 rounded-lg p-4 text-sm text-gray-600">
-                  {viewingProduct.description}
-                </div>
-              )}
-
-              <div className="mt-5 bg-green-50 border border-green-200 rounded-xl p-4">
-                <div className="flex gap-3">
-                  <MessageCircle className="text-green-600 w-5 h-5 shrink-0" />
-                  <div>
-                    <p className="font-bold text-green-800 text-sm">สนใจสินค้านี้?</p>
-                    <p className="text-xs text-green-700 mt-1">
-                      แคปหน้าจอสินค้า <Camera className="inline w-3.5 h-3.5 mx-1" /> หรือกดปุ่มวาง (Paste) เพื่อแนบรูปในแชต LINE
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* ปุ่มแชร์เข้า LINE */}
               <button
-                onClick={() => handleShare(viewingProduct)}
-                className="w-full mt-4 bg-[#06C755] hover:bg-[#05B34C] text-white py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 shadow-md transition"
+                type="submit"
+                className="w-full bg-[#1B2A3A] hover:bg-[#111B25] text-[#D4AF37] font-bold py-2.5 rounded-lg text-sm shadow-md transition"
               >
-                <Share2 className="w-5 h-5" /> แชร์ข้อมูลสินค้าลง LINE
+                เข้าสู่ระบบ
               </button>
-
-              {isLoggedIn && (
-                <button
-                  onClick={() => {
-                    setViewingProduct(null);
-                    openEditProduct(viewingProduct);
-                  }}
-                  className="w-full mt-3 bg-blue-50 text-blue-700 py-3 rounded-xl font-bold"
-                >
-                  <Edit className="inline w-4 h-4 mr-1" /> แก้ไขสินค้า
-                </button>
-              )}
-            </div>
+            </form>
           </div>
         </div>
       )}
