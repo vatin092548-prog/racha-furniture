@@ -36,8 +36,6 @@ import {
   Bookmark,
   AlertCircle,
   Phone,
-  ChevronRight,
-  SlidersHorizontal,
 } from "lucide-react";
 
 export default function App() {
@@ -101,13 +99,13 @@ export default function App() {
   };
 
   const categories = [
-    { name: "ห้องนอน", icon: Bed, prefix: "A", desc: "เตียง, ตู้เสื้อผ้า, โต๊ะแป้ง" },
-    { name: "ห้องนั่งเล่น", icon: Sofa, prefix: "T", desc: "ตู้วางทีวี, โต๊ะกลาง, ชั้นวาง" },
-    { name: "โซฟา & เก้าอี้พักผ่อน", icon: Armchair, prefix: "S", desc: "โซฟาเข้ามุม, เก้าอี้ปรับนอน" },
-    { name: "ห้องอาหาร/ห้องครัว", icon: Utensils, prefix: "E", desc: "ชุดโต๊ะอาหาร, เก้าอี้กินข้าว" },
-    { name: "ห้องสำนักงาน", icon: Briefcase, prefix: "I", desc: "โต๊ะทำงาน, เก้าอี้ผู้บริหาร" },
-    { name: "สินค้าพิเศษ", icon: Sparkles, prefix: "P", desc: "สินค้าโปรโมชั่น, ตัวโชว์" },
-    { name: "ห้องทั่วไป", icon: LayoutGrid, prefix: "B", desc: "เฟอร์นิเจอร์อเนกประสงค์" },
+    { name: "ห้องนอน", icon: Bed, prefix: "A" },
+    { name: "ห้องนั่งเล่น", icon: Sofa, prefix: "T" },
+    { name: "โซฟา & เก้าอี้พักผ่อน", icon: Armchair, prefix: "S" },
+    { name: "ห้องอาหาร/ห้องครัว", icon: Utensils, prefix: "E" },
+    { name: "ห้องสำนักงาน", icon: Briefcase, prefix: "I" },
+    { name: "สินค้าพิเศษ", icon: Sparkles, prefix: "P" },
+    { name: "ห้องทั่วไป", icon: LayoutGrid, prefix: "B" },
   ];
 
   /* =======================================================
@@ -310,16 +308,16 @@ export default function App() {
     if (!file) return;
 
     try {
-      showToast("กำลังบีบอัดรูปภาพให้เร็วขึ้น...");
+      showToast("กำลังประมวลผลรูปภาพ...");
       const compressedImage = await compressImage(file, 800, 0.7);
       setFormData((previous) => ({
         ...previous,
         image: compressedImage,
       }));
-      showToast("อัปโหลดรูปภาพสำเร็จ");
+      showToast("อัปโหลดรูปภาพเรียบร้อย");
     } catch (error) {
       console.error("Image Compress Error:", error);
-      alert("ไม่สามารถอัปโหลดรูปภาพนี้ได้");
+      alert("ไม่สามารถอ่านหรือบีบอัดรูปภาพได้");
     }
   };
 
@@ -409,7 +407,15 @@ export default function App() {
       showToast(editingProduct ? "แก้ไขสินค้าสำเร็จ" : "เพิ่มสินค้าสำเร็จ");
     } catch (error) {
       console.error("❌ FIRESTORE SAVE ERROR", error);
-      alert(`❌ ไม่สามารถบันทึกได้: ${error.message}`);
+      let message = "ไม่สามารถบันทึกสินค้าได้";
+      if (error.code === "permission-denied") {
+        message = "Firebase ไม่อนุญาตให้เขียนข้อมูล\nกรุณาตรวจสอบ Firestore Rules";
+      } else if (error.code === "invalid-argument") {
+        message = "ข้อมูลหรือไฟล์รูปภาพที่ส่งไป Firebase ไม่ถูกต้อง";
+      } else {
+        message = `บันทึกสินค้าไม่สำเร็จ\n\n${error.message}`;
+      }
+      alert(`❌ ${message}`);
     }
   };
 
@@ -430,7 +436,7 @@ export default function App() {
       showToast("ลบสินค้าเรียบร้อย");
     } catch (error) {
       console.error("❌ DELETE ERROR:", error);
-      alert(`ลบสินค้าไม่สำเร็จ: ${error.message}`);
+      alert(`ลบสินค้าไม่สำเร็จ\n\n${error.message}`);
     }
   };
 
@@ -453,7 +459,7 @@ export default function App() {
       `📍 ราชาเฟอร์นิเจอร์ สาขาหาดใหญ่\n` +
       `📦 สถานะ: ${product.status || "มีสินค้าพร้อมส่ง"}\n` +
       `📍 โซนวาง: ${product.location || "-"}\n\n` +
-      `ดูรูปและรายละเอียดเพิ่มเติม:\n` +
+      `ดูรูปและรายละเอียดสินค้าเพิ่มเติมได้ที่:\n` +
       `${productUrl}`;
 
     try {
@@ -476,7 +482,7 @@ export default function App() {
     } else {
       if (navigator.clipboard) {
         navigator.clipboard.writeText(shareText);
-        showToast("คัดลอกรูปภาพและข้อความแล้ว! นำไปวางใน LINE ได้เลย");
+        showToast("คัดลอกรูปภาพและข้อความแล้ว! กด Ctrl+V ใน LINE ได้เลย");
       } else {
         alert(shareText);
       }
@@ -484,32 +490,68 @@ export default function App() {
   };
 
   /* =======================================================
-     BADGES
+     IMAGE BADGE
   ======================================================= */
   const renderImageBadge = (status) => {
     switch (status) {
       case "สินค้าตัวโชว์หน้าร้าน":
         return (
-          <div className="bg-gradient-to-r from-amber-500 to-amber-600 text-white font-black text-[11px] px-2.5 py-1 rounded-full shadow-lg flex items-center gap-1 backdrop-blur-md">
-            <Sparkles className="w-3 h-3 animate-spin-slow" /> ตัวโชว์
+          <div className="bg-amber-500 text-white font-black text-xs px-2.5 py-1 rounded-lg shadow-md flex items-center gap-1">
+            <Sparkles className="w-3.5 h-3.5 animate-pulse" /> สินค้าตัวโชว์
           </div>
         );
       case "สินค้าติดจอง":
         return (
-          <div className="bg-gradient-to-r from-purple-600 to-purple-800 text-white font-black text-[11px] px-2.5 py-1 rounded-full shadow-lg flex items-center gap-1">
-            <Bookmark className="w-3 h-3" /> ติดจอง
+          <div className="bg-purple-600 text-white font-black text-xs px-2.5 py-1 rounded-lg shadow-md flex items-center gap-1">
+            <Bookmark className="w-3.5 h-3.5" /> ติดจองแล้ว
           </div>
         );
       case "สินค้าหมด":
         return (
-          <div className="bg-gradient-to-r from-red-600 to-red-800 text-white font-black text-[11px] px-2.5 py-1 rounded-full shadow-lg flex items-center gap-1">
-            <AlertCircle className="w-3 h-3" /> หมด
+          <div className="bg-red-600 text-white font-black text-xs px-2.5 py-1 rounded-lg shadow-md flex items-center gap-1">
+            <AlertCircle className="w-3.5 h-3.5" /> สินค้าหมด
           </div>
         );
       default:
         return (
-          <div className="bg-gradient-to-r from-emerald-600 to-teal-700 text-white font-black text-[11px] px-2.5 py-1 rounded-full shadow-lg flex items-center gap-1">
-            <CheckCircle2 className="w-3 h-3" /> พร้อมส่ง
+          <div className="bg-emerald-600 text-white font-black text-xs px-2.5 py-1 rounded-lg shadow-md flex items-center gap-1">
+            <CheckCircle2 className="w-3.5 h-3.5" /> พร้อมขาย
+          </div>
+        );
+    }
+  };
+
+  /* =======================================================
+     BOTTOM BADGE
+  ======================================================= */
+  const renderBottomBadge = (status) => {
+    switch (status) {
+      case "สินค้าตัวโชว์หน้าร้าน":
+        return (
+          <div className="mt-4 rounded-xl py-2 text-center text-xs font-black border-2 bg-amber-100 text-amber-900 border-amber-300 shadow-sm">
+            <Sparkles className="inline w-4 h-4 mr-1 text-amber-700" />
+            สินค้าตัวโชว์หน้าร้าน
+          </div>
+        );
+      case "สินค้าติดจอง":
+        return (
+          <div className="mt-4 rounded-xl py-2 text-center text-xs font-black border-2 bg-purple-100 text-purple-900 border-purple-300 shadow-sm">
+            <Bookmark className="inline w-4 h-4 mr-1 text-purple-700" />
+            สินค้าติดจอง
+          </div>
+        );
+      case "สินค้าหมด":
+        return (
+          <div className="mt-4 rounded-xl py-2 text-center text-xs font-black border-2 bg-red-100 text-red-900 border-red-300 shadow-sm">
+            <AlertCircle className="inline w-4 h-4 mr-1 text-red-700" />
+            สินค้าหมด
+          </div>
+        );
+      default:
+        return (
+          <div className="mt-4 rounded-xl py-2 text-center text-xs font-black border-2 bg-emerald-100 text-emerald-900 border-emerald-300 shadow-sm">
+            <CheckCircle2 className="inline w-4 h-4 mr-1 text-emerald-700" />
+            มีสินค้าพร้อมส่ง
           </div>
         );
     }
@@ -569,25 +611,25 @@ export default function App() {
   const promotionCount = products.filter((product) => Boolean(product.promoPrice)).length;
   const stockCount = products.filter((product) => product.status !== "สินค้าหมด").length;
 
+  /* =======================================================
+     RENDER
+  ======================================================= */
   return (
-    <div className="min-h-screen bg-[#F4F6F9] text-gray-800 font-sans selection:bg-[#D4AF37] selection:text-white">
-      {/* TOAST NOTIFICATION */}
+    <div className="min-h-screen bg-[#F8F6F0] text-gray-800">
+      {/* TOAST */}
       {toast && (
-        <div className="fixed bottom-6 right-6 z-[100] animate-bounce">
-          <div className="bg-[#0F172A] text-[#D4AF37] border-2 border-[#D4AF37] px-6 py-3.5 rounded-2xl shadow-2xl font-bold text-sm flex items-center gap-2 backdrop-blur-md">
-            <Sparkles className="w-4 h-4 text-[#D4AF37]" />
+        <div className="fixed bottom-5 right-5 z-[100]">
+          <div className="bg-[#1B2A3A] text-[#D4AF37] border border-[#D4AF37] px-5 py-3 rounded-xl shadow-xl font-bold text-sm">
             {toast}
           </div>
         </div>
       )}
 
       {/* HEADER */}
-      <header className="bg-[#0F172A] text-white sticky top-0 z-40 border-b border-[#1E293B] shadow-xl">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex flex-col md:flex-row items-center justify-between gap-4">
-          
-          {/* Logo Brand */}
+      <header className="bg-[#1B2A3A] text-white px-6 py-4 shadow-md sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-4">
           <div
-            className="flex items-center gap-3.5 cursor-pointer group"
+            className="flex items-center gap-3 cursor-pointer"
             onClick={() => {
               setSelectedCategory("");
               setSearchTerm("");
@@ -595,72 +637,63 @@ export default function App() {
               window.history.pushState({}, "", window.location.pathname);
             }}
           >
-            <div className="p-2.5 bg-gradient-to-br from-[#D4AF37] to-[#997B15] rounded-2xl shadow-lg shadow-[#D4AF37]/20 group-hover:scale-105 transition-transform duration-300">
+            <div className="text-[#D4AF37]">
               <svg
-                width="32"
-                height="32"
+                width="44"
+                height="44"
                 viewBox="0 0 100 100"
                 fill="none"
-                stroke="white"
-                strokeWidth="7"
+                stroke="currentColor"
+                strokeWidth="6"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               >
                 <path d="M15 70 L25 35 L40 55 L50 25 L60 55 L75 35 L85 70 Z" />
-                <circle cx="25" cy="30" r="4" fill="white" />
-                <circle cx="50" cy="20" r="4" fill="white" />
-                <circle cx="75" cy="30" r="4" fill="white" />
-                <path d="M18 78 Q50 83 82 78" strokeWidth="6" />
+                <circle cx="25" cy="30" r="4" fill="currentColor" />
+                <circle cx="50" cy="20" r="4" fill="currentColor" />
+                <circle cx="75" cy="30" r="4" fill="currentColor" />
+                <path d="M18 78 Q50 83 82 78" strokeWidth="5" />
               </svg>
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-xl md:text-2xl font-black tracking-tight text-white group-hover:text-[#D4AF37] transition">
-                  ราชาเฟอร์นิเจอร์
-                </h1>
+                <h1 className="text-xl md:text-2xl font-bold">ราชาเฟอร์นิเจอร์</h1>
                 <span
-                  className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border ${
-                    isLoggedIn
-                      ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
-                      : "bg-[#D4AF37]/10 text-[#D4AF37] border-[#D4AF37]/30"
+                  className={`text-[10px] font-bold px-2 py-1 rounded-full ${
+                    isLoggedIn ? "bg-green-500 text-white" : "bg-[#D4AF37] text-[#1B2A3A]"
                   }`}
                 >
-                  {isLoggedIn ? "โหมดพนักงาน" : "แคตตาล็อกหน้าร้าน"}
+                  {isLoggedIn ? "โหมดพนักงาน" : "แคตตาล็อกออนไลน์"}
                 </span>
               </div>
-              <div className="flex items-center gap-3 text-[11px] text-slate-400 mt-0.5">
-                <span className="flex items-center gap-1"><MapPin className="w-3 h-3 text-[#D4AF37]" /> สาขาหาดใหญ่ (ถ.สามสิบเมตร)</span>
-                <span className="hidden sm:inline text-slate-600">•</span>
-                <span className="hidden sm:flex items-center gap-1"><Phone className="w-3 h-3 text-[#D4AF37]" /> 074-244665</span>
+
+              <div className="flex flex-col text-xs text-[#D4AF37] mt-0.5 space-y-0.5">
+                <div className="flex items-center gap-1">
+                  <MapPin className="w-3 h-3 shrink-0" /> สาขาหาดใหญ่ (ถ.สามสิบเมตร)
+                </div>
+                <div className="flex items-center gap-1 font-sans">
+                  <Phone className="w-3 h-3 shrink-0" /> โทร. 074-244665 , 086-4906582
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Search & Actions Bar */}
-          <div className="flex items-center gap-2.5 w-full md:w-auto">
-            <div className="relative flex-1 md:w-72">
+          <div className="flex items-center gap-2 w-full lg:w-auto">
+            <div className="relative w-full lg:w-80">
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="ค้นหาชื่อ หรือ รหัสสินค้า..."
-                className="w-full bg-[#1E293B] text-white placeholder-slate-400 pl-10 pr-4 py-2 rounded-xl text-xs font-medium border border-slate-700 focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] transition-all"
+                placeholder="ค้นหาชื่อสินค้า หรือ รหัสสินค้า..."
+                className="w-full bg-white text-gray-800 pl-4 pr-10 py-2.5 rounded-lg outline-none text-sm"
               />
-              <Search className="absolute left-3.5 top-2.5 text-slate-400 w-3.5 h-3.5" />
-              {searchTerm && (
-                <button 
-                  onClick={() => setSearchTerm("")} 
-                  className="absolute right-3 top-2.5 text-slate-400 hover:text-white"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              )}
+              <Search className="absolute right-3 top-3 text-gray-400 w-4 h-4" />
             </div>
 
             {isLoggedIn && (
               <button
                 onClick={openAddProduct}
-                className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white px-3.5 py-2 rounded-xl font-bold text-xs shadow-lg shadow-emerald-900/20 flex items-center gap-1.5 whitespace-nowrap transition active:scale-95"
+                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 rounded-lg font-bold text-sm flex items-center gap-1 whitespace-nowrap"
               >
                 <Plus className="w-4 h-4" /> เพิ่มสินค้า
               </button>
@@ -669,8 +702,7 @@ export default function App() {
             {isLoggedIn ? (
               <button
                 onClick={handleLogout}
-                title="ออกจากระบบ"
-                className="bg-slate-800 hover:bg-red-600/20 hover:text-red-400 text-slate-400 border border-slate-700 hover:border-red-500/30 p-2 rounded-xl transition"
+                className="bg-red-600 hover:bg-red-700 text-white px-3 py-2.5 rounded-lg font-bold"
               >
                 <LogOut className="w-4 h-4" />
               </button>
@@ -680,93 +712,69 @@ export default function App() {
                   setShowLoginModal(true);
                   setLoginError("");
                 }}
-                className="bg-slate-800 hover:bg-slate-700 text-[#D4AF37] border border-[#D4AF37]/30 px-3.5 py-2 rounded-xl font-bold text-xs flex items-center gap-1.5 whitespace-nowrap transition active:scale-95"
+                className="bg-[#D4AF37] hover:bg-[#B89425] text-[#1B2A3A] px-4 py-2.5 rounded-lg font-bold text-sm flex items-center gap-1 whitespace-nowrap"
               >
-                <Lock className="w-3.5 h-3.5" /> สำหรับพนักงาน
+                <Lock className="w-4 h-4" /> สำหรับพนักงาน
               </button>
             )}
           </div>
-
         </div>
       </header>
 
-      {/* MAIN BODY */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
-
+      {/* MAIN */}
+      <main className="max-w-7xl mx-auto p-5 md:p-6">
         {firebaseError && (
-          <div className="mb-6 bg-red-50 border border-red-200 text-red-700 rounded-2xl p-4 shadow-sm flex items-center gap-3">
-            <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />
-            <div className="text-xs font-medium whitespace-pre-line">{firebaseError}</div>
+          <div className="mb-6 bg-red-50 border border-red-300 text-red-700 rounded-xl p-4">
+            <div className="font-bold">⚠️ Firebase Error</div>
+            <div className="text-sm whitespace-pre-line mt-1">{firebaseError}</div>
           </div>
         )}
 
-        {/* ADMIN DASHBOARD */}
+        {/* DASHBOARD */}
         {isLoggedIn && (
-          <div className="mb-8 bg-white rounded-3xl border border-slate-200/80 p-5 shadow-sm">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <div className="p-2 bg-amber-500/10 text-amber-600 rounded-xl">
-                  <LayoutDashboard className="w-4 h-4" />
-                </div>
-                <h2 className="font-bold text-slate-800 text-sm">แผงควบคุมระบบจัดการสินค้า</h2>
-              </div>
-              <span className="text-[11px] text-slate-400 font-mono">เรียลไทม์จาก Firebase</span>
+          <div className="mb-8 bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
+            <div className="flex items-center gap-2 mb-4">
+              <LayoutDashboard className="w-5 h-5 text-[#D4AF37]" />
+              <h2 className="font-bold text-[#1B2A3A] text-lg">ภาพรวมระบบจัดการสินค้า</h2>
             </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="bg-gradient-to-br from-blue-500/5 to-indigo-500/10 border border-blue-100 rounded-2xl p-4 flex items-center justify-between">
+            <div className="grid md:grid-cols-3 gap-4">
+              <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 flex justify-between">
                 <div>
-                  <p className="text-[11px] font-bold text-blue-600 uppercase tracking-wider">สินค้าทั้งหมด</p>
-                  <p className="text-3xl font-black text-slate-800 mt-1">{products.length}</p>
+                  <p className="text-xs text-blue-600 font-bold">สินค้าทั้งหมด</p>
+                  <p className="text-2xl font-black text-blue-900">{products.length}</p>
                 </div>
-                <div className="p-3 bg-blue-500 text-white rounded-2xl shadow-md shadow-blue-500/20">
-                  <Package className="w-5 h-5" />
-                </div>
+                <Package className="text-blue-400" />
               </div>
-
-              <div className="bg-gradient-to-br from-rose-500/5 to-pink-500/10 border border-rose-100 rounded-2xl p-4 flex items-center justify-between">
+              <div className="bg-red-50 border border-red-100 rounded-xl p-4 flex justify-between">
                 <div>
-                  <p className="text-[11px] font-bold text-rose-600 uppercase tracking-wider">โปรโมชั่นพิเศษ</p>
-                  <p className="text-3xl font-black text-slate-800 mt-1">{promotionCount}</p>
+                  <p className="text-xs text-red-600 font-bold">โปรโมชั่น</p>
+                  <p className="text-2xl font-black text-red-900">{promotionCount}</p>
                 </div>
-                <div className="p-3 bg-rose-500 text-white rounded-2xl shadow-md shadow-rose-500/20">
-                  <Tag className="w-5 h-5" />
-                </div>
+                <Tag className="text-red-400" />
               </div>
-
-              <div className="bg-gradient-to-br from-emerald-500/5 to-teal-500/10 border border-emerald-100 rounded-2xl p-4 flex items-center justify-between">
+              <div className="bg-green-50 border border-green-100 rounded-xl p-4 flex justify-between">
                 <div>
-                  <p className="text-[11px] font-bold text-emerald-600 uppercase tracking-wider">มีสินค้าพร้อมขาย</p>
-                  <p className="text-3xl font-black text-slate-800 mt-1">{stockCount}</p>
+                  <p className="text-xs text-green-600 font-bold">พร้อมขาย</p>
+                  <p className="text-2xl font-black text-green-900">{stockCount}</p>
                 </div>
-                <div className="p-3 bg-emerald-500 text-white rounded-2xl shadow-md shadow-emerald-500/20">
-                  <CheckCircle2 className="w-5 h-5" />
-                </div>
+                <CheckCircle2 className="text-green-400" />
               </div>
             </div>
           </div>
         )}
 
-        {/* CATEGORY GRID (DESIGN ENHANCEMENT) */}
+        {/* CATEGORY GRID */}
         {!selectedCategory && searchTerm === "" && (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
-              <div>
-                <h2 className="text-lg font-black text-slate-800 tracking-tight">
-                  เลือกหมวดหมู่เฟอร์นิเจอร์
-                </h2>
-                <p className="text-xs text-slate-500 mt-0.5">ค้นหาเฟอร์นิเจอร์คุณภาพเยี่ยมตามหมวดห้องที่คุณต้องการ</p>
-              </div>
-              <span className="text-xs font-bold text-[#D4AF37] bg-amber-50 border border-amber-200 px-3 py-1 rounded-full">
-                {categories.length} หมวดหมู่
-              </span>
+          <>
+            <div className="mb-6">
+              <h2 className="text-xl font-bold text-[#1B2A3A] border-b-2 border-[#D4AF37] inline-block pb-1">
+                หมวดหมู่สินค้าเฟอร์นิเจอร์
+              </h2>
+              <p className="text-xs text-gray-500 mt-1">เลือกหมวดหมู่เพื่อดูสินค้า</p>
             </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {categories.map((category) => {
                 const Icon = category.icon;
-                const count = products.filter((p) => p.category === category.name).length;
-
                 return (
                   <button
                     key={category.name}
@@ -774,46 +782,31 @@ export default function App() {
                       setSelectedCategory(category.name);
                       setSubFilterSize("ทั้งหมด");
                     }}
-                    className="group relative bg-white border border-slate-200/80 hover:border-[#D4AF37] rounded-2xl p-4 text-left shadow-sm hover:shadow-xl hover:shadow-[#D4AF37]/5 transition-all duration-300 flex items-center justify-between overflow-hidden"
+                    className="bg-white border border-amber-100 hover:border-[#D4AF37] hover:shadow-md rounded-xl p-4 flex items-center justify-between text-left transition"
                   >
                     <div className="flex items-center gap-4">
-                      <div className="p-3.5 bg-slate-50 group-hover:bg-[#0F172A] text-slate-700 group-hover:text-[#D4AF37] rounded-2xl transition-colors duration-300 shadow-inner">
+                      <div className="p-3 bg-[#F4E8C1] text-[#1B2A3A] rounded-lg">
                         <Icon className="w-6 h-6" />
                       </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-extrabold text-slate-800 group-hover:text-[#0F172A] text-sm">
-                            {category.name}
-                          </h3>
-                        </div>
-                        <p className="text-[11px] text-slate-400 mt-0.5 line-clamp-1">{category.desc}</p>
-                        <span className="inline-block mt-2 text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
-                          {count} รายการ
-                        </span>
-                      </div>
+                      <span className="font-bold">{category.name}</span>
                     </div>
 
-                    <div className="flex flex-col items-end gap-1">
-                      {isLoggedIn && (
-                        <span className="text-xs font-black font-mono text-[#D4AF37] bg-amber-50 border border-amber-200/60 px-2.5 py-1 rounded-lg">
-                          {category.prefix}
-                        </span>
-                      )}
-                      <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-[#D4AF37] group-hover:translate-x-1 transition-all mt-1" />
-                    </div>
+                    {isLoggedIn && (
+                      <span className="font-mono font-bold text-lg text-red-600 bg-red-50 border border-red-200 px-3 py-1 rounded-lg">
+                        {category.prefix}
+                      </span>
+                    )}
                   </button>
                 );
               })}
             </div>
-          </div>
+          </>
         )}
 
-        {/* PRODUCT LIST SECTION */}
+        {/* PRODUCT GRID */}
         {(selectedCategory || searchTerm !== "") && (
-          <div className="space-y-4">
-            
-            {/* Header Control inside Category */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm">
+          <div>
+            <div className="flex justify-between items-center mb-4">
               <button
                 onClick={() => {
                   setSelectedCategory("");
@@ -821,39 +814,32 @@ export default function App() {
                   setSubFilterSize("ทั้งหมด");
                   window.history.pushState({}, "", window.location.pathname);
                 }}
-                className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3.5 py-2 rounded-xl flex items-center gap-2 text-xs font-bold transition w-fit"
+                className="bg-[#1B2A3A] text-[#D4AF37] border border-[#D4AF37] px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-bold shadow-sm hover:bg-[#111B25] transition"
               >
-                <ArrowLeft className="w-4 h-4" /> ดูหมวดหมู่ทั้งหมด
+                <ArrowLeft className="w-4 h-4" /> ย้อนกลับไปหน้าหมวดหมู่
               </button>
-
-              <div className="flex items-center gap-2">
-                {selectedCategory && (
-                  <span className="text-xs font-extrabold text-[#0F172A] bg-amber-400/10 border border-amber-400/30 px-3 py-1.5 rounded-xl">
-                    หมวด: {selectedCategory} {isLoggedIn && `(${categoryPrefixMap[selectedCategory]})`}
-                  </span>
-                )}
-                {searchTerm && (
-                  <span className="text-xs font-bold text-slate-600 bg-slate-100 px-3 py-1.5 rounded-xl">
-                    ผลการค้นหา: "{searchTerm}"
-                  </span>
-                )}
-              </div>
+              {selectedCategory && (
+                <span className="bg-amber-100 text-amber-900 px-3 py-1.5 rounded-full text-xs font-bold">
+                  หมวด: {selectedCategory}{" "}
+                  {isLoggedIn && `(${categoryPrefixMap[selectedCategory]})`}
+                </span>
+              )}
             </div>
 
-            {/* Sub Filter for Bedrooms */}
+            {/* ปุ่มค้นหาฟิลเตอร์ย่อยสำหรับหมวดหมู่ "ห้องนอน" */}
             {selectedCategory === "ห้องนอน" && (
-              <div className="bg-amber-50/60 border border-amber-200/60 rounded-2xl p-3 flex flex-wrap items-center gap-2">
-                <span className="text-xs font-bold text-amber-900 flex items-center gap-1.5 mr-2">
-                  <Bed className="w-4 h-4 text-amber-600" /> ขนาดเตียง:
+              <div className="bg-amber-50/80 border border-amber-200 rounded-xl p-3.5 mb-4 flex flex-wrap items-center gap-2">
+                <span className="text-xs font-bold text-amber-900 flex items-center gap-1 mr-2">
+                  <Bed className="w-4 h-4 text-amber-700" /> ค้นหาขนาดเตียง:
                 </span>
                 {["ทั้งหมด", "3.5 ฟุต", "5 ฟุต", "6 ฟุต"].map((sizeOption) => (
                   <button
                     key={sizeOption}
                     onClick={() => setSubFilterSize(sizeOption)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
                       subFilterSize === sizeOption
-                        ? "bg-[#0F172A] text-[#D4AF37] shadow-md"
-                        : "bg-white text-slate-600 border border-slate-200 hover:border-amber-300"
+                        ? "bg-[#1B2A3A] text-[#D4AF37] shadow"
+                        : "bg-white text-gray-700 border border-gray-300 hover:border-amber-400"
                     }`}
                   >
                     {sizeOption}
@@ -862,20 +848,20 @@ export default function App() {
               </div>
             )}
 
-            {/* Sub Filter for Dining Room */}
+            {/* ปุ่มค้นหาฟิลเตอร์ย่อยสำหรับหมวดหมู่ "ห้องอาหาร/ห้องครัว" */}
             {selectedCategory === "ห้องอาหาร/ห้องครัว" && (
-              <div className="bg-amber-50/60 border border-amber-200/60 rounded-2xl p-3 flex flex-wrap items-center gap-2">
-                <span className="text-xs font-bold text-amber-900 flex items-center gap-1.5 mr-2">
-                  <Utensils className="w-4 h-4 text-amber-600" /> จำนวนที่นั่ง:
+              <div className="bg-amber-50/80 border border-amber-200 rounded-xl p-3.5 mb-4 flex flex-wrap items-center gap-2">
+                <span className="text-xs font-bold text-amber-900 flex items-center gap-1 mr-2">
+                  <Utensils className="w-4 h-4 text-amber-700" /> ค้นหาจำนวนที่นั่ง:
                 </span>
                 {["ทั้งหมด", "2 ที่นั่ง", "4 ที่นั่ง", "6 ที่นั่ง"].map((seatOption) => (
                   <button
                     key={seatOption}
                     onClick={() => setSubFilterSize(seatOption)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
                       subFilterSize === seatOption
-                        ? "bg-[#0F172A] text-[#D4AF37] shadow-md"
-                        : "bg-white text-slate-600 border border-slate-200 hover:border-amber-300"
+                        ? "bg-[#1B2A3A] text-[#D4AF37] shadow"
+                        : "bg-white text-gray-700 border border-gray-300 hover:border-amber-400"
                     }`}
                   >
                     {seatOption}
@@ -884,75 +870,65 @@ export default function App() {
               </div>
             )}
 
-            {/* BAR FILTER & PRICE SORT */}
-            <div className="bg-white border border-slate-200/80 rounded-2xl p-3 flex flex-wrap items-center justify-between gap-3 shadow-sm">
+            {/* FILTER BAR */}
+            <div className="bg-white border border-gray-200 rounded-xl p-3 mb-6 flex flex-wrap items-center justify-between gap-3">
               <div className="flex flex-wrap items-center gap-2">
                 <button
                   onClick={() => setPromoOnly(!promoOnly)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition ${
-                    promoOnly
-                      ? "bg-rose-600 text-white shadow-md shadow-rose-600/20"
-                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  className={`px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1 ${
+                    promoOnly ? "bg-red-600 text-white" : "bg-gray-100 text-gray-600"
                   }`}
                 >
-                  <Flame className="w-3.5 h-3.5" /> ลดพิเศษ
+                  <Flame className="w-3.5 h-3.5" /> 🔥 ลดพิเศษ
                 </button>
                 <button
                   onClick={() => setStockOnly(!stockOnly)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition ${
-                    stockOnly
-                      ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/20"
-                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  className={`px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1 ${
+                    stockOnly ? "bg-emerald-600 text-white" : "bg-gray-100 text-gray-600"
                   }`}
                 >
-                  <CheckCircle2 className="w-3.5 h-3.5" /> พร้อมส่ง
+                  <CheckCircle2 className="w-3.5 h-3.5" /> มีสินค้าพร้อมส่ง
                 </button>
               </div>
 
-              <div className="flex flex-wrap items-center gap-3">
-                <div className="flex items-center gap-1.5 text-xs">
-                  <SlidersHorizontal className="w-3.5 h-3.5 text-slate-400" />
-                  <span className="text-slate-500 font-bold">ช่วงราคา:</span>
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="flex items-center gap-1 text-xs">
+                  <span className="text-gray-500 font-bold">ราคา:</span>
                   <input
                     type="number"
                     placeholder="ต่ำสุด"
                     value={minPrice}
                     onChange={(e) => setMinPrice(e.target.value)}
-                    className="w-16 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-xs outline-none focus:border-[#D4AF37]"
+                    className="w-16 bg-gray-50 border border-gray-200 rounded px-2 py-1 text-xs"
                   />
-                  <span className="text-slate-300">-</span>
+                  <span>-</span>
                   <input
                     type="number"
                     placeholder="สูงสุด"
                     value={maxPrice}
                     onChange={(e) => setMaxPrice(e.target.value)}
-                    className="w-16 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-xs outline-none focus:border-[#D4AF37]"
+                    className="w-16 bg-gray-50 border border-gray-200 rounded px-2 py-1 text-xs"
                   />
                 </div>
 
                 <select
                   value={sortPrice}
                   onChange={(e) => setSortPrice(e.target.value)}
-                  className="bg-slate-50 border border-slate-200 text-xs font-bold text-slate-700 rounded-xl px-2.5 py-1.5 outline-none focus:border-[#D4AF37]"
+                  className="bg-gray-50 border border-gray-200 text-xs font-bold rounded-lg px-2 py-1.5 outline-none"
                 >
                   <option value="none">เรียงลำดับราคา</option>
-                  <option value="low">ราคา: น้อย ➔ มาก</option>
-                  <option value="high">ราคา: มาก ➔ น้อย</option>
+                  <option value="low">น้อยไปมาก</option>
+                  <option value="high">มากไปน้อย</option>
                 </select>
               </div>
             </div>
 
             {/* PRODUCT CARDS LIST */}
             {loading ? (
-              <div className="text-center py-20 bg-white rounded-3xl border border-slate-200/80 shadow-sm">
-                <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-[#D4AF37] border-t-transparent"></div>
-                <p className="text-xs text-slate-400 mt-2 font-bold">กำลังโหลดรายการสินค้า...</p>
-              </div>
+              <div className="text-center py-12 text-gray-500">กำลังโหลดข้อมูลสินค้า...</div>
             ) : filteredProducts.length === 0 ? (
-              <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-slate-300">
-                <Package className="w-12 h-12 text-slate-300 mx-auto mb-2" />
-                <p className="text-sm font-bold text-slate-500">ไม่พบรายการสินค้าที่คุณค้นหา</p>
-                <p className="text-xs text-slate-400 mt-1">ลองเปลี่ยนคำค้นหาหรือตัวกรองใหม่อีกครั้ง</p>
+              <div className="text-center py-12 text-gray-400 bg-white rounded-2xl border border-dashed border-gray-300">
+                ไม่พบรายการสินค้าตรงกับเงื่อนไขที่ค้นหา
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
@@ -960,74 +936,72 @@ export default function App() {
                   <div
                     key={product.id}
                     onClick={() => setViewingProduct(product)}
-                    className="group bg-white rounded-2xl border border-slate-200/80 hover:border-[#D4AF37]/50 shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col justify-between overflow-hidden"
+                    className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl transition-all cursor-pointer flex flex-col justify-between overflow-hidden group"
                   >
                     <div>
-                      {/* Image Box */}
-                      <div className="relative aspect-4/3 bg-slate-100 overflow-hidden">
+                      {/* Product Image Box */}
+                      <div className="relative aspect-4/3 bg-gray-100 overflow-hidden">
                         {product.image ? (
                           <img
                             src={product.image}
                             alt={product.name}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
                           />
                         ) : (
-                          <div className="w-full h-full flex flex-col items-center justify-center text-slate-300 bg-slate-50">
-                            <ImageIcon className="w-10 h-10 mb-1" />
-                            <span className="text-[10px]">ไม่มีรูปภาพ</span>
+                          <div className="w-full h-full flex items-center justify-center text-gray-300">
+                            <ImageIcon className="w-12 h-12" />
                           </div>
                         )}
 
-                        <div className="absolute top-2.5 left-2.5 flex flex-col gap-1">
+                        <div className="absolute top-2 left-2 flex flex-col gap-1">
                           {renderImageBadge(product.status)}
                         </div>
 
                         {product.promoPrice && (
-                          <div className="absolute top-2.5 right-2.5 bg-gradient-to-r from-rose-600 to-red-600 text-white font-black text-[10px] px-2.5 py-1 rounded-full shadow-lg tracking-wider uppercase">
-                            PROMO
+                          <div className="absolute top-2 right-2 bg-red-600 text-white font-black text-xs px-2.5 py-1 rounded-lg shadow-md animate-bounce">
+                            PROMOTION
                           </div>
                         )}
                       </div>
 
-                      {/* Content */}
+                      {/* Product Content */}
                       <div className="p-4">
-                        <div className="flex items-center justify-between gap-2 mb-1">
-                          <span className="font-mono text-[11px] font-bold text-slate-400">
+                        <div className="flex justify-between items-start mb-1">
+                          <span className="font-mono text-xs font-bold text-gray-400">
                             ID: {product.id}
                           </span>
                           {product.size && (
-                            <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md font-bold">
+                            <span className="text-[11px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded font-bold">
                               {product.size}
                             </span>
                           )}
                         </div>
 
-                        <h3 className="font-bold text-slate-800 text-sm line-clamp-1 group-hover:text-[#D4AF37] transition-colors">
+                        <h3 className="font-bold text-gray-800 text-base line-clamp-1 group-hover:text-[#D4AF37] transition">
                           {product.name}
                         </h3>
 
                         {product.location && (
-                          <p className="text-[11px] text-slate-400 mt-1 flex items-center gap-1">
-                            <MapPin className="w-3 h-3 text-amber-500 shrink-0" />
+                          <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                            <MapPin className="w-3 h-3 text-amber-600 shrink-0" />
                             โซน: {product.location}
                           </p>
                         )}
 
-                        {/* Price */}
                         <div className="mt-3 flex items-baseline gap-2">
                           {product.promoPrice ? (
                             <>
-                              <span className="text-xl font-black text-rose-600">
+                              <span className="text-lg font-black text-red-600">
                                 ฿{Number(product.promoPrice).toLocaleString()}
                               </span>
                               {product.price && product.price !== product.promoPrice && (
-                                <span className="text-xs text-slate-400 line-through">
+                                <span className="text-xs text-gray-400 line-through">
                                   ฿{Number(product.price).toLocaleString()}
                                 </span>
                               )}
                             </>
                           ) : (
-                            <span className="text-xl font-black text-slate-800">
+                            <span className="text-lg font-black text-[#1B2A3A]">
                               ฿{Number(product.price).toLocaleString()}
                             </span>
                           )}
@@ -1035,29 +1009,29 @@ export default function App() {
                       </div>
                     </div>
 
-                    {/* Bottom Actions */}
+                    {/* Bottom Badge & Share Actions */}
                     <div className="p-4 pt-0">
-                      <div className="border-t border-slate-100 pt-3 flex items-center justify-between gap-2">
+                      {renderBottomBadge(product.status)}
+
+                      <div className="mt-3 flex items-center justify-between gap-2 border-t pt-3">
                         <button
                           onClick={(e) => handleShare(product, e)}
-                          className="flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 border border-emerald-200/60 transition"
+                          className="flex-1 bg-green-50 hover:bg-green-100 text-green-700 py-1.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1 border border-green-200 transition"
                         >
-                          <Share2 className="w-3.5 h-3.5" /> แชร์ลง LINE
+                          <Share2 className="w-3.5 h-3.5" /> แชร์ไป LINE
                         </button>
 
                         {isLoggedIn && (
                           <div className="flex items-center gap-1">
                             <button
                               onClick={(e) => openEditProduct(product, e)}
-                              className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition"
-                              title="แก้ไข"
+                              className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition"
                             >
                               <Edit className="w-4 h-4" />
                             </button>
                             <button
                               onClick={(e) => handleDeleteProduct(product, e)}
-                              className="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-xl transition"
-                              title="ลบ"
+                              className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition"
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -1065,131 +1039,124 @@ export default function App() {
                         )}
                       </div>
                     </div>
-
                   </div>
                 ))}
               </div>
             )}
-
           </div>
         )}
-
       </main>
 
       {/* ==================== VIEW PRODUCT MODAL ==================== */}
       {viewingProduct && (
-        <div className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-xl w-full max-h-[90vh] overflow-y-auto shadow-2xl relative border border-slate-100">
-            
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl relative">
             <button
               onClick={() => setViewingProduct(null)}
-              className="absolute top-4 right-4 z-10 bg-white/80 hover:bg-white text-slate-700 p-2 rounded-full shadow-md backdrop-blur-md transition"
+              className="absolute top-4 right-4 z-10 bg-white/80 hover:bg-white p-2 rounded-full shadow-md text-gray-700 transition"
             >
               <X className="w-5 h-5" />
             </button>
 
-            <div className="aspect-4/3 bg-slate-100 relative overflow-hidden">
+            <div className="aspect-4/3 bg-gray-100 relative">
               {viewingProduct.image ? (
                 <img
                   src={viewingProduct.image}
                   alt={viewingProduct.name}
-                  className="w-full h-full object-contain bg-slate-900/5"
+                  className="w-full h-full object-contain bg-black/5"
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-slate-300">
+                <div className="w-full h-full flex items-center justify-center text-gray-300">
                   <ImageIcon className="w-16 h-16" />
                 </div>
               )}
             </div>
 
             <div className="p-6">
-              <div className="flex items-center justify-between gap-2 mb-2">
-                <span className="font-mono text-xs font-bold text-slate-400 bg-slate-100 px-3 py-1 rounded-lg">
+              <div className="flex items-center justify-between mb-2">
+                <span className="font-mono text-xs font-bold text-gray-400 bg-gray-100 px-2.5 py-1 rounded-md">
                   ID: {viewingProduct.id}
                 </span>
-                <span className="text-xs font-extrabold text-[#0F172A] bg-amber-400/10 border border-amber-400/30 px-3 py-1 rounded-full">
+                <span className="text-xs font-bold text-amber-800 bg-amber-100 px-3 py-1 rounded-full">
                   {viewingProduct.category}
                 </span>
               </div>
 
-              <h2 className="text-2xl font-black text-slate-800">{viewingProduct.name}</h2>
+              <h2 className="text-2xl font-bold text-gray-800">{viewingProduct.name}</h2>
 
               <div className="my-4 flex items-baseline gap-3">
                 {viewingProduct.promoPrice ? (
                   <>
-                    <span className="text-3xl font-black text-rose-600">
+                    <span className="text-3xl font-black text-red-600">
                       ฿{Number(viewingProduct.promoPrice).toLocaleString()}
                     </span>
                     {viewingProduct.price && viewingProduct.price !== viewingProduct.promoPrice && (
-                      <span className="text-base text-slate-400 line-through">
+                      <span className="text-base text-gray-400 line-through">
                         ฿{Number(viewingProduct.price).toLocaleString()}
                       </span>
                     )}
                   </>
                 ) : (
-                  <span className="text-3xl font-black text-slate-800">
+                  <span className="text-3xl font-black text-[#1B2A3A]">
                     ฿{Number(viewingProduct.price).toLocaleString()}
                   </span>
                 )}
               </div>
 
-              <div className="space-y-2 border-t border-b border-slate-100 py-4 my-4 text-xs text-slate-600">
+              <div className="space-y-2 border-t border-b border-gray-100 py-4 my-4 text-sm text-gray-600">
                 {viewingProduct.size && (
-                  <p className="flex justify-between">
-                    <span className="font-bold text-slate-400">ขนาด:</span>
-                    <span className="font-bold text-slate-800">{viewingProduct.size}</span>
+                  <p>
+                    <strong>ขนาด:</strong> {viewingProduct.size}
                   </p>
                 )}
                 {viewingProduct.location && (
-                  <p className="flex justify-between">
-                    <span className="font-bold text-slate-400">โซนจัดวาง:</span>
-                    <span className="font-bold text-slate-800">{viewingProduct.location}</span>
+                  <p>
+                    <strong>โซนที่จัดวาง:</strong> {viewingProduct.location}
                   </p>
                 )}
-                <p className="flex justify-between">
-                  <span className="font-bold text-slate-400">สถานะ:</span>
-                  <span className="font-bold text-slate-800">{viewingProduct.status}</span>
+                <p>
+                  <strong>สถานะ:</strong> {viewingProduct.status}
                 </p>
                 {viewingProduct.description && (
-                  <div className="pt-2 border-t border-slate-100">
-                    <span className="font-bold text-slate-400 block mb-1">รายละเอียดเพิ่มเติม:</span>
-                    <p className="text-slate-700 leading-relaxed whitespace-pre-line">{viewingProduct.description}</p>
-                  </div>
+                  <p className="whitespace-pre-line pt-2">
+                    <strong>รายละเอียดเพิ่มเติม:</strong>
+                    <br />
+                    {viewingProduct.description}
+                  </p>
                 )}
               </div>
 
-              <button
-                onClick={(e) => handleShare(viewingProduct, e)}
-                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20 transition active:scale-98"
-              >
-                <Share2 className="w-5 h-5" /> แชร์รายละเอียดลง LINE
-              </button>
+              <div className="flex gap-3">
+                <button
+                  onClick={(e) => handleShare(viewingProduct, e)}
+                  className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 shadow-md transition"
+                >
+                  <Share2 className="w-5 h-5" /> แชร์รายละเอียดลง LINE
+                </button>
+              </div>
             </div>
-
           </div>
         </div>
       )}
 
       {/* ==================== ADD / EDIT PRODUCT MODAL ==================== */}
       {showProductModal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full max-h-[90vh] overflow-y-auto p-6 shadow-2xl relative">
-            
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6 shadow-2xl relative">
             <button
               onClick={closeProductModal}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1"
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 p-2"
             >
               <X className="w-5 h-5" />
             </button>
 
-            <h2 className="text-lg font-black text-slate-800 mb-4">
+            <h2 className="text-xl font-bold text-[#1B2A3A] mb-4">
               {editingProduct ? "แก้ไขข้อมูลสินค้า" : "เพิ่มสินค้าใหม่"}
             </h2>
 
-            <form onSubmit={handleSaveProduct} className="space-y-3.5">
-              
+            <form onSubmit={handleSaveProduct} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-600 mb-1">หมวดหมู่สินค้า</label>
+                <label className="block text-xs font-bold text-gray-600 mb-1">หมวดหมู่สินค้า</label>
                 <select
                   value={formData.category}
                   onChange={(e) => {
@@ -1197,7 +1164,7 @@ export default function App() {
                     const nextId = editingProduct ? formData.id : generateNextId(cat, products);
                     setFormData({ ...formData, category: cat, id: nextId });
                   }}
-                  className="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-medium outline-none focus:border-[#D4AF37]"
+                  className="w-full border border-gray-300 rounded-lg p-2 text-sm outline-none"
                 >
                   {categories.map((c) => (
                     <option key={c.name} value={c.name}>
@@ -1209,70 +1176,74 @@ export default function App() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 mb-1">รหัสสินค้า</label>
+                  <label className="block text-xs font-bold text-gray-600 mb-1">รหัสสินค้า</label>
                   <input
                     type="text"
                     value={formData.id}
                     onChange={(e) => setFormData({ ...formData, id: e.target.value })}
-                    className="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-mono outline-none focus:border-[#D4AF37]"
+                    className="w-full border border-gray-300 rounded-lg p-2 text-sm outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 mb-1">ขนาด (ถ้ามี)</label>
+                  <label className="block text-xs font-bold text-gray-600 mb-1">ขนาด (ถ้ามี)</label>
                   <input
                     type="text"
                     placeholder="เช่น 5 ฟุต"
                     value={formData.size}
                     onChange={(e) => setFormData({ ...formData, size: e.target.value })}
-                    className="w-full border border-slate-200 rounded-xl p-2.5 text-xs outline-none focus:border-[#D4AF37]"
+                    className="w-full border border-gray-300 rounded-lg p-2 text-sm outline-none"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-600 mb-1">ชื่อสินค้า *</label>
+                <label className="block text-xs font-bold text-gray-600 mb-1">ชื่อสินค้า *</label>
                 <input
                   type="text"
                   required
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full border border-slate-200 rounded-xl p-2.5 text-xs outline-none focus:border-[#D4AF37]"
+                  className="w-full border border-gray-300 rounded-lg p-2 text-sm outline-none"
                 />
               </div>
 
-              {/* Dynamic Prices Required */}
+              {/* ส่วนราคาที่แก้ไข required แล้ว */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 mb-1">ราคาปกติ (บาท)</label>
+                  <label className="block text-xs font-bold text-gray-600 mb-1">
+                    ราคาปกติ (บาท)
+                  </label>
                   <input
                     type="number"
                     placeholder="ถ้าไม่มี ไม่ต้องกรอก"
                     value={formData.price}
                     onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                     required={!formData.promoPrice}
-                    className="w-full border border-slate-200 rounded-xl p-2.5 text-xs outline-none focus:border-[#D4AF37]"
+                    className="w-full border border-gray-300 rounded-lg p-2 text-sm outline-none focus:border-[#D4AF37]"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 mb-1">ราคาลดพิเศษ (บาท)</label>
+                  <label className="block text-xs font-bold text-gray-600 mb-1">
+                    ราคาลดพิเศษ (บาท)
+                  </label>
                   <input
                     type="number"
                     placeholder="ราคาโปรโมชั่น"
                     value={formData.promoPrice}
                     onChange={(e) => setFormData({ ...formData, promoPrice: e.target.value })}
                     required={!formData.price}
-                    className="w-full border border-slate-200 rounded-xl p-2.5 text-xs outline-none focus:border-[#D4AF37]"
+                    className="w-full border border-gray-300 rounded-lg p-2 text-sm outline-none focus:border-[#D4AF37]"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 mb-1">สถานะสินค้า</label>
+                  <label className="block text-xs font-bold text-gray-600 mb-1">สถานะสินค้า</label>
                   <select
                     value={formData.status}
                     onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                    className="w-full border border-slate-200 rounded-xl p-2.5 text-xs outline-none focus:border-[#D4AF37]"
+                    className="w-full border border-gray-300 rounded-lg p-2 text-sm outline-none"
                   >
                     <option value="มีสินค้าพร้อมส่ง">มีสินค้าพร้อมส่ง</option>
                     <option value="สินค้าตัวโชว์หน้าร้าน">สินค้าตัวโชว์หน้าร้าน</option>
@@ -1281,31 +1252,31 @@ export default function App() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 mb-1">โซนวางสินค้า</label>
+                  <label className="block text-xs font-bold text-gray-600 mb-1">โซนวางสินค้า</label>
                   <input
                     type="text"
                     placeholder="เช่น โซน A2"
                     value={formData.location}
                     onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                    className="w-full border border-slate-200 rounded-xl p-2.5 text-xs outline-none focus:border-[#D4AF37]"
+                    className="w-full border border-gray-300 rounded-lg p-2 text-sm outline-none"
                   />
                 </div>
               </div>
 
-              {/* Upload & Remove Image */}
+              {/* ส่วนรูปภาพ พร้อมปุ่มลบรูปภาพ */}
               <div>
-                <label className="block text-xs font-bold text-slate-600 mb-1">รูปภาพสินค้า</label>
+                <label className="block text-xs font-bold text-gray-600 mb-1">รูปภาพสินค้า</label>
                 {formData.image ? (
-                  <div className="relative inline-block mt-1">
+                  <div className="relative inline-block mb-2">
                     <img
                       src={formData.image}
                       alt="Preview"
-                      className="w-20 h-20 object-cover rounded-xl border border-slate-200 shadow-sm"
+                      className="w-24 h-24 object-cover rounded-xl border border-gray-200"
                     />
                     <button
                       type="button"
                       onClick={handleRemoveImage}
-                      className="absolute -top-2 -right-2 bg-red-600 hover:bg-red-700 text-white p-1 rounded-full shadow-md transition"
+                      className="absolute -top-2 -right-2 bg-red-600 hover:bg-red-700 text-white p-1.5 rounded-full shadow-md transition"
                       title="ลบรูปภาพนี้"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -1316,18 +1287,20 @@ export default function App() {
                     type="file"
                     accept="image/*"
                     onChange={handleImageUpload}
-                    className="w-full text-xs text-slate-500 border border-slate-200 rounded-xl p-2"
+                    className="w-full text-xs text-gray-500 border border-gray-300 rounded-lg p-2"
                   />
                 )}
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-600 mb-1">รายละเอียดเพิ่มเติม</label>
+                <label className="block text-xs font-bold text-gray-600 mb-1">
+                  รายละเอียดสินค้าเพิ่มเติม
+                </label>
                 <textarea
-                  rows="2"
+                  rows="3"
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full border border-slate-200 rounded-xl p-2.5 text-xs outline-none focus:border-[#D4AF37]"
+                  className="w-full border border-gray-300 rounded-lg p-2 text-sm outline-none"
                 ></textarea>
               </div>
 
@@ -1335,18 +1308,17 @@ export default function App() {
                 <button
                   type="button"
                   onClick={closeProductModal}
-                  className="px-4 py-2 text-slate-500 hover:bg-slate-100 rounded-xl font-bold text-xs"
+                  className="px-4 py-2 text-gray-500 hover:bg-gray-100 rounded-lg font-bold text-sm"
                 >
                   ยกเลิก
                 </button>
                 <button
                   type="submit"
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2 rounded-xl font-bold text-xs shadow-md shadow-emerald-600/20"
+                  className="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-lg font-bold text-sm shadow-md"
                 >
                   บันทึกสินค้า
                 </button>
               </div>
-
             </form>
           </div>
         </div>
@@ -1354,50 +1326,47 @@ export default function App() {
 
       {/* ==================== LOGIN MODAL ==================== */}
       {showLoginModal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-xs w-full p-6 shadow-2xl relative">
-            
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl relative">
             <button
               onClick={() => setShowLoginModal(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
             >
               <X className="w-5 h-5" />
             </button>
 
             <div className="text-center mb-5">
-              <div className="w-12 h-12 bg-[#0F172A] text-[#D4AF37] rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg shadow-slate-900/20">
+              <div className="w-12 h-12 bg-amber-100 text-[#D4AF37] rounded-full flex items-center justify-center mx-auto mb-2">
                 <Lock className="w-6 h-6" />
               </div>
-              <h2 className="text-base font-black text-slate-800">เข้าสู่ระบบพนักงาน</h2>
-              <p className="text-[11px] text-slate-400 mt-0.5">กรอกรหัสผ่านเพื่อจัดการข้อมูล</p>
+              <h2 className="text-lg font-bold text-[#1B2A3A]">เข้าสู่ระบบพนักงาน</h2>
+              <p className="text-xs text-gray-500 mt-1">ป้อนรหัสผ่านเพื่อจัดการข้อมูลสินค้า</p>
             </div>
 
-            <form onSubmit={handleLogin} className="space-y-3">
+            <form onSubmit={handleLogin} className="space-y-4">
               <div>
                 <input
                   type="password"
                   placeholder="รหัสผ่านพนักงาน"
                   value={passwordInput}
                   onChange={(e) => setPasswordInput(e.target.value)}
-                  className="w-full border border-slate-200 rounded-xl p-2.5 text-center font-mono text-sm outline-none focus:border-[#D4AF37]"
+                  className="w-full border border-gray-300 rounded-lg p-2.5 text-center text-sm outline-none focus:border-[#D4AF37]"
                 />
                 {loginError && (
-                  <p className="text-[11px] text-red-500 font-bold mt-1 text-center">{loginError}</p>
+                  <p className="text-xs text-red-500 font-bold mt-1 text-center">{loginError}</p>
                 )}
               </div>
 
               <button
                 type="submit"
-                className="w-full bg-[#0F172A] hover:bg-slate-800 text-[#D4AF37] font-bold py-2.5 rounded-xl text-xs shadow-md transition"
+                className="w-full bg-[#1B2A3A] hover:bg-[#111B25] text-[#D4AF37] font-bold py-2.5 rounded-lg text-sm shadow-md transition"
               >
                 เข้าสู่ระบบ
               </button>
             </form>
-
           </div>
         </div>
       )}
-
     </div>
   );
 }
