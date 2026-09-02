@@ -80,7 +80,7 @@ export default function App() {
   const [toast, setToast] = useState("");
 
   /* =======================================================
-     CATEGORIES & PREFIX MAP
+     CATEGORIES & PREFIX MAP & IMAGES
   ======================================================= */
   const categoryPrefixMap = {
     "ห้องนอน": "A",
@@ -97,43 +97,50 @@ export default function App() {
       name: "ห้องนอน", 
       icon: Bed, 
       prefix: "A", 
-      description: "เตียง, ตู้เสื้อผ้า, โต๊ะแป้ง" 
+      description: "เตียง, ตู้เสื้อผ้า, โต๊ะเครื่องแป้ง",
+      image: "https://images.unsplash.com/photo-1616594039964-ae9021a400a0?q=80&w=600&auto=format&fit=crop"
     },
     { 
       name: "ห้องนั่งเล่น", 
       icon: Sofa, 
       prefix: "T", 
-      description: "ตู้วางทีวี, โต๊ะกลาง, ชั้นวาง" 
+      description: "ชุดโซฟา, โต๊ะกลาง, ชั้นวางทีวี",
+      image: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?q=80&w=600&auto=format&fit=crop"
     },
     { 
       name: "โซฟา & เก้าอี้พักผ่อน", 
       icon: Armchair, 
       prefix: "S", 
-      description: "โซฟาเข้ามุม, เก้าอี้ปรับนอน" 
+      description: "โต๊ะหน้าทีวี, เก้าอี้พักผ่อน",
+      image: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?q=80&w=600&auto=format&fit=crop"
     },
     { 
       name: "ห้องอาหาร/ห้องครัว", 
       icon: Utensils, 
       prefix: "E", 
-      description: "ชุดโต๊ะอาหาร, เคาน์เตอร์ครัว" 
+      description: "ชุดโต๊ะอาหาร, เคาน์เตอร์ครัว",
+      image: "https://images.unsplash.com/photo-1617806118233-18e1de247200?q=80&w=600&auto=format&fit=crop"
     },
     { 
       name: "ห้องสำนักงาน", 
       icon: Briefcase, 
       prefix: "I", 
-      description: "โต๊ะทำงาน, เก้าอี้ผู้บริหาร" 
+      description: "โต๊ะทำงาน, เก้าอี้ผู้บริหาร",
+      image: "https://images.unsplash.com/photo-1524758631624-e2822e304c36?q=80&w=600&auto=format&fit=crop"
     },
     { 
       name: "สินค้าพิเศษ", 
       icon: Sparkles, 
       prefix: "P", 
-      description: "สินค้าโปรโมชั่น, ตัวโชว์" 
+      description: "สินค้ารุ่นพิเศษ, ดีไซน์พรีเมียม",
+      image: "https://images.unsplash.com/photo-1567016432779-094069958ea5?q=80&w=600&auto=format&fit=crop"
     },
     { 
       name: "ห้องทั่วไป", 
       icon: LayoutGrid, 
       prefix: "B", 
-      description: "เฟอร์นิเจอร์อเนกประสงค์" 
+      description: "เฟอร์นิเจอร์อเนกประสงค์",
+      image: "https://images.unsplash.com/photo-1595428774223-ef52624120d2?q=80&w=600&auto=format&fit=crop"
     },
   ];
 
@@ -642,11 +649,10 @@ export default function App() {
         </div>
       )}
 
-      {/* HEADER - Modern Dark Luxury Edition */}
+      {/* HEADER */}
       <header className="bg-[#0F172A] border-b border-[#2A3447] sticky top-0 z-40 shadow-xl backdrop-blur-md bg-opacity-95">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex flex-col md:flex-row items-center justify-between gap-3.5">
           
-          {/* Logo Brand */}
           <div
             className="flex items-center gap-3.5 cursor-pointer group w-full md:w-auto justify-between md:justify-start"
             onClick={() => {
@@ -657,7 +663,6 @@ export default function App() {
             }}
           >
             <div className="flex items-center gap-3">
-              {/* Icon Container - Gold Highlight */}
               <div className="p-2.5 bg-gradient-to-br from-[#E6C687] to-[#B89446] rounded-2xl shadow-lg shadow-[#B89446]/20 group-hover:scale-105 transition-transform duration-300">
                 <svg
                   width="26"
@@ -700,7 +705,6 @@ export default function App() {
             </div>
           </div>
 
-          {/* Search Bar & Actions */}
           <div className="flex items-center gap-2.5 w-full md:w-auto">
             <div className="relative flex-1 md:w-72">
               <input
@@ -764,17 +768,17 @@ export default function App() {
           </div>
         )}
 
-        {/* ADMIN DASHBOARD UI */}
+        {/* ADMIN DASHBOARD UI WITH CATEGORY BREAKDOWN */}
         {isLoggedIn && (
-          <div className="mb-8 bg-white rounded-2xl border border-[#EAE3D2] p-5 shadow-sm">
-            <div className="flex items-center justify-between mb-4 border-b border-[#F5EFE6] pb-3">
+          <div className="mb-8 bg-white rounded-2xl border border-[#EAE3D2] p-5 shadow-sm space-y-5">
+            <div className="flex items-center justify-between border-b border-[#F5EFE6] pb-3">
               <div className="flex items-center gap-2.5">
                 <div className="p-2 bg-[#F5E7C6] text-[#5C4D28] rounded-xl font-bold">
                   <LayoutDashboard className="w-4 h-4" />
                 </div>
                 <div>
                   <h2 className="font-bold text-[#362D19] text-sm">แผงควบคุมระบบจัดการสินค้า</h2>
-                  <p className="text-[10px] text-slate-500">ภาพรวมคลังสินค้าและสถิติโปรโมชั่น</p>
+                  <p className="text-[10px] text-slate-500">ภาพรวมคลังสินค้า สถิติโปรโมชั่น และจำนวนสินค้าแยกตามหมวดหมู่</p>
                 </div>
               </div>
               <span className="text-[11px] text-emerald-700 font-mono bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full flex items-center gap-1.5">
@@ -829,10 +833,59 @@ export default function App() {
                 </div>
               </div>
             </div>
+
+            {/* จำนวนสินค้าแยกตามแต่ละหมวดหมู่ */}
+            <div className="pt-2 border-t border-[#F5EFE6]">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-bold text-[#4A3E25] flex items-center gap-1.5">
+                  <LayoutGrid className="w-3.5 h-3.5 text-[#B89446]" /> 
+                  สรุปจำนวนสินค้าแยกตามหมวดหมู่
+                </span>
+                <span className="text-[10px] text-slate-400">คลิกที่หมวดหมู่เพื่อกรองสินค้า</span>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
+                {categories.map((cat) => {
+                  const catCount = products.filter(
+                    (p) => p.category === cat.name || p.id?.startsWith(cat.prefix)
+                  ).length;
+                  const Icon = cat.icon;
+                  const isSelected = selectedCategory === cat.name;
+
+                  return (
+                    <button
+                      key={cat.name}
+                      onClick={() => {
+                        setSelectedCategory(isSelected ? "" : cat.name);
+                        setSubFilterSize("ทั้งหมด");
+                      }}
+                      className={`p-2.5 rounded-xl border transition-all flex flex-col items-center text-center justify-between ${
+                        isSelected
+                          ? "bg-[#6B5528] text-white border-[#6B5528] shadow-sm scale-105"
+                          : "bg-[#FAF8F5] hover:bg-white text-slate-700 border-[#EAE3D2] hover:border-[#B89446]"
+                      }`}
+                    >
+                      <Icon className={`w-4 h-4 mb-1.5 ${isSelected ? "text-amber-200" : "text-[#B89446]"}`} />
+                      <span className="text-[11px] font-bold line-clamp-1">{cat.name}</span>
+                      <span
+                        className={`text-[10px] font-mono font-black mt-1 px-2 py-0.5 rounded-full ${
+                          isSelected
+                            ? "bg-white/20 text-white"
+                            : "bg-amber-100/70 text-[#5C4D28]"
+                        }`}
+                      >
+                        {catCount}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
           </div>
         )}
 
-        {/* CATEGORY CARDS GRID (สไตล์ Dark Card) */}
+        {/* CATEGORY CARDS GRID */}
         {!selectedCategory && searchTerm === "" && (
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -849,38 +902,43 @@ export default function App() {
                       setSelectedCategory(category.name);
                       setSubFilterSize("ทั้งหมด");
                     }}
-                    className="group bg-[#161B26] hover:bg-[#1E2433] border border-slate-800 hover:border-[#D4AF37] rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 cursor-pointer flex flex-col justify-between min-h-[190px] relative overflow-hidden"
+                    className="group bg-white rounded-2xl border border-slate-100 hover:border-amber-400 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] transition-all duration-300 cursor-pointer overflow-hidden flex relative min-h-[175px]"
                   >
-                    {/* Header ของ Card: ไอคอน + ตัวเลขจำนวนรายการ */}
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="p-3 rounded-xl bg-slate-800/80 text-[#E6C687] border border-slate-700/60 group-hover:scale-105 transition-transform duration-300">
-                        <Icon className="w-6 h-6" />
+                    <div className="flex-1 p-5 flex flex-col justify-between z-10 bg-gradient-to-r from-white via-white/95 to-transparent pr-2">
+                      <div>
+                        <div className="w-10 h-10 rounded-xl bg-[#FFF8EE] border border-[#F5E6D3] flex items-center justify-center text-[#B58048] mb-3 group-hover:scale-105 transition-transform duration-300">
+                          <Icon className="w-5 h-5" />
+                        </div>
+
+                        <h3 className="text-base font-bold text-slate-800 group-hover:text-[#B58048] transition-colors">
+                          {category.name}
+                        </h3>
+
+                        {category.description && (
+                          <p className="text-[11px] text-slate-400 mt-0.5 line-clamp-1">
+                            {category.description}
+                          </p>
+                        )}
                       </div>
-                      <span className="text-xs font-bold text-slate-300 bg-slate-800/90 border border-slate-700 px-3 py-1 rounded-full font-mono">
+
+                      <div className="flex items-center gap-1.5 text-xs text-slate-400 group-hover:text-amber-600 font-medium transition-colors pt-2">
+                        <span>เลือกชมสินค้า</span>
+                        <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                      </div>
+                    </div>
+
+                    <div className="w-5/12 relative overflow-hidden flex items-end justify-end">
+                      <div className="absolute top-3 right-3 z-10 bg-white/90 backdrop-blur-sm text-slate-700 font-medium text-[11px] px-2.5 py-0.5 rounded-full shadow-sm border border-slate-100">
                         {count} รายการ
-                      </span>
-                    </div>
-
-                    {/* Middle ของ Card: ชื่อหมวดหมู่ + คำอธิบายตัวอย่างสินค้า */}
-                    <div className="my-3">
-                      <h3 className="text-base font-extrabold text-white group-hover:text-[#E6C687] transition-colors">
-                        {category.name}
-                      </h3>
-                      {category.description && (
-                        <p className="text-xs text-slate-400 mt-1 line-clamp-1 font-normal">
-                          {category.description}
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Footer ของ Card: ข้อความ เลือกชมสินค้า + วงกลมไอคอนลูกศร */}
-                    <div className="flex items-center justify-between pt-2 border-t border-slate-800/80">
-                      <span className="text-xs font-medium text-slate-400 group-hover:text-slate-200 transition-colors">
-                        เลือกชมสินค้า
-                      </span>
-                      <div className="w-7 h-7 rounded-full bg-slate-800 group-hover:bg-[#B89446] flex items-center justify-center text-slate-400 group-hover:text-white transition-all duration-300">
-                        <ChevronRight className="w-4 h-4" />
                       </div>
+
+                      <img
+                        src={category.image}
+                        alt={category.name}
+                        className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
+                      />
+
+                      <div className="absolute inset-0 bg-gradient-to-r from-white via-white/30 to-transparent pointer-events-none" />
                     </div>
                   </div>
                 );
