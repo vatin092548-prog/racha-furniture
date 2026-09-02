@@ -30,7 +30,9 @@ import {
   ChevronRight,
   SlidersHorizontal,
   Upload,
-  Activity
+  Activity,
+  Crown,
+  Grid
 } from "lucide-react";
 
 export default function App() {
@@ -85,11 +87,11 @@ export default function App() {
   const categoryPrefixMap = {
     "ห้องนอน": "A",
     "ห้องนั่งเล่น": "T",
-    "โซฟา & เก้าอี้พักผ่อน": "S",
-    "ห้องอาหาร/ห้องครัว": "E",
-    "ห้องสำนักงาน": "I",
-    "สินค้าพิเศษ": "P",
-    "ห้องทั่วไป": "B",
+    "โต๊ะ & เก้าอี้พักผ่อน": "S",
+    "ห้องอาหาร / ห้องครัว": "E",
+    "ห้องทำงาน": "I",
+    "สินค้าตกแต่ง": "P",
+    "ห้องจัดเก็บ": "B",
   };
 
   const categories = [
@@ -108,44 +110,44 @@ export default function App() {
       image: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?q=80&w=600&auto=format&fit=crop"
     },
     { 
-      name: "โซฟา & เก้าอี้พักผ่อน", 
+      name: "โต๊ะ & เก้าอี้พักผ่อน", 
       icon: Armchair, 
       prefix: "S", 
       description: "โต๊ะหน้าทีวี, เก้าอี้พักผ่อน",
       image: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?q=80&w=600&auto=format&fit=crop"
     },
     { 
-      name: "ห้องอาหาร/ห้องครัว", 
+      name: "ห้องอาหาร / ห้องครัว", 
       icon: Utensils, 
       prefix: "E", 
-      description: "ชุดโต๊ะอาหาร, เคาน์เตอร์ครัว",
+      description: "ชุดโต๊ะอาหาร, เก้าอี้บาร์",
       image: "https://images.unsplash.com/photo-1617806118233-18e1de247200?q=80&w=600&auto=format&fit=crop"
     },
     { 
-      name: "ห้องสำนักงาน", 
+      name: "ห้องทำงาน", 
       icon: Briefcase, 
       prefix: "I", 
       description: "โต๊ะทำงาน, เก้าอี้ผู้บริหาร",
       image: "https://images.unsplash.com/photo-1524758631624-e2822e304c36?q=80&w=600&auto=format&fit=crop"
     },
     { 
-      name: "สินค้าพิเศษ", 
+      name: "สินค้าตกแต่ง", 
       icon: Sparkles, 
       prefix: "P", 
-      description: "สินค้ารุ่นพิเศษ, ดีไซน์พรีเมียม",
+      description: "สินค้าตกแต่งบ้าน, ดีไซน์พรีเมียม",
       image: "https://images.unsplash.com/photo-1567016432779-094069958ea5?q=80&w=600&auto=format&fit=crop"
     },
     { 
-      name: "ห้องทั่วไป", 
+      name: "ห้องจัดเก็บ", 
       icon: LayoutGrid, 
       prefix: "B", 
-      description: "เฟอร์นิเจอร์อเนกประสงค์",
+      description: "ตู้โชว์, ตู้เก็บของอเนกประสงค์",
       image: "https://images.unsplash.com/photo-1595428774223-ef52624120d2?q=80&w=600&auto=format&fit=crop"
     },
   ];
 
   /* =======================================================
-     FORM
+     FORM & AUTO ID
   ======================================================= */
   const emptyForm = {
     id: "",
@@ -162,9 +164,6 @@ export default function App() {
 
   const [formData, setFormData] = useState(emptyForm);
 
-  /* =======================================================
-     AUTO GENERATE ID
-  ======================================================= */
   const generateNextId = (categoryName, currentProducts) => {
     const prefix = categoryPrefixMap[categoryName] || "A";
     const categoryProducts = currentProducts.filter(
@@ -184,7 +183,7 @@ export default function App() {
   };
 
   /* =======================================================
-     SUPABASE FETCH & REALTIME SUBSCRIPTION
+     SUPABASE FETCH & REALTIME
   ======================================================= */
   const fetchProducts = async () => {
     setLoading(true);
@@ -221,7 +220,7 @@ export default function App() {
   }, []);
 
   /* =======================================================
-     OPEN PRODUCT AUTOMATICALLY FROM URL PARAMETER (?product=A1)
+     AUTO OPEN FROM URL PARAMETER (?product=A1)
   ======================================================= */
   useEffect(() => {
     if (products.length > 0) {
@@ -240,7 +239,7 @@ export default function App() {
   }, [products]);
 
   /* =======================================================
-     TOAST
+     TOAST & LOGIN HANDLERS
   ======================================================= */
   const showToast = (message) => {
     setToast(message);
@@ -249,9 +248,6 @@ export default function App() {
     }, 3000);
   };
 
-  /* =======================================================
-     LOGIN / LOGOUT
-  ======================================================= */
   const handleLogin = (event) => {
     event.preventDefault();
     if (passwordInput === STORE_PASSWORD) {
@@ -271,7 +267,7 @@ export default function App() {
   };
 
   /* =======================================================
-     PRODUCT MODAL CONTROLS
+     PRODUCT MODAL HANDLERS
   ======================================================= */
   const openAddProduct = () => {
     setEditingProduct(null);
@@ -311,7 +307,7 @@ export default function App() {
   };
 
   /* =======================================================
-     IMAGE COMPRESSOR & UPLOAD & REMOVE
+     IMAGE COMPRESSOR & UPLOAD
   ======================================================= */
   const compressImage = (file, maxWidth = 800, quality = 0.7) => {
     return new Promise((resolve, reject) => {
@@ -350,7 +346,7 @@ export default function App() {
     if (!file) return;
 
     try {
-      showToast("กำลังบีบอัดรูปภาพให้เร็วขึ้น...");
+      showToast("กำลังบีบอัดรูปภาพ...");
       const compressedImage = await compressImage(file, 800, 0.7);
       setFormData((previous) => ({
         ...previous,
@@ -372,7 +368,7 @@ export default function App() {
   };
 
   /* =======================================================
-     SAVE PRODUCT (SUPABASE UPSERT)
+     SAVE & DELETE PRODUCT
   ======================================================= */
   const handleSaveProduct = async (event) => {
     event.preventDefault();
@@ -391,7 +387,7 @@ export default function App() {
     const hasPromoPrice = formData.promoPrice !== "" && formData.promoPrice !== null && formData.promoPrice !== undefined;
 
     if (!hasNormalPrice && !hasPromoPrice) {
-      alert("กรุณากรอกราคาสินค้า อย่างน้อย 1 ช่อง (ราคาปกติ หรือ ราคาลดพิเศษ)");
+      alert("กรุณากรอกราคาสินค้า อย่างน้อย 1 ช่อง");
       return;
     }
 
@@ -400,27 +396,12 @@ export default function App() {
 
     if (hasNormalPrice) {
       normalPrice = Number(formData.price);
-      if (Number.isNaN(normalPrice) || normalPrice < 0) {
-        alert("ราคาสินค้าไม่ถูกต้อง");
-        return;
-      }
     }
-
     if (hasPromoPrice) {
       promotionPrice = Number(formData.promoPrice);
-      if (Number.isNaN(promotionPrice) || promotionPrice < 0) {
-        alert("ราคาโปรโมชั่นไม่ถูกต้อง");
-        return;
-      }
     }
-
     if (normalPrice === null && promotionPrice !== null) {
       normalPrice = promotionPrice;
-    }
-
-    if (hasNormalPrice && hasPromoPrice && promotionPrice > normalPrice) {
-      alert("ราคาลดพิเศษไม่ควรมากกว่าราคาปกติ");
-      return;
     }
 
     const newProductId = formData.id?.trim() || `P${Date.now()}`;
@@ -445,7 +426,6 @@ export default function App() {
       }
 
       const { error } = await supabase.from("products").upsert([productData]);
-
       if (error) throw error;
 
       closeProductModal();
@@ -457,21 +437,14 @@ export default function App() {
     }
   };
 
-  /* =======================================================
-     DELETE PRODUCT (SUPABASE DELETE)
-  ======================================================= */
   const handleDeleteProduct = async (product, event) => {
     if (event) event.stopPropagation();
-    if (!isLoggedIn) {
-      alert("กรุณาเข้าสู่ระบบพนักงานก่อน");
-      return;
-    }
+    if (!isLoggedIn) return;
 
     if (!window.confirm(`ต้องการลบสินค้า "${product.name}" หรือไม่?`)) return;
 
     try {
       const { error } = await supabase.from("products").delete().eq("id", product.id);
-
       if (error) throw error;
 
       fetchProducts();
@@ -483,7 +456,7 @@ export default function App() {
   };
 
   /* =======================================================
-     SHARE
+     SHARE & BADGES
   ======================================================= */
   const handleShare = async (product, event) => {
     if (event) event.stopPropagation();
@@ -505,16 +478,6 @@ export default function App() {
       `ดูรูปและรายละเอียดเพิ่มเติม:\n` +
       `${productUrl}`;
 
-    try {
-      if (product.image && product.image.startsWith("data:image") && window.ClipboardItem) {
-        const response = await fetch(product.image);
-        const blob = await response.blob();
-        await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
-      }
-    } catch (err) {
-      console.log("Clipboard image copy not supported");
-    }
-
     const lineShareUrl = `line://msg/text/${encodeURIComponent(shareText)}`;
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
       navigator.userAgent
@@ -525,52 +488,57 @@ export default function App() {
     } else {
       if (navigator.clipboard) {
         navigator.clipboard.writeText(shareText);
-        showToast("คัดลอกรูปภาพและข้อความแล้ว! นำไปวางใน LINE ได้เลย");
+        showToast("คัดลอกข้อความสินค้าแล้ว นำไปวางใน LINE ได้เลย");
       } else {
         alert(shareText);
       }
     }
   };
 
-  /* =======================================================
-     BADGES
-  ======================================================= */
   const renderImageBadge = (status) => {
     switch (status) {
       case "สินค้าตัวโชว์หน้าร้าน":
         return (
-          <div className="bg-amber-500 text-slate-950 font-black text-[10px] px-2.5 py-1 rounded-full shadow-md flex items-center gap-1">
-            <Sparkles className="w-3 h-3" /> ตัวโชว์
+          <div className="bg-amber-500 text-slate-950 font-black text-[10px] px-2 py-0.5 rounded-full shadow flex items-center gap-1">
+            <Sparkles className="w-2.5 h-2.5" /> ตัวโชว์
           </div>
         );
       case "สินค้าติดจอง":
         return (
-          <div className="bg-purple-600 text-white font-black text-[10px] px-2.5 py-1 rounded-full shadow-md">
+          <div className="bg-purple-600 text-white font-black text-[10px] px-2 py-0.5 rounded-full shadow">
             ติดจอง
           </div>
         );
       case "สินค้าหมด":
         return (
-          <div className="bg-rose-600 text-white font-black text-[10px] px-2.5 py-1 rounded-full shadow-md">
+          <div className="bg-rose-600 text-white font-black text-[10px] px-2 py-0.5 rounded-full shadow">
             หมด
           </div>
         );
       default:
         return (
-          <div className="bg-emerald-600 text-white font-black text-[10px] px-2.5 py-1 rounded-full shadow-md flex items-center gap-1">
-            <CheckCircle2 className="w-3 h-3" /> พร้อมส่ง
+          <div className="bg-emerald-600 text-white font-black text-[10px] px-2 py-0.5 rounded-full shadow flex items-center gap-1">
+            <CheckCircle2 className="w-2.5 h-2.5" /> พร้อมส่ง
           </div>
         );
     }
   };
 
   /* =======================================================
-     FILTER PRODUCTS
+     FILTER PRODUCTS & STATS (แก้ไขเงื่อนไขหมวดหมู่ตรงนี้)
   ======================================================= */
   const filteredProducts = useMemo(() => {
     return products
       .filter((product) => {
-        const categoryMatch = selectedCategory ? product.category === selectedCategory : true;
+        // หาหมวดหมู่ที่ถูกเลือกเพื่อดึงรหัส Prefix
+        const currentCategoryObj = categories.find((c) => c.name === selectedCategory);
+        const categoryPrefix = currentCategoryObj ? currentCategoryObj.prefix : "";
+
+        // เช็คทั้งชื่อหมวดหมู่ตรงๆ และการเริ่มต้นด้วย Prefix เดียวกัน
+        const categoryMatch = selectedCategory
+          ? (product.category === selectedCategory || (categoryPrefix && product.id?.startsWith(categoryPrefix)))
+          : true;
+
         const search = searchTerm.trim().toLowerCase();
         const name = String(product.name || "").toLowerCase();
         const id = String(product.id || "").toLowerCase();
@@ -579,7 +547,6 @@ export default function App() {
         const stockMatch = stockOnly ? product.status !== "สินค้าหมด" : true;
 
         const actualPrice = Number(product.promoPrice || product.price || 0);
-
         const minMatch = minPrice === "" || actualPrice >= Number(minPrice);
         const maxMatch = maxPrice === "" || actualPrice <= Number(maxPrice);
 
@@ -593,7 +560,7 @@ export default function App() {
           } else if (subFilterSize === "6 ฟุต") {
             subFilterMatch = /6\s*ฟุต/.test(sizeStr);
           }
-        } else if (selectedCategory === "ห้องอาหาร/ห้องครัว" && subFilterSize !== "ทั้งหมด") {
+        } else if (selectedCategory === "ห้องอาหาร / ห้องครัว" && subFilterSize !== "ทั้งหมด") {
           const sizeStr = `${product.size || ""} ${product.name || ""} ${product.description || ""}`;
           subFilterMatch = sizeStr.includes(subFilterSize);
         }
@@ -625,6 +592,7 @@ export default function App() {
     maxPrice,
     subFilterSize,
     sortPrice,
+    categories,
   ]);
 
   const promotionCount = useMemo(
@@ -637,9 +605,9 @@ export default function App() {
   );
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7] text-slate-800 font-sans">
+    <div className="min-h-screen bg-[#FAF7F2] text-slate-800 font-sans">
 
-      {/* TOAST NOTIFICATION */}
+      {/* TOAST */}
       {toast && (
         <div className="fixed bottom-6 right-6 z-[100]">
           <div className="bg-[#161B26] text-[#E6C687] border border-[#B89446]/40 px-5 py-3 rounded-2xl shadow-2xl font-bold text-xs flex items-center gap-2">
@@ -664,22 +632,7 @@ export default function App() {
           >
             <div className="flex items-center gap-3">
               <div className="p-2.5 bg-gradient-to-br from-[#E6C687] to-[#B89446] rounded-2xl shadow-lg shadow-[#B89446]/20 group-hover:scale-105 transition-transform duration-300">
-                <svg
-                  width="26"
-                  height="26"
-                  viewBox="0 0 100 100"
-                  fill="none"
-                  stroke="#1E1B18"
-                  strokeWidth="8"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M15 70 L25 35 L40 55 L50 25 L60 55 L75 35 L85 70 Z" />
-                  <circle cx="25" cy="30" r="4" fill="#1E1B18" />
-                  <circle cx="50" cy="20" r="4" fill="#1E1B18" />
-                  <circle cx="75" cy="30" r="4" fill="#1E1B18" />
-                  <path d="M18 78 Q50 83 82 78" strokeWidth="6" />
-                </svg>
+                <Crown className="w-6 h-6 text-[#1E1B18]" />
               </div>
 
               <div>
@@ -712,7 +665,7 @@ export default function App() {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="ค้นหาชื่อ หรือ รหัสสินค้า..."
-                className="w-full bg-[#182030] text-slate-100 placeholder-slate-400 pl-9 pr-8 py-2 rounded-xl text-xs font-medium border border-[#2A354A] focus:outline-none focus:border-[#E6C687] focus:ring-1 focus:ring-[#E6C687] transition"
+                className="w-full bg-[#182030] text-slate-100 placeholder-slate-400 pl-9 pr-8 py-2 rounded-xl text-xs font-medium border border-[#2A354A] focus:outline-none focus:border-[#E6C687] transition"
               />
               <Search className="absolute left-3 top-2.5 text-slate-400 w-3.5 h-3.5" />
               {searchTerm && (
@@ -728,7 +681,7 @@ export default function App() {
             {isLoggedIn && (
               <button
                 onClick={openAddProduct}
-                className="bg-gradient-to-r from-[#D4AF37] to-[#B89446] hover:from-[#E6C687] hover:to-[#C5A049] text-slate-950 font-black px-3.5 py-2 rounded-xl text-xs shadow-md shadow-amber-500/10 flex items-center gap-1.5 whitespace-nowrap transition active:scale-95"
+                className="bg-gradient-to-r from-[#D4AF37] to-[#B89446] hover:from-[#E6C687] hover:to-[#C5A049] text-slate-950 font-black px-3.5 py-2 rounded-xl text-xs shadow-md flex items-center gap-1.5 whitespace-nowrap transition active:scale-95"
               >
                 <Plus className="w-4 h-4 stroke-[2.5]" /> เพิ่มสินค้า
               </button>
@@ -758,19 +711,40 @@ export default function App() {
         </div>
       </header>
 
-      {/* MAIN CONTENT */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+      {/* MAIN CONTAINER */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
 
         {supabaseError && (
-          <div className="mb-6 bg-rose-50 border border-rose-200 text-rose-700 rounded-2xl p-4 flex items-center gap-3">
+          <div className="bg-rose-50 border border-rose-200 text-rose-700 rounded-2xl p-4 flex items-center gap-3">
             <AlertCircle className="w-5 h-5 text-rose-600 shrink-0" />
             <div className="text-xs font-medium whitespace-pre-line">{supabaseError}</div>
           </div>
         )}
 
+        {/* HERO BANNER SECTION */}
+        {!selectedCategory && !searchTerm && (
+          <div className="relative w-full rounded-2xl overflow-hidden shadow-md bg-slate-900 text-white min-h-[180px] sm:min-h-[220px] flex items-center">
+            <div 
+              className="absolute inset-0 bg-cover bg-center" 
+              style={{ backgroundImage: `url('https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?q=80&w=1400&auto=format&fit=crop')` }}
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent" />
+            
+            <div className="relative z-10 p-6 sm:p-10 max-w-xl space-y-2">
+              <h2 className="text-2xl sm:text-3xl font-black tracking-tight leading-tight text-[#E6C687] drop-shadow-md">
+                แต่งบ้านในสไตล์คุณ <br />
+                <span className="text-white">ด้วยเฟอร์นิเจอร์คุณภาพ</span>
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-200 font-medium leading-relaxed drop-shadow-sm">
+                คัดสรรเฟอร์นิเจอร์คุณภาพดี ดีไซน์สวย ทนทาน เพื่อทุกพื้นที่ในบ้านของคุณ
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* ADMIN DASHBOARD UI WITH CATEGORY BREAKDOWN */}
         {isLoggedIn && (
-          <div className="mb-8 bg-white rounded-2xl border border-[#EAE3D2] p-5 shadow-sm space-y-5">
+          <div className="bg-white rounded-2xl border border-[#EAE3D2] p-5 shadow-sm space-y-5">
             <div className="flex items-center justify-between border-b border-[#F5EFE6] pb-3">
               <div className="flex items-center gap-2.5">
                 <div className="p-2 bg-[#F5E7C6] text-[#5C4D28] rounded-xl font-bold">
@@ -885,10 +859,19 @@ export default function App() {
           </div>
         )}
 
-        {/* CATEGORY CARDS GRID */}
-        {!selectedCategory && searchTerm === "" && (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        {/* CATEGORY SECTION HEADER & CARDS GRID */}
+        {!selectedCategory && !searchTerm && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-base sm:text-lg font-black text-slate-800 flex items-center gap-2">
+                  <Crown className="w-5 h-5 text-amber-600" /> หมวดหมู่สินค้า
+                </h3>
+                <p className="text-xs text-slate-400">เลือกช้อปตามหมวดหมู่ที่คุณสนใจ</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {categories.map((category) => {
                 const Icon = category.icon;
                 const count = products.filter(
@@ -902,42 +885,35 @@ export default function App() {
                       setSelectedCategory(category.name);
                       setSubFilterSize("ทั้งหมด");
                     }}
-                    className="group bg-white rounded-2xl border border-slate-100 hover:border-amber-400 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] transition-all duration-300 cursor-pointer overflow-hidden flex relative min-h-[175px]"
+                    className="group bg-white rounded-2xl border border-slate-100 hover:border-amber-400/80 shadow-[0_2px_10px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_25px_rgba(0,0,0,0.08)] transition-all duration-300 cursor-pointer overflow-hidden flex min-h-[125px] relative"
                   >
-                    <div className="flex-1 p-5 flex flex-col justify-between z-10 bg-gradient-to-r from-white via-white/95 to-transparent pr-2">
+                    <div className="flex-1 p-4 flex flex-col justify-between z-10 bg-gradient-to-r from-white via-white/95 to-transparent pr-1">
                       <div>
-                        <div className="w-10 h-10 rounded-xl bg-[#FFF8EE] border border-[#F5E6D3] flex items-center justify-center text-[#B58048] mb-3 group-hover:scale-105 transition-transform duration-300">
-                          <Icon className="w-5 h-5" />
+                        <div className="flex items-center gap-2.5 mb-1">
+                          <div className="w-8 h-8 rounded-full bg-[#FFF7ED] border border-[#FFEDD5] flex items-center justify-center text-amber-700 shrink-0">
+                            <Icon className="w-4 h-4" />
+                          </div>
+                          <h4 className="text-sm font-bold text-slate-800 group-hover:text-amber-700 transition-colors line-clamp-1">
+                            {category.name}
+                          </h4>
                         </div>
-
-                        <h3 className="text-base font-bold text-slate-800 group-hover:text-[#B58048] transition-colors">
-                          {category.name}
-                        </h3>
-
-                        {category.description && (
-                          <p className="text-[11px] text-slate-400 mt-0.5 line-clamp-1">
-                            {category.description}
-                          </p>
-                        )}
+                        <p className="text-[11px] text-slate-400 pl-10">
+                          {count} รายการ
+                        </p>
                       </div>
 
-                      <div className="flex items-center gap-1.5 text-xs text-slate-400 group-hover:text-amber-600 font-medium transition-colors pt-2">
+                      <div className="flex items-center gap-1 text-[11px] text-slate-400 group-hover:text-amber-600 font-medium transition-colors pt-2 pl-10">
                         <span>เลือกชมสินค้า</span>
-                        <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                        <ChevronRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
                       </div>
                     </div>
 
-                    <div className="w-5/12 relative overflow-hidden flex items-end justify-end">
-                      <div className="absolute top-3 right-3 z-10 bg-white/90 backdrop-blur-sm text-slate-700 font-medium text-[11px] px-2.5 py-0.5 rounded-full shadow-sm border border-slate-100">
-                        {count} รายการ
-                      </div>
-
+                    <div className="w-5/12 relative overflow-hidden flex items-center justify-end">
                       <img
                         src={category.image}
                         alt={category.name}
                         className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
                       />
-
                       <div className="absolute inset-0 bg-gradient-to-r from-white via-white/30 to-transparent pointer-events-none" />
                     </div>
                   </div>
@@ -948,9 +924,9 @@ export default function App() {
         )}
 
         {/* PRODUCT LIST SECTION */}
-        {(selectedCategory || searchTerm !== "") && (
-          <div className="space-y-4">
-            
+        <div className="space-y-4">
+          
+          {(selectedCategory || searchTerm !== "") && (
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-3.5 rounded-xl border border-[#EAE3D2] shadow-sm">
               <button
                 onClick={() => {
@@ -972,242 +948,244 @@ export default function App() {
                 )}
                 {searchTerm && (
                   <span className="text-xs font-bold text-slate-700 bg-slate-100 px-3 py-1 rounded-lg border border-slate-200">
-                    ผลการค้นหา: "{searchTerm}"
+                    ผลการค้นหา: "{searchTerm.trim() || 'ทั้งหมด'}"
                   </span>
                 )}
               </div>
             </div>
+          )}
 
-            {selectedCategory === "ห้องนอน" && (
-              <div className="bg-white border border-[#EAE3D2] rounded-xl p-3 flex flex-wrap items-center gap-2 shadow-sm">
-                <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5 mr-2">
-                  <Bed className="w-4 h-4 text-[#B89446]" /> ขนาดเตียง:
-                </span>
-                {["ทั้งหมด", "3.5 ฟุต", "5 ฟุต", "6 ฟุต"].map((sizeOption) => (
-                  <button
-                    key={sizeOption}
-                    onClick={() => setSubFilterSize(sizeOption)}
-                    className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
-                      subFilterSize === sizeOption
-                        ? "bg-[#6B5528] text-white shadow-sm"
-                        : "bg-[#FAF8F5] text-slate-700 border border-[#E6DFD3] hover:bg-[#F3EDE2]"
-                    }`}
-                  >
-                    {sizeOption}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {selectedCategory === "ห้องอาหาร/ห้องครัว" && (
-              <div className="bg-white border border-[#EAE3D2] rounded-xl p-3 flex flex-wrap items-center gap-2 shadow-sm">
-                <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5 mr-2">
-                  <Utensils className="w-4 h-4 text-[#B89446]" /> จำนวนที่นั่ง:
-                </span>
-                {["ทั้งหมด", "2 ที่นั่ง", "4 ที่นั่ง", "6 ที่นั่ง"].map((seatOption) => (
-                  <button
-                    key={seatOption}
-                    onClick={() => setSubFilterSize(seatOption)}
-                    className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
-                      subFilterSize === seatOption
-                        ? "bg-[#6B5528] text-white shadow-sm"
-                        : "bg-[#FAF8F5] text-slate-700 border border-[#E6DFD3] hover:bg-[#F3EDE2]"
-                    }`}
-                  >
-                    {seatOption}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            <div className="bg-white border border-[#EAE3D2] rounded-xl p-3.5 flex flex-wrap items-center justify-between gap-3 shadow-sm">
-              <div className="flex flex-wrap items-center gap-2">
+          {selectedCategory === "ห้องนอน" && (
+            <div className="bg-white border border-[#EAE3D2] rounded-xl p-3 flex flex-wrap items-center gap-2 shadow-sm">
+              <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5 mr-2">
+                <Bed className="w-4 h-4 text-[#B89446]" /> ขนาดเตียง:
+              </span>
+              {["ทั้งหมด", "3.5 ฟุต", "5 ฟุต", "6 ฟุต"].map((sizeOption) => (
                 <button
-                  onClick={() => setPromoOnly(!promoOnly)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition ${
-                    promoOnly
-                      ? "bg-rose-600 text-white shadow-sm"
-                      : "bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100"
+                  key={sizeOption}
+                  onClick={() => setSubFilterSize(sizeOption)}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
+                    subFilterSize === sizeOption
+                      ? "bg-[#6B5528] text-white shadow-sm"
+                      : "bg-[#FAF8F5] text-slate-700 border border-[#E6DFD3] hover:bg-[#F3EDE2]"
                   }`}
                 >
-                  <Flame className="w-3.5 h-3.5" /> 
-                  ลดพิเศษ
+                  {sizeOption}
                 </button>
+              ))}
+            </div>
+          )}
 
+          {selectedCategory === "ห้องอาหาร / ห้องครัว" && (
+            <div className="bg-white border border-[#EAE3D2] rounded-xl p-3 flex flex-wrap items-center gap-2 shadow-sm">
+              <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5 mr-2">
+                <Utensils className="w-4 h-4 text-[#B89446]" /> จำนวนที่นั่ง:
+              </span>
+              {["ทั้งหมด", "2 ที่นั่ง", "4 ที่นั่ง", "6 ที่นั่ง"].map((seatOption) => (
                 <button
-                  onClick={() => setStockOnly(!stockOnly)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition ${
-                    stockOnly
-                      ? "bg-emerald-600 text-white shadow-sm"
-                      : "bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100"
+                  key={seatOption}
+                  onClick={() => setSubFilterSize(seatOption)}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
+                    subFilterSize === seatOption
+                      ? "bg-[#6B5528] text-white shadow-sm"
+                      : "bg-[#FAF8F5] text-slate-700 border border-[#E6DFD3] hover:bg-[#F3EDE2]"
                   }`}
                 >
-                  <CheckCircle2 className="w-3.5 h-3.5" /> 
-                  พร้อมส่ง
+                  {seatOption}
                 </button>
-              </div>
+              ))}
+            </div>
+          )}
 
-              <div className="flex flex-wrap items-center gap-3">
-                <div className="flex items-center gap-1.5 text-xs">
-                  <SlidersHorizontal className="w-3.5 h-3.5 text-slate-400" />
-                  <span className="text-slate-600 font-bold">ราคา:</span>
-                  <input
-                    type="number"
-                    placeholder="ต่ำสุด"
-                    value={minPrice}
-                    onChange={(e) => setMinPrice(e.target.value)}
-                    className="w-16 bg-[#FAF8F5] border border-[#E6DFD3] text-slate-800 rounded-lg px-2 py-1 text-xs outline-none focus:border-[#B89446]"
-                  />
-                  <span className="text-slate-400">-</span>
-                  <input
-                    type="number"
-                    placeholder="สูงสุด"
-                    value={maxPrice}
-                    onChange={(e) => setMaxPrice(e.target.value)}
-                    className="w-16 bg-[#FAF8F5] border border-[#E6DFD3] text-slate-800 rounded-lg px-2 py-1 text-xs outline-none focus:border-[#B89446]"
-                  />
-                </div>
+          {/* CONTROL BAR */}
+          <div className="bg-white border border-[#EAE3D2] rounded-xl p-3.5 flex flex-wrap items-center justify-between gap-3 shadow-sm">
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                onClick={() => setPromoOnly(!promoOnly)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition ${
+                  promoOnly
+                    ? "bg-rose-600 text-white shadow-sm"
+                    : "bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100"
+                }`}
+              >
+                <Flame className="w-3.5 h-3.5" /> 
+                ลดพิเศษ
+              </button>
 
-                <select
-                  value={sortPrice}
-                  onChange={(e) => setSortPrice(e.target.value)}
-                  className="bg-[#FAF8F5] border border-[#E6DFD3] text-xs font-bold text-slate-700 rounded-lg px-2.5 py-1 text-xs outline-none focus:border-[#B89446]"
-                >
-                  <option value="none">เรียงลำดับราคา</option>
-                  <option value="low">ราคา: น้อย ➔ มาก</option>
-                  <option value="high">ราคา: มาก ➔ น้อย</option>
-                </select>
-              </div>
+              <button
+                onClick={() => setStockOnly(!stockOnly)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition ${
+                  stockOnly
+                    ? "bg-emerald-600 text-white shadow-sm"
+                    : "bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100"
+                }`}
+              >
+                <CheckCircle2 className="w-3.5 h-3.5" /> 
+                พร้อมส่ง
+              </button>
             </div>
 
-            {loading ? (
-              <div className="text-center py-16 bg-white rounded-2xl border border-[#EAE3D2]">
-                <div className="inline-block animate-spin rounded-full h-7 w-7 border-3 border-[#B89446] border-t-transparent"></div>
-                <p className="text-xs text-slate-500 mt-2 font-medium">กำลังโหลดรายการสินค้า...</p>
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-1.5 text-xs">
+                <SlidersHorizontal className="w-3.5 h-3.5 text-slate-400" />
+                <span className="text-slate-600 font-bold">ราคา:</span>
+                <input
+                  type="number"
+                  placeholder="ต่ำสุด"
+                  value={minPrice}
+                  onChange={(e) => setMinPrice(e.target.value)}
+                  className="w-16 bg-[#FAF8F5] border border-[#E6DFD3] text-slate-800 rounded-lg px-2 py-1 text-xs outline-none focus:border-[#B89446]"
+                />
+                <span className="text-slate-400">-</span>
+                <input
+                  type="number"
+                  placeholder="สูงสุด"
+                  value={maxPrice}
+                  onChange={(e) => setMaxPrice(e.target.value)}
+                  className="w-16 bg-[#FAF8F5] border border-[#E6DFD3] text-slate-800 rounded-lg px-2 py-1 text-xs outline-none focus:border-[#B89446]"
+                />
               </div>
-            ) : filteredProducts.length === 0 ? (
-              <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-[#EAE3D2]">
-                <Package className="w-10 h-10 text-slate-300 mx-auto mb-2" />
-                <p className="text-sm font-bold text-slate-700">ไม่พบรายการสินค้าที่คุณค้นหา</p>
-                <p className="text-xs text-slate-400 mt-1">ลองเปลี่ยนคำค้นหาหรือตัวกรองใหม่อีกครั้ง</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {filteredProducts.map((product) => {
-                  return (
-                    <div
-                      key={product.id}
-                      onClick={() => setViewingProduct(product)}
-                      className="group bg-white rounded-xl border border-[#EAE3D2] hover:border-[#D4AF37] shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between overflow-hidden"
-                    >
-                      <div>
-                        <div className="relative aspect-4/3 bg-slate-100 overflow-hidden">
-                          {product.image ? (
-                            <img
-                              src={product.image}
-                              alt={product.name}
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 bg-slate-50">
-                              <ImageIcon className="w-8 h-8 mb-1" />
-                              <span className="text-[10px]">ไม่มีรูปภาพ</span>
-                            </div>
-                          )}
 
-                          <div className="absolute top-2 left-2 flex flex-col gap-1">
-                            {renderImageBadge(product.status)}
-                          </div>
-
-                          {product.promoPrice && (
-                            <div className="absolute bottom-2 right-2 bg-rose-600 text-white font-bold text-[9px] px-2 py-0.5 rounded-md shadow-sm">
-                              PROMO
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="p-3.5">
-                          <div className="flex items-center justify-between gap-2 mb-1">
-                            <span className="font-mono text-[10px] font-bold text-slate-400">
-                              ID: {product.id}
-                            </span>
-                            {product.size && (
-                              <span className="text-[10px] bg-[#F8F4EC] text-[#6B5528] px-2 py-0.5 rounded font-bold border border-[#EADFCA]">
-                                {product.size}
-                              </span>
-                            )}
-                          </div>
-
-                          <h3 className="font-bold text-slate-800 text-xs line-clamp-1 group-hover:text-[#8C733E] transition-colors">
-                            {product.name}
-                          </h3>
-
-                          {product.location && (
-                            <p className="text-[11px] text-slate-500 mt-1 flex items-center gap-1">
-                              <MapPin className="w-3 h-3 text-[#B89446] shrink-0" />
-                              โซน: {product.location}
-                            </p>
-                          )}
-
-                          <div className="mt-2.5 flex items-baseline gap-2">
-                            {product.promoPrice ? (
-                              <>
-                                <span className="text-lg font-black text-rose-600">
-                                  ฿{Number(product.promoPrice).toLocaleString()}
-                                </span>
-                                {product.price && product.price !== product.promoPrice && (
-                                  <span className="text-xs text-slate-400 line-through">
-                                    ฿{Number(product.price).toLocaleString()}
-                                  </span>
-                                )}
-                              </>
-                            ) : (
-                              <span className="text-lg font-black text-slate-900">
-                                ฿{Number(product.price).toLocaleString()}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="p-3.5 pt-0">
-                        <div className="border-t border-slate-100 pt-2.5 flex items-center justify-between gap-2">
-                          <button
-                            onClick={(e) => handleShare(product, e)}
-                            className="flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 py-1.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1 border border-emerald-200 transition"
-                          >
-                            <Share2 className="w-3.5 h-3.5" /> แชร์ลง LINE
-                          </button>
-
-                          {isLoggedIn && (
-                            <div className="flex items-center gap-1">
-                              <button
-                                onClick={(e) => openEditProduct(product, e)}
-                                className="p-1.5 rounded-lg bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200 transition"
-                                title="แก้ไขสินค้า"
-                              >
-                                <Edit className="w-3.5 h-3.5" />
-                              </button>
-                              <button
-                                onClick={(e) => handleDeleteProduct(product, e)}
-                                className="p-1.5 rounded-lg bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 transition"
-                                title="ลบสินค้า"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-
+              <select
+                value={sortPrice}
+                onChange={(e) => setSortPrice(e.target.value)}
+                className="bg-[#FAF8F5] border border-[#E6DFD3] text-xs font-bold text-slate-700 rounded-lg px-2.5 py-1 outline-none focus:border-[#B89446]"
+              >
+                <option value="none">เรียงลำดับราคา</option>
+                <option value="low">ราคา: น้อย ➔ มาก</option>
+                <option value="high">ราคา: มาก ➔ น้อย</option>
+              </select>
+            </div>
           </div>
-        )}
+
+          {/* PRODUCT CARDS GRID */}
+          {loading ? (
+            <div className="text-center py-16 bg-white rounded-2xl border border-[#EAE3D2]">
+              <div className="inline-block animate-spin rounded-full h-7 w-7 border-3 border-[#B89446] border-t-transparent"></div>
+              <p className="text-xs text-slate-500 mt-2 font-medium">กำลังโหลดรายการสินค้า...</p>
+            </div>
+          ) : filteredProducts.length === 0 ? (
+            <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-[#EAE3D2]">
+              <Package className="w-10 h-10 text-slate-300 mx-auto mb-2" />
+              <p className="text-sm font-bold text-slate-700">ไม่พบรายการสินค้าที่คุณค้นหา</p>
+              <p className="text-xs text-slate-400 mt-1">ลองเปลี่ยนคำค้นหาหรือตัวกรองใหม่อีกครั้ง</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {filteredProducts.map((product) => {
+                return (
+                  <div
+                    key={product.id}
+                    onClick={() => setViewingProduct(product)}
+                    className="group bg-white rounded-xl border border-[#EAE3D2] hover:border-[#D4AF37] shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between overflow-hidden"
+                  >
+                    <div>
+                      <div className="relative aspect-4/3 bg-slate-100 overflow-hidden">
+                        {product.image ? (
+                          <img
+                            src={product.image}
+                            alt={product.name}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 bg-slate-50">
+                            <ImageIcon className="w-8 h-8 mb-1" />
+                            <span className="text-[10px]">ไม่มีรูปภาพ</span>
+                          </div>
+                        )}
+
+                        <div className="absolute top-2 left-2 flex flex-col gap-1">
+                          {renderImageBadge(product.status)}
+                        </div>
+
+                        {product.promoPrice && (
+                          <div className="absolute bottom-2 right-2 bg-rose-600 text-white font-bold text-[9px] px-2 py-0.5 rounded-md shadow-sm">
+                            PROMO
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="p-3.5">
+                        <div className="flex items-center justify-between gap-2 mb-1">
+                          <span className="font-mono text-[10px] font-bold text-slate-400">
+                            ID: {product.id}
+                          </span>
+                          {product.size && (
+                            <span className="text-[10px] bg-[#F8F4EC] text-[#6B5528] px-2 py-0.5 rounded font-bold border border-[#EADFCA]">
+                              {product.size}
+                            </span>
+                          )}
+                        </div>
+
+                        <h3 className="font-bold text-slate-800 text-xs line-clamp-1 group-hover:text-[#8C733E] transition-colors">
+                          {product.name}
+                        </h3>
+
+                        {product.location && (
+                          <p className="text-[11px] text-slate-500 mt-1 flex items-center gap-1">
+                            <MapPin className="w-3 h-3 text-[#B89446] shrink-0" />
+                            โซน: {product.location}
+                          </p>
+                        )}
+
+                        <div className="mt-2.5 flex items-baseline gap-2">
+                          {product.promoPrice ? (
+                            <>
+                              <span className="text-lg font-black text-rose-600">
+                                ฿{Number(product.promoPrice).toLocaleString()}
+                              </span>
+                              {product.price && product.price !== product.promoPrice && (
+                                <span className="text-xs text-slate-400 line-through">
+                                  ฿{Number(product.price).toLocaleString()}
+                                </span>
+                              )}
+                            </>
+                          ) : (
+                            <span className="text-lg font-black text-slate-900">
+                              ฿{Number(product.price).toLocaleString()}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="p-3.5 pt-0">
+                      <div className="border-t border-slate-100 pt-2.5 flex items-center justify-between gap-2">
+                        <button
+                          onClick={(e) => handleShare(product, e)}
+                          className="flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 py-1.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1 border border-emerald-200 transition"
+                        >
+                          <Share2 className="w-3.5 h-3.5" /> แชร์ลง LINE
+                        </button>
+
+                        {isLoggedIn && (
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={(e) => openEditProduct(product, e)}
+                              className="p-1.5 rounded-lg bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200 transition"
+                              title="แก้ไขสินค้า"
+                            >
+                              <Edit className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={(e) => handleDeleteProduct(product, e)}
+                              className="p-1.5 rounded-lg bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 transition"
+                              title="ลบสินค้า"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+        </div>
 
       </main>
 
@@ -1433,7 +1411,7 @@ export default function App() {
                   <label className="block font-bold text-slate-600 mb-1">รูปภาพสินค้า</label>
                   {formData.image ? (
                     <div className="flex items-center gap-3 mt-1">
-                      <div className="relative w-20 h-20 rounded-xl overflow-hidden border border-slate-200 shadow-sm group">
+                      <div className="relative w-20 h-20 rounded-xl overflow-hidden border border-slate-200 shadow-sm">
                         <img
                           src={formData.image}
                           alt="Preview"
@@ -1443,18 +1421,17 @@ export default function App() {
                           type="button"
                           onClick={handleRemoveImage}
                           className="absolute top-1 right-1 bg-rose-600 text-white p-1 rounded-full shadow transition"
-                          title="ลบรูปภาพนี้"
                         >
                           <Trash2 className="w-3 h-3" />
                         </button>
                       </div>
-                      <p className="text-[11px] text-slate-500">รูปภาพถูกเตรียมพร้อมบันทึกแล้ว คุณสามารถลบแล้วอัปโหลดใหม่ได้</p>
+                      <p className="text-[11px] text-slate-500">รูปภาพถูกเตรียมพร้อมบันทึกแล้ว</p>
                     </div>
                   ) : (
                     <label className="border-2 border-dashed border-[#E6DFD3] hover:border-[#B89446] rounded-xl p-4 text-center cursor-pointer transition bg-[#FAF8F5] flex flex-col items-center justify-center group">
                       <Upload className="w-6 h-6 text-slate-400 group-hover:text-[#B89446] transition mb-1" />
                       <p className="text-xs font-bold text-slate-700">คลิกเพื่อเลือกรูปภาพสินค้า</p>
-                      <p className="text-[10px] text-slate-400 mt-0.5">รองรับไฟล์ PNG, JPG หรือ WEBP (บีบอัดภาพอัตโนมัติ)</p>
+                      <p className="text-[10px] text-slate-400 mt-0.5">รองรับไฟล์ PNG, JPG หรือ WEBP</p>
                       <input
                         type="file"
                         accept="image/*"
