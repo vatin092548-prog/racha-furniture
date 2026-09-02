@@ -491,7 +491,6 @@ export default function App() {
       ? `฿${Number(product.promoPrice).toLocaleString()}`
       : `฿${Number(product.price).toLocaleString()}`;
 
-    // 📌 อัปเดตรายละเอียดสถานที่และเบอร์โทรศัพท์ในข้อความแชร์
     const shareText =
       `🪑 ${product.name}\n` +
       `💰 ราคา ${price}\n` +
@@ -620,7 +619,7 @@ export default function App() {
   const stockCount = products.filter((product) => product.status !== "สินค้าหมด").length;
 
   return (
-    <div className="min-h-screen bg-[#0B0F19] text-slate-100 font-sans selection:bg-[#D4AF37] selection:text-slate-950">
+    <div className="min-h-screen bg-[#F1F5F9] text-slate-800 font-sans selection:bg-[#D4AF37] selection:text-slate-950">
 
       {/* TOAST NOTIFICATION */}
       {toast && (
@@ -632,8 +631,8 @@ export default function App() {
         </div>
       )}
 
-      {/* LUXURY HEADER */}
-      <header className="bg-[#0B0F19]/90 backdrop-blur-md border-b border-amber-500/10 sticky top-0 z-40 shadow-2xl">
+      {/* LUXURY HEADER (คงสีมืดดั้งเดิม) */}
+      <header className="bg-[#0B0F19]/95 backdrop-blur-md border-b border-amber-500/10 sticky top-0 z-40 shadow-2xl">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex flex-col md:flex-row items-center justify-between gap-3.5">
           
           {/* Logo Brand */}
@@ -682,7 +681,6 @@ export default function App() {
                   </span>
                 </div>
 
-                {/* 📌 อัปเดตสาขาและเบอร์โทรตามรูปภาพ */}
                 <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11px] text-[#F3C649] font-medium mt-0.5">
                   <span className="flex items-center gap-1">
                     <MapPin className="w-3 h-3 text-[#F3C649]" /> สาขาหาดใหญ่ (ถ.สามสิบเมตร)
@@ -771,21 +769,19 @@ export default function App() {
         </div>
       </header>
 
-      {/* MAIN CONTENT */}
+      {/* MAIN CONTENT (ปรับเป็นพื้นหลังสว่าง #F1F5F9) */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
 
         {supabaseError && (
-          <div className="mb-6 bg-rose-950/30 border border-rose-500/30 text-rose-300 rounded-2xl p-4 shadow-sm flex items-center gap-3 backdrop-blur-md">
-            <AlertCircle className="w-5 h-5 text-rose-500 shrink-0" />
+          <div className="mb-6 bg-rose-900/10 border border-rose-500/40 text-rose-700 rounded-2xl p-4 shadow-sm flex items-center gap-3">
+            <AlertCircle className="w-5 h-5 text-rose-600 shrink-0" />
             <div className="text-xs font-medium whitespace-pre-line">{supabaseError}</div>
           </div>
         )}
 
         {/* ADMIN DASHBOARD UI */}
         {isLoggedIn && (
-          <div className="mb-8 bg-[#101726]/90 rounded-3xl border border-slate-700/60 p-5 shadow-2xl backdrop-blur-xl relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
-
+          <div className="mb-8 bg-[#101726] rounded-3xl border border-slate-700/60 p-5 shadow-xl relative overflow-hidden">
             <div className="flex items-center justify-between mb-4 border-b border-slate-800/80 pb-3">
               <div className="flex items-center gap-2.5">
                 <div className="p-2 bg-gradient-to-br from-[#F3C649] to-[#997B15] text-slate-950 rounded-xl shadow-md font-bold">
@@ -803,7 +799,7 @@ export default function App() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="bg-[#182238] border border-blue-500/30 hover:border-blue-400/60 rounded-2xl p-4 flex items-center justify-between shadow-xl transition">
+              <div className="bg-[#182238] border border-blue-500/30 rounded-2xl p-4 flex items-center justify-between shadow-xl">
                 <div>
                   <span className="text-[11px] font-extrabold text-blue-300 uppercase tracking-wider block mb-1">
                     สินค้าทั้งหมดในระบบ
@@ -813,12 +809,12 @@ export default function App() {
                     <span className="text-xs text-slate-400 font-bold">รายการ</span>
                   </div>
                 </div>
-                <div className="p-3.5 bg-blue-500/20 text-blue-400 rounded-2xl border border-blue-400/40 shadow-inner">
+                <div className="p-3.5 bg-blue-500/20 text-blue-400 rounded-2xl border border-blue-400/40">
                   <Package className="w-6 h-6" />
                 </div>
               </div>
 
-              <div className="bg-[#1F1E28] border border-amber-500/30 hover:border-[#F3C649]/60 rounded-2xl p-4 flex items-center justify-between shadow-xl transition">
+              <div className="bg-[#1F1E28] border border-amber-500/30 rounded-2xl p-4 flex items-center justify-between shadow-xl">
                 <div>
                   <span className="text-[11px] font-extrabold text-[#F3C649] uppercase tracking-wider block mb-1">
                     โปรโมชั่นพิเศษ
@@ -828,12 +824,12 @@ export default function App() {
                     <span className="text-xs text-amber-200/60 font-bold">รายการ</span>
                   </div>
                 </div>
-                <div className="p-3.5 bg-[#F3C649]/20 text-[#F3C649] rounded-2xl border border-[#F3C649]/40 shadow-inner">
+                <div className="p-3.5 bg-[#F3C649]/20 text-[#F3C649] rounded-2xl border border-[#F3C649]/40">
                   <Tag className="w-6 h-6" />
                 </div>
               </div>
 
-              <div className="bg-[#122428] border border-emerald-500/30 hover:border-emerald-400/60 rounded-2xl p-4 flex items-center justify-between shadow-xl transition">
+              <div className="bg-[#122428] border border-emerald-500/30 rounded-2xl p-4 flex items-center justify-between shadow-xl">
                 <div>
                   <span className="text-[11px] font-extrabold text-emerald-300 uppercase tracking-wider block mb-1">
                     พร้อมจำหน่าย
@@ -843,7 +839,7 @@ export default function App() {
                     <span className="text-xs text-emerald-200/60 font-bold">รายการ</span>
                   </div>
                 </div>
-                <div className="p-3.5 bg-emerald-500/20 text-emerald-400 rounded-2xl border border-emerald-400/40 shadow-inner">
+                <div className="p-3.5 bg-emerald-500/20 text-emerald-400 rounded-2xl border border-emerald-400/40">
                   <CheckCircle2 className="w-6 h-6" />
                 </div>
               </div>
@@ -854,14 +850,14 @@ export default function App() {
         {/* CATEGORY CARDS GRID */}
         {!selectedCategory && searchTerm === "" && !showFavoritesOnly && (
           <div className="space-y-6">
-            <div className="flex items-center justify-between border-b border-slate-800/80 pb-4">
+            <div className="flex items-center justify-between border-b border-slate-300 pb-4">
               <div>
-                <h2 className="text-xl md:text-2xl font-black text-white tracking-tight flex items-center gap-2">
+                <h2 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
                   <span>เลือกหมวดหมู่เฟอร์นิเจอร์</span>
                 </h2>
-                <p className="text-xs text-slate-400 mt-1">คัดสรรเฟอร์นิเจอร์หรูหราคุณภาพเยี่ยม ตอบโจทย์ทุกสไตล์ของบ้านคุณ</p>
+                <p className="text-xs text-slate-600 mt-1 font-medium">คัดสรรเฟอร์นิเจอร์หรูหราคุณภาพเยี่ยม ตอบโจทย์ทุกสไตล์ของบ้านคุณ</p>
               </div>
-              <span className="text-xs font-black text-[#F3C649] bg-[#F3C649]/10 border border-[#F3C649]/30 px-3.5 py-1.5 rounded-full shadow-lg">
+              <span className="text-xs font-black text-amber-800 bg-amber-500/10 border border-amber-500/30 px-3.5 py-1.5 rounded-full shadow-sm">
                 {categories.length} หมวดหมู่
               </span>
             </div>
@@ -878,7 +874,7 @@ export default function App() {
                       setSelectedCategory(category.name);
                       setSubFilterSize("ทั้งหมด");
                     }}
-                    className="group relative bg-gradient-to-b from-[#141C2E] via-[#101726] to-[#0D121F] border border-slate-800 hover:border-[#D4AF37]/60 rounded-3xl p-5 shadow-xl hover:shadow-2xl hover:shadow-[#D4AF37]/10 hover:-translate-y-1.5 transition-all duration-300 cursor-pointer flex flex-col justify-between overflow-hidden"
+                    className="group relative bg-[#101726] border border-slate-800 hover:border-[#D4AF37] rounded-3xl p-5 shadow-xl hover:shadow-2xl hover:shadow-amber-500/10 hover:-translate-y-1.5 transition-all duration-300 cursor-pointer flex flex-col justify-between overflow-hidden"
                   >
                     <div className="absolute top-0 right-0 w-36 h-36 bg-[#D4AF37]/5 rounded-full blur-2xl group-hover:bg-[#D4AF37]/15 transition-all duration-500 pointer-events-none" />
 
@@ -925,7 +921,7 @@ export default function App() {
         {(selectedCategory || searchTerm !== "" || showFavoritesOnly) && (
           <div className="space-y-4">
             
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#131927] p-4 rounded-2xl border border-slate-800 shadow-xl backdrop-blur-md">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200 shadow-md">
               <button
                 onClick={() => {
                   setSelectedCategory("");
@@ -934,24 +930,24 @@ export default function App() {
                   setSubFilterSize("ทั้งหมด");
                   window.history.pushState({}, "", window.location.pathname);
                 }}
-                className="bg-[#1C263B] hover:bg-[#25334E] text-slate-200 px-3.5 py-2 rounded-xl flex items-center gap-2 text-xs font-bold transition w-fit border border-slate-700/60"
+                className="bg-[#101726] hover:bg-[#1C263B] text-white px-3.5 py-2 rounded-xl flex items-center gap-2 text-xs font-bold transition w-fit border border-slate-800"
               >
                 <ArrowLeft className="w-4 h-4 text-[#F3C649]" /> ดูหมวดหมู่ทั้งหมด
               </button>
 
               <div className="flex items-center gap-2">
                 {showFavoritesOnly && (
-                  <span className="text-xs font-black text-rose-400 bg-rose-500/10 border border-rose-500/30 px-3 py-1.5 rounded-xl flex items-center gap-1.5">
-                    <Heart className="w-3.5 h-3.5 fill-rose-500" /> สินค้าที่คุณถูกใจ ({favorites.length})
+                  <span className="text-xs font-black text-rose-600 bg-rose-50 border border-rose-200 px-3 py-1.5 rounded-xl flex items-center gap-1.5">
+                    <Heart className="w-3.5 h-3.5 fill-rose-500 text-rose-500" /> สินค้าที่คุณถูกใจ ({favorites.length})
                   </span>
                 )}
                 {selectedCategory && (
-                  <span className="text-xs font-black text-[#F3C649] bg-[#F3C649]/10 border border-[#F3C649]/30 px-3 py-1.5 rounded-xl">
+                  <span className="text-xs font-black text-amber-900 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-xl">
                     หมวด: {selectedCategory} {isLoggedIn && `(${categoryPrefixMap[selectedCategory]})`}
                   </span>
                 )}
                 {searchTerm && (
-                  <span className="text-xs font-bold text-slate-300 bg-[#1C263B] px-3 py-1.5 rounded-xl border border-slate-700/50">
+                  <span className="text-xs font-bold text-slate-700 bg-slate-100 px-3 py-1.5 rounded-xl border border-slate-200">
                     ผลการค้นหา: "{searchTerm}"
                   </span>
                 )}
@@ -959,9 +955,9 @@ export default function App() {
             </div>
 
             {selectedCategory === "ห้องนอน" && (
-              <div className="bg-[#131927] border border-amber-500/20 rounded-2xl p-3 flex flex-wrap items-center gap-2 shadow-lg">
-                <span className="text-xs font-bold text-[#F3C649] flex items-center gap-1.5 mr-2">
-                  <Bed className="w-4 h-4 text-[#F3C649]" /> ขนาดเตียง:
+              <div className="bg-white border border-amber-200 rounded-2xl p-3 flex flex-wrap items-center gap-2 shadow-sm">
+                <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5 mr-2">
+                  <Bed className="w-4 h-4 text-amber-600" /> ขนาดเตียง:
                 </span>
                 {["ทั้งหมด", "3.5 ฟุต", "5 ฟุต", "6 ฟุต"].map((sizeOption) => (
                   <button
@@ -969,8 +965,8 @@ export default function App() {
                     onClick={() => setSubFilterSize(sizeOption)}
                     className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${
                       subFilterSize === sizeOption
-                        ? "bg-gradient-to-r from-[#F3C649] to-[#997B15] text-slate-950 shadow-md"
-                        : "bg-[#1C263B] text-slate-300 border border-slate-700/60 hover:border-[#D4AF37]/50"
+                        ? "bg-[#101726] text-[#F3C649] shadow-md"
+                        : "bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200"
                     }`}
                   >
                     {sizeOption}
@@ -980,9 +976,9 @@ export default function App() {
             )}
 
             {selectedCategory === "ห้องอาหาร/ห้องครัว" && (
-              <div className="bg-[#131927] border border-amber-500/20 rounded-2xl p-3 flex flex-wrap items-center gap-2 shadow-lg">
-                <span className="text-xs font-bold text-[#F3C649] flex items-center gap-1.5 mr-2">
-                  <Utensils className="w-4 h-4 text-[#F3C649]" /> จำนวนที่นั่ง:
+              <div className="bg-white border border-amber-200 rounded-2xl p-3 flex flex-wrap items-center gap-2 shadow-sm">
+                <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5 mr-2">
+                  <Utensils className="w-4 h-4 text-amber-600" /> จำนวนที่นั่ง:
                 </span>
                 {["ทั้งหมด", "2 ที่นั่ง", "4 ที่นั่ง", "6 ที่นั่ง"].map((seatOption) => (
                   <button
@@ -990,8 +986,8 @@ export default function App() {
                     onClick={() => setSubFilterSize(seatOption)}
                     className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${
                       subFilterSize === seatOption
-                        ? "bg-gradient-to-r from-[#F3C649] to-[#997B15] text-slate-950 shadow-md"
-                        : "bg-[#1C263B] text-slate-300 border border-slate-700/60 hover:border-[#D4AF37]/50"
+                        ? "bg-[#101726] text-[#F3C649] shadow-md"
+                        : "bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200"
                     }`}
                   >
                     {seatOption}
@@ -1000,17 +996,17 @@ export default function App() {
               </div>
             )}
 
-            <div className="bg-[#131927] border border-slate-800 rounded-2xl p-3.5 flex flex-wrap items-center justify-between gap-3 shadow-xl">
+            <div className="bg-white border border-slate-200 rounded-2xl p-3.5 flex flex-wrap items-center justify-between gap-3 shadow-md">
               <div className="flex flex-wrap items-center gap-2.5">
                 <button
                   onClick={() => setPromoOnly(!promoOnly)}
                   className={`px-3.5 py-2 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all duration-200 ${
                     promoOnly
-                      ? "bg-gradient-to-r from-rose-600 to-red-600 text-white shadow-lg shadow-rose-900/40 border border-rose-400 scale-105"
-                      : "bg-[#1E293B] text-rose-300 border border-rose-500/40 hover:bg-rose-950/40 hover:border-rose-400"
+                      ? "bg-rose-600 text-white shadow-md border border-rose-500"
+                      : "bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100"
                   }`}
                 >
-                  <Flame className={`w-4 h-4 ${promoOnly ? "text-white" : "text-rose-400"}`} /> 
+                  <Flame className={`w-4 h-4 ${promoOnly ? "text-white" : "text-rose-600"}`} /> 
                   ลดพิเศษ
                 </button>
 
@@ -1018,40 +1014,40 @@ export default function App() {
                   onClick={() => setStockOnly(!stockOnly)}
                   className={`px-3.5 py-2 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all duration-200 ${
                     stockOnly
-                      ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-900/40 border border-emerald-400 scale-105"
-                      : "bg-[#1E293B] text-emerald-300 border border-emerald-500/40 hover:bg-emerald-950/40 hover:border-emerald-400"
+                      ? "bg-emerald-600 text-white shadow-md border border-emerald-500"
+                      : "bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100"
                   }`}
                 >
-                  <CheckCircle2 className={`w-4 h-4 ${stockOnly ? "text-white" : "text-emerald-400"}`} /> 
+                  <CheckCircle2 className={`w-4 h-4 ${stockOnly ? "text-white" : "text-emerald-600"}`} /> 
                   พร้อมส่ง
                 </button>
               </div>
 
               <div className="flex flex-wrap items-center gap-3">
                 <div className="flex items-center gap-1.5 text-xs">
-                  <SlidersHorizontal className="w-3.5 h-3.5 text-slate-400" />
-                  <span className="text-slate-400 font-bold">ช่วงราคา:</span>
+                  <SlidersHorizontal className="w-3.5 h-3.5 text-slate-500" />
+                  <span className="text-slate-700 font-bold">ช่วงราคา:</span>
                   <input
                     type="number"
                     placeholder="ต่ำสุด"
                     value={minPrice}
                     onChange={(e) => setMinPrice(e.target.value)}
-                    className="w-16 bg-[#161F33] border border-slate-700 text-white rounded-lg px-2 py-1 text-xs outline-none focus:border-[#D4AF37]"
+                    className="w-16 bg-slate-50 border border-slate-300 text-slate-900 rounded-lg px-2 py-1 text-xs outline-none focus:border-amber-500"
                   />
-                  <span className="text-slate-600">-</span>
+                  <span className="text-slate-400">-</span>
                   <input
                     type="number"
                     placeholder="สูงสุด"
                     value={maxPrice}
                     onChange={(e) => setMaxPrice(e.target.value)}
-                    className="w-16 bg-[#161F33] border border-slate-700 text-white rounded-lg px-2 py-1 text-xs outline-none focus:border-[#D4AF37]"
+                    className="w-16 bg-slate-50 border border-slate-300 text-slate-900 rounded-lg px-2 py-1 text-xs outline-none focus:border-amber-500"
                   />
                 </div>
 
                 <select
                   value={sortPrice}
                   onChange={(e) => setSortPrice(e.target.value)}
-                  className="bg-[#161F33] border border-slate-700 text-xs font-bold text-slate-200 rounded-xl px-2.5 py-1.5 outline-none focus:border-[#D4AF37]"
+                  className="bg-slate-50 border border-slate-300 text-xs font-bold text-slate-700 rounded-xl px-2.5 py-1.5 outline-none focus:border-amber-500"
                 >
                   <option value="none">เรียงลำดับราคา</option>
                   <option value="low">ราคา: น้อย ➔ มาก</option>
@@ -1061,14 +1057,14 @@ export default function App() {
             </div>
 
             {loading ? (
-              <div className="text-center py-20 bg-[#131927] rounded-3xl border border-slate-800 shadow-xl">
+              <div className="text-center py-20 bg-white rounded-3xl border border-slate-200 shadow-md">
                 <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-[#F3C649] border-t-transparent"></div>
-                <p className="text-xs text-slate-400 mt-3 font-bold">กำลังโหลดรายการสินค้า...</p>
+                <p className="text-xs text-slate-600 mt-3 font-bold">กำลังโหลดรายการสินค้า...</p>
               </div>
             ) : filteredProducts.length === 0 ? (
-              <div className="text-center py-20 bg-[#131927] rounded-3xl border border-dashed border-slate-800">
-                <Package className="w-12 h-12 text-slate-600 mx-auto mb-2" />
-                <p className="text-sm font-bold text-slate-300">
+              <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-slate-300">
+                <Package className="w-12 h-12 text-slate-400 mx-auto mb-2" />
+                <p className="text-sm font-bold text-slate-800">
                   {showFavoritesOnly ? "คุณยังไม่ได้กดถูกใจสินค้าชิ้นไหนเลย" : "ไม่พบรายการสินค้าที่คุณค้นหา"}
                 </p>
                 <p className="text-xs text-slate-500 mt-1">
@@ -1084,7 +1080,7 @@ export default function App() {
                     <div
                       key={product.id}
                       onClick={() => setViewingProduct(product)}
-                      className="group bg-[#131927] rounded-2xl border border-slate-800 hover:border-[#D4AF37]/60 shadow-xl hover:shadow-2xl hover:shadow-[#D4AF37]/10 transition-all duration-300 cursor-pointer flex flex-col justify-between overflow-hidden relative"
+                      className="group bg-[#101726] rounded-2xl border border-slate-800 hover:border-[#D4AF37] shadow-xl hover:shadow-2xl hover:shadow-amber-500/10 transition-all duration-300 cursor-pointer flex flex-col justify-between overflow-hidden relative"
                     >
                       <div>
                         <div className="relative aspect-4/3 bg-slate-900 overflow-hidden">
@@ -1212,7 +1208,7 @@ export default function App() {
       {/* VIEW PRODUCT MODAL */}
       {viewingProduct && (
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-[#131927] rounded-3xl max-w-xl w-full max-h-[90vh] overflow-y-auto shadow-2xl relative border border-slate-800">
+          <div className="bg-[#101726] rounded-3xl max-w-xl w-full max-h-[90vh] overflow-y-auto shadow-2xl relative border border-slate-800">
             
             <button
               onClick={() => setViewingProduct(null)}
@@ -1318,7 +1314,7 @@ export default function App() {
       {/* ADD / EDIT PRODUCT MODAL */}
       {showProductModal && (
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-[#131927] border border-slate-800 rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+          <div className="bg-[#101726] border border-slate-800 rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
             
             <div className="px-6 py-4 border-b border-slate-800 flex justify-between items-center bg-[#0F1626]">
               <h2 className="text-base font-bold text-white flex items-center gap-2">
@@ -1349,7 +1345,7 @@ export default function App() {
                       className="w-full bg-[#161F33] border border-slate-700/80 rounded-xl px-3 py-2.5 text-xs text-white outline-none focus:border-[#F3C649] transition"
                     >
                       {categories.map((c) => (
-                        <option key={c.name} value={c.name} className="bg-[#131927]">
+                        <option key={c.name} value={c.name} className="bg-[#101726]">
                           {c.name}
                         </option>
                       ))}
@@ -1420,10 +1416,10 @@ export default function App() {
                       onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                       className="w-full bg-[#161F33] border border-slate-700/80 rounded-xl px-3 py-2.5 text-xs text-white outline-none focus:border-[#F3C649] transition"
                     >
-                      <option value="มีสินค้าพร้อมส่ง" className="bg-[#131927]">มีสินค้าพร้อมส่ง</option>
-                      <option value="สินค้าตัวโชว์หน้าร้าน" className="bg-[#131927]">สินค้าตัวโชว์หน้าร้าน</option>
-                      <option value="สินค้าติดจอง" className="bg-[#131927]">สินค้าติดจอง</option>
-                      <option value="สินค้าหมด" className="bg-[#131927]">สินค้าหมด</option>
+                      <option value="มีสินค้าพร้อมส่ง" className="bg-[#101726]">มีสินค้าพร้อมส่ง</option>
+                      <option value="สินค้าตัวโชว์หน้าร้าน" className="bg-[#101726]">สินค้าตัวโชว์หน้าร้าน</option>
+                      <option value="สินค้าติดจอง" className="bg-[#101726]">สินค้าติดจอง</option>
+                      <option value="สินค้าหมด" className="bg-[#101726]">สินค้าหมด</option>
                     </select>
                   </div>
 
@@ -1510,7 +1506,7 @@ export default function App() {
       {/* LOGIN MODAL */}
       {showLoginModal && (
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-[#131927] rounded-3xl max-w-xs w-full p-6 shadow-2xl relative border border-slate-800">
+          <div className="bg-[#101726] rounded-3xl max-w-xs w-full p-6 shadow-2xl relative border border-slate-800">
             <button
               onClick={() => setShowLoginModal(false)}
               className="absolute top-4 right-4 text-slate-400 hover:text-white"
