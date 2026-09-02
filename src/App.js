@@ -635,15 +635,15 @@ export default function App() {
       {/* TOAST NOTIFICATION */}
       {toast && (
         <div className="fixed bottom-6 right-6 z-[100]">
-          <div className="bg-[#2C2416] text-[#E6C687] border border-[#D4AF37]/40 px-5 py-3 rounded-2xl shadow-xl font-bold text-xs flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-[#D4AF37]" />
+          <div className="bg-[#161B26] text-[#E6C687] border border-[#B89446]/40 px-5 py-3 rounded-2xl shadow-2xl font-bold text-xs flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-[#E6C687]" />
             {toast}
           </div>
         </div>
       )}
 
-      {/* HEADER */}
-      <header className="bg-white border-b border-[#EAE3D2] sticky top-0 z-40 shadow-sm">
+      {/* HEADER - Modern Dark Luxury Edition */}
+      <header className="bg-[#0F172A] border-b border-[#2A3447] sticky top-0 z-40 shadow-xl backdrop-blur-md bg-opacity-95">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex flex-col md:flex-row items-center justify-between gap-3.5">
           
           {/* Logo Brand */}
@@ -657,41 +657,43 @@ export default function App() {
             }}
           >
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-[#F5E7C6] border border-[#E6D4AA] rounded-2xl shadow-sm">
+              {/* Icon Container - Gold Highlight */}
+              <div className="p-2.5 bg-gradient-to-br from-[#E6C687] to-[#B89446] rounded-2xl shadow-lg shadow-[#B89446]/20 group-hover:scale-105 transition-transform duration-300">
                 <svg
                   width="26"
                   height="26"
                   viewBox="0 0 100 100"
                   fill="none"
-                  stroke="#5C4D28"
+                  stroke="#1E1B18"
                   strokeWidth="8"
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 >
                   <path d="M15 70 L25 35 L40 55 L50 25 L60 55 L75 35 L85 70 Z" />
-                  <circle cx="25" cy="30" r="4" fill="#5C4D28" />
-                  <circle cx="50" cy="20" r="4" fill="#5C4D28" />
-                  <circle cx="75" cy="30" r="4" fill="#5C4D28" />
+                  <circle cx="25" cy="30" r="4" fill="#1E1B18" />
+                  <circle cx="50" cy="20" r="4" fill="#1E1B18" />
+                  <circle cx="75" cy="30" r="4" fill="#1E1B18" />
                   <path d="M18 78 Q50 83 82 78" strokeWidth="6" />
                 </svg>
               </div>
+
               <div>
                 <div className="flex items-center gap-2">
-                  <h1 className="text-lg md:text-xl font-black tracking-tight text-[#362D19]">
+                  <h1 className="text-lg md:text-xl font-black tracking-tight text-white group-hover:text-[#E6C687] transition-colors">
                     ราชาเฟอร์นิเจอร์
                   </h1>
-                  <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full border bg-[#F8F4EC] text-[#8C733E] border-[#EADFCA]">
+                  <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full border bg-[#1E2638] text-[#E6C687] border-[#3B4760]/60">
                     {isLoggedIn ? "พนักงาน" : "แคตตาล็อกออนไลน์"}
                   </span>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11px] text-[#786335] font-medium mt-0.5">
+                <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11px] text-slate-400 font-medium mt-0.5">
                   <span className="flex items-center gap-1">
-                    <MapPin className="w-3 h-3 text-[#B89446]" /> สาขาหาดใหญ่ (ถ.สามสิบเมตร)
+                    <MapPin className="w-3 h-3 text-[#E6C687]" /> สาขาหาดใหญ่ (ถ.สามสิบเมตร)
                   </span>
-                  <span className="text-slate-300 hidden sm:inline">•</span>
+                  <span className="text-slate-600 hidden sm:inline">•</span>
                   <span className="flex items-center gap-1">
-                    <Phone className="w-3 h-3 text-[#B89446]" /> โทร. 074-244665 , 086-4906582
+                    <Phone className="w-3 h-3 text-[#E6C687]" /> โทร. 074-244665 , 086-4906582
                   </span>
                 </div>
               </div>
@@ -706,13 +708,13 @@ export default function App() {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="ค้นหาชื่อ หรือ รหัสสินค้า..."
-                className="w-full bg-[#FAF8F5] text-slate-800 placeholder-slate-400 pl-9 pr-8 py-2 rounded-xl text-xs font-medium border border-[#E6DFD3] focus:outline-none focus:border-[#B89446] focus:bg-white transition"
+                className="w-full bg-[#182030] text-slate-100 placeholder-slate-400 pl-9 pr-8 py-2 rounded-xl text-xs font-medium border border-[#2A354A] focus:outline-none focus:border-[#E6C687] focus:ring-1 focus:ring-[#E6C687] transition"
               />
               <Search className="absolute left-3 top-2.5 text-slate-400 w-3.5 h-3.5" />
               {searchTerm && (
                 <button 
                   onClick={() => setSearchTerm("")} 
-                  className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600"
+                  className="absolute right-3 top-2.5 text-slate-400 hover:text-white transition"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
@@ -722,9 +724,9 @@ export default function App() {
             {isLoggedIn && (
               <button
                 onClick={openAddProduct}
-                className="bg-[#B89446] hover:bg-[#A3813B] text-white px-3.5 py-2 rounded-xl font-bold text-xs shadow-sm flex items-center gap-1.5 whitespace-nowrap transition active:scale-95"
+                className="bg-gradient-to-r from-[#D4AF37] to-[#B89446] hover:from-[#E6C687] hover:to-[#C5A049] text-slate-950 font-black px-3.5 py-2 rounded-xl text-xs shadow-md shadow-amber-500/10 flex items-center gap-1.5 whitespace-nowrap transition active:scale-95"
               >
-                <Plus className="w-4 h-4" /> เพิ่มสินค้า
+                <Plus className="w-4 h-4 stroke-[2.5]" /> เพิ่มสินค้า
               </button>
             )}
 
@@ -732,7 +734,7 @@ export default function App() {
               <button
                 onClick={handleLogout}
                 title="ออกจากระบบ"
-                className="bg-[#FAF8F5] hover:bg-rose-50 text-slate-600 hover:text-rose-600 border border-[#E6DFD3] hover:border-rose-200 p-2 rounded-xl transition"
+                className="bg-[#182030] hover:bg-rose-950/40 text-slate-300 hover:text-rose-400 border border-[#2A354A] hover:border-rose-800/60 p-2 rounded-xl transition"
               >
                 <LogOut className="w-4 h-4" />
               </button>
@@ -742,9 +744,9 @@ export default function App() {
                   setShowLoginModal(true);
                   setLoginError("");
                 }}
-                className="bg-[#FAF8F5] hover:bg-[#F3EDE2] text-[#6B5528] border border-[#E6DFD3] px-3.5 py-2 rounded-xl font-bold text-xs flex items-center gap-1.5 whitespace-nowrap transition active:scale-95"
+                className="bg-[#182030] hover:bg-[#202B40] text-[#E6C687] border border-[#2A354A] hover:border-[#E6C687]/40 px-3.5 py-2 rounded-xl font-bold text-xs flex items-center gap-1.5 whitespace-nowrap transition active:scale-95 shadow-sm"
               >
-                <Lock className="w-3.5 h-3.5 text-[#B89446]" /> พนักงาน
+                <Lock className="w-3.5 h-3.5 text-[#E6C687]" /> พนักงาน
               </button>
             )}
           </div>
@@ -830,7 +832,7 @@ export default function App() {
           </div>
         )}
 
-        {/* CATEGORY CARDS GRID (สไตล์ Dark Card ตามแบบภาพตัวอย่างล่าสุด) */}
+        {/* CATEGORY CARDS GRID (สไตล์ Dark Card) */}
         {!selectedCategory && searchTerm === "" && (
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -1449,8 +1451,8 @@ export default function App() {
             </button>
 
             <div className="text-center mb-4">
-              <div className="w-10 h-10 bg-[#F5E7C6] text-[#5C4D28] rounded-xl flex items-center justify-center mx-auto mb-2 border border-[#E6D4AA]">
-                <Lock className="w-5 h-5 text-[#B89446]" />
+              <div className="w-10 h-10 bg-[#161B26] text-[#E6C687] rounded-xl flex items-center justify-center mx-auto mb-2 border border-slate-700">
+                <Lock className="w-5 h-5 text-[#E6C687]" />
               </div>
               <h2 className="text-sm font-bold text-slate-800">เข้าสู่ระบบพนักงาน</h2>
               <p className="text-[11px] text-slate-400 mt-0.5">กรอกรหัสผ่านเพื่อจัดการข้อมูล</p>
