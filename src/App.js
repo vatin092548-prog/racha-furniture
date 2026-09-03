@@ -235,8 +235,9 @@ export default function App() {
   }, []);
 
   /* =======================================================
-     AUTO OPEN FROM URL PARAMETER (?product=A1)
+     URL SYNC & AUTO OPEN FROM PARAMETER (?product=A1)
   ======================================================= */
+  // 1. อ่าน URL ครั้งแรกเมื่อโหลดสินค้าเสร็จ
   useEffect(() => {
     if (products.length > 0) {
       const urlParams = new URLSearchParams(window.location.search);
@@ -251,6 +252,36 @@ export default function App() {
         }
       }
     }
+  }, [products]);
+
+  // 2. อัปเดต URL Realtime เมื่อคลิกดูสินค้า หรือปิด Pop-up
+  useEffect(() => {
+    if (viewingProduct) {
+      const newUrl = `${window.location.pathname}?product=${viewingProduct.id}`;
+      window.history.pushState({ productId: viewingProduct.id }, "", newUrl);
+    } else if (!selectedCategory && !searchTerm) {
+      window.history.pushState({}, "", window.location.pathname);
+    }
+  }, [viewingProduct]);
+
+  // 3. ดักจับปุ่ม Back (ย้อนกลับ) ของมือถือ/เบราว์เซอร์
+  useEffect(() => {
+    const handlePopState = () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const productIdFromUrl = urlParams.get("product");
+
+      if (productIdFromUrl && products.length > 0) {
+        const found = products.find(
+          (p) => String(p.id).toLowerCase() === String(productIdFromUrl).toLowerCase()
+        );
+        setViewingProduct(found || null);
+      } else {
+        setViewingProduct(null);
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
   }, [products]);
 
   /* =======================================================
@@ -617,7 +648,7 @@ export default function App() {
   );
 
   return (
-    <div className="min-h-screen bg-[#FAF9F6] text-slate-800 font-sans selection:bg-[#E6C687] selection:text-slate-900">
+    <div className="min-h-screen bg-[#FAF9F6] text-slate-800 font-sans selection:bg-[#E6C687] selection:text-slate-900 pb-20 md:pb-0">
 
       {/* TOAST */}
       {toast && (
@@ -639,11 +670,11 @@ export default function App() {
               setSelectedCategory("");
               setSearchTerm("");
               setSubFilterSize("ทั้งหมด");
+              setViewingProduct(null);
               window.history.pushState({}, "", window.location.pathname);
             }}
           >
             <div className="flex items-center gap-3">
-              {/* 📍 รูปโลโก้ตรงมุมซ้ายบน Navbar */}
               <div className="relative group-hover:scale-105 transition-transform duration-300">
                 <img 
                   src="/logo.jpg" 
@@ -804,7 +835,6 @@ export default function App() {
               </div>
             </div>
 
-            {/* จำนวนสินค้าแยกตามแต่ละหมวดหมู่ */}
             <div className="pt-2 border-t border-slate-100">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
@@ -855,30 +885,33 @@ export default function App() {
           </div>
         )}
 
-        {/* =======================================================
-            NEW LUXURY CATEGORY SECTION WITH LOGO
-        ======================================================= */}
+        {/* LUXURY CATEGORY SECTION */}
         {!selectedCategory && !searchTerm && (
           <div className="space-y-6">
             
-            {/* CATEGORY SECTION HEADER WITH LOGO IN THE CENTER */}
             <div className="flex flex-col md:flex-row items-center justify-between border-b border-slate-200/80 pb-6 gap-4">
               <div className="text-center md:text-left">
                 <span className="text-[10px] font-mono font-bold tracking-widest text-[#B89446] uppercase block mb-1">
                   BESPOKE LIVING SPACES
                 </span>
                 <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center justify-center md:justify-start gap-2">
-                  หมวดหมู่เฟอร์นิเจอร์ <span className="text-xs font-normal text-slate-400 font-sans"></span>
+                  หมวดหมู่เฟอร์นิเจอร์หลัก <span className="text-xs font-normal text-slate-400 font-sans">(Product Categories)</span>
                 </h2>
-               
-                 <p className="text-xs text-slate-400 flex items-center justify-center md:justify-end gap-1.5">
+              </div>
+
+              <div className="flex justify-center my-2 md:my-0">
+                <img 
+                  src="/logo.jpg" 
+                  alt="RACHA FURNITURE" 
+                  className="h-16 sm:h-20 w-auto object-contain rounded-2xl shadow-lg border border-[#B89446]/20 hover:scale-105 transition-transform duration-300"
+                />
+              </div>
+
+              <p className="text-xs text-slate-400 flex items-center justify-center md:justify-end gap-1.5">
                 <MapPin className="w-3.5 h-3.5 text-[#B89446]" /> โชว์รูมสาขาหาดใหญ่มีสินค้าแสดงครบทุกหมวด
               </p>
-              </div>
-    
             </div>
 
-            {/* CATEGORY CARDS GRID */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {categories.map((category) => {
                 const Icon = category.icon;
@@ -897,10 +930,8 @@ export default function App() {
                       category.isFullWidth ? "md:col-span-2 lg:col-span-3 flex-col lg:flex-row" : ""
                     }`}
                   >
-                    {/* TOP TEXT CONTENT & TAGS */}
                     <div className="p-6 sm:p-7 z-10 bg-white flex flex-col justify-between flex-1">
                       <div>
-                        {/* Header Badge */}
                         <div className="flex items-center justify-between mb-4">
                           <div className="w-9 h-9 rounded-2xl bg-[#FAF6EE] border border-[#EFE5D3] flex items-center justify-center text-[#B89446] shadow-sm">
                             <Icon className="w-5 h-5" />
@@ -918,7 +949,6 @@ export default function App() {
                           </div>
                         </div>
 
-                        {/* Title & Description */}
                         <div className="mb-4">
                           <h3 className="text-lg sm:text-xl font-black text-slate-900 group-hover:text-[#B89446] transition-colors leading-snug">
                             {category.name}
@@ -931,7 +961,6 @@ export default function App() {
                           </p>
                         </div>
 
-                        {/* Sub Category Tags */}
                         {category.tags && (
                           <div className="flex flex-wrap gap-1.5 mb-5">
                             {category.tags.map((tag, idx) => (
@@ -946,7 +975,6 @@ export default function App() {
                         )}
                       </div>
 
-                      {/* Bottom Link CTA */}
                       <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-[#B89446] group-hover:text-[#91712E] transition-colors">
                         <span className="flex items-center gap-1.5">
                           เลือกชมสินค้าในหมวดนี้
@@ -955,7 +983,6 @@ export default function App() {
                       </div>
                     </div>
 
-                    {/* BOTTOM IMAGE WITH WHITE FADE GRADIENT */}
                     <div className={`relative overflow-hidden ${category.isFullWidth ? "lg:w-1/2 min-h-[220px]" : "h-48 sm:h-52"}`}>
                       <img
                         src={category.image}
@@ -972,12 +999,31 @@ export default function App() {
               })}
             </div>
 
+            <div className="bg-[#101726] rounded-3xl p-6 sm:p-8 text-white flex flex-col md:flex-row items-center justify-between gap-6 border border-[#252F45] shadow-xl">
+              <div className="space-y-1.5 text-center md:text-left">
+                <span className="text-[10px] font-bold tracking-widest text-[#E6C687] uppercase">
+                  CUSTOM MADE & INTERIOR CONSULTANT
+                </span>
+                <h3 className="text-lg sm:text-xl font-black">
+                  ต้องการเฟอร์นิเจอร์สั่งทำ หรือปรึกษาการจัดวางห้อง?
+                </h3>
+                <p className="text-xs text-slate-300 max-w-xl">
+                  เรามีทีมงานผู้เชี่ยวชาญพร้อมให้คำปรึกษา ออกแบบ 3D และจัดสรรเฟอร์นิเจอร์ให้เหมาะกับพื้นที่บ้านคุณโดยเฉพาะ
+                </p>
+              </div>
+
+              <a
+                href="tel:074244665"
+                className="bg-gradient-to-r from-[#E6C687] to-[#B89446] hover:from-[#F0D59E] hover:to-[#C5A049] text-slate-950 font-black px-6 py-3 rounded-2xl text-xs whitespace-nowrap shadow-lg flex items-center gap-2 transition active:scale-95"
+              >
+                <Phone className="w-4 h-4" /> ติดต่อทีมงานราชาเฟอร์นิเจอร์
+              </a>
+            </div>
+
           </div>
         )}
 
-        {/* =======================================================
-            PRODUCT LIST SECTION (แสดงผลเฉพาะเมื่อเลือกหมวดหมู่หรือค้นหา)
-        ======================================================= */}
+        {/* PRODUCT LIST SECTION */}
         {(selectedCategory || searchTerm !== "") && (
           <div className="space-y-5">
             
@@ -987,6 +1033,7 @@ export default function App() {
                   setSelectedCategory("");
                   setSearchTerm("");
                   setSubFilterSize("ทั้งหมด");
+                  setViewingProduct(null);
                   window.history.pushState({}, "", window.location.pathname);
                 }}
                 className="bg-[#FAF8F5] hover:bg-[#F3EDE2] text-[#4A3E25] border border-[#E6DFD3] px-4 py-2 rounded-xl flex items-center gap-2 text-xs font-bold transition w-fit"
@@ -1249,7 +1296,10 @@ export default function App() {
           <div className="bg-white rounded-3xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl relative border border-slate-200">
             
             <button
-              onClick={() => setViewingProduct(null)}
+              onClick={() => {
+                setViewingProduct(null);
+                window.history.pushState({}, "", window.location.pathname);
+              }}
               className="absolute top-3 right-3 z-10 bg-white/80 hover:bg-white text-slate-600 p-2 rounded-full shadow-md transition border border-slate-200"
             >
               <X className="w-4 h-4" />
