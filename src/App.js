@@ -31,11 +31,11 @@ import {
   SlidersHorizontal,
   Upload,
   Activity,
-  Crown
+  RefreshCw
 } from "lucide-react";
 
 /* =======================================================
-   CATEGORIES & PREFIX MAP (STATIC CONSTANTS OUTSIDE APP)
+   CATEGORIES & PREFIX MAP
 ======================================================= */
 const categoryPrefixMap = {
   "ห้องนอน": "A",
@@ -109,7 +109,7 @@ const categories = [
     icon: LayoutGrid, 
     prefix: "B", 
     description: "เรือนกระจกแสดงของสะสม, โคมไฟตั้งพื้น, กระจกแต่งบ้าน, ฉากกั้นห้อง, และของตกแต่งชิ้นเล็กอเนกประสงค์เพื่อเติมเต็มทุกมุมบ้านให้มีชีวิตชีวา",
-    tags: ["โคมไฟดีไซน์โมเดิร์นลักชัวรี", "กระจกเงาตั้งพื้น & งานไม้ตกแต่ง", "ตู้โชว์อเนกประสงค์อเนกประสงค์", "รูปภาพงานศิลปะแท้"],
+    tags: ["โคมไฟดีไซน์โมเดิร์นลักชัวรี", "กระจกเงาตั้งพื้น & งานไม้ตกแต่ง", "ตู้โชว์อเนกประสงค์", "รูปภาพงานศิลปะแท้"],
     isFullWidth: true,
     image: "https://images.unsplash.com/photo-1595428774223-ef52624120d2?q=80&w=1200&auto=format&fit=crop"
   },
@@ -198,59 +198,49 @@ export default function App() {
   };
 
   /* =======================================================
-   SUPABASE FETCH & REALTIME (FIXED TIMEOUT)
-======================================================= */
-const fetchProducts = async () => {
-  try {
-    setLoading(true);
-    
-    // ดึงข้อมูลพร้อมตั้งเวลา Timeout ป้องกันการค้าง
-    const { data, error } = await supabase
-      .from("products")
-      .select("*")
-      .order("updatedAt", { ascending: false });
+     SUPABASE FETCH & REALTIME
+  ======================================================= */
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from("products")
+        .select("*");
 
-    if (error) throw error;
+      if (error) throw error;
 
-    setProducts(data || []);
-    setSupabaseError(""); // ล้างข้อความแจ้งเตือนเมื่อโหลดสำเร็จ
-  } catch (error) {
-    console.error("❌ Supabase READ ERROR", error);
-    setSupabaseError(`ไม่สามารถอ่านข้อมูลจาก Supabase ได้\n${error.message}`);
-  } finally {
-    setLoading(false);
-  }
-};
-
-useEffect(() => {
-  // 1. ดึงข้อมูลครั้งแรก
-  fetchProducts();
-
-  // 2. สร้าง Realtime Channel พร้อม cleanup เมื่อ Unmount
-  const channel = supabase
-    .channel("schema-db-changes")
-    .on(
-      "postgres_changes",
-      {
-        event: "*",
-        schema: "public",
-        table: "products",
-      },
-      () => {
-        fetchProducts();
-      }
-    )
-    .subscribe();
-
-  return () => {
-    supabase.removeChannel(channel);
+      setProducts(data || []);
+      setSupabaseError("");
+    } catch (error) {
+      console.error("❌ Supabase READ ERROR", error);
+      setSupabaseError(`ไม่สามารถอ่านข้อมูลจาก Supabase ได้: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
   };
-}, []);
+
+  useEffect(() => {
+    fetchProducts();
+
+    const channel = supabase
+      .channel("public:products")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "products" },
+        () => {
+          fetchProducts();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   /* =======================================================
      URL SYNC & AUTO OPEN FROM PARAMETER (?product=A1)
   ======================================================= */
-  // 1. อ่าน URL ครั้งแรกเมื่อโหลดสินค้าเสร็จ
   useEffect(() => {
     if (products.length > 0) {
       const urlParams = new URLSearchParams(window.location.search);
@@ -267,7 +257,6 @@ useEffect(() => {
     }
   }, [products]);
 
-  // 2. อัปเดต URL Realtime เมื่อคลิกดูสินค้า หรือปิด Pop-up
   useEffect(() => {
     if (viewingProduct) {
       const newUrl = `${window.location.pathname}?product=${viewingProduct.id}`;
@@ -275,9 +264,9 @@ useEffect(() => {
     } else if (!selectedCategory && !searchTerm) {
       window.history.pushState({}, "", window.location.pathname);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [viewingProduct]);
 
-  // 3. ดักจับปุ่ม Back (ย้อนกลับ) ของมือถือ/เบราว์เซอร์
   useEffect(() => {
     const handlePopState = () => {
       const urlParams = new URLSearchParams(window.location.search);
@@ -776,13 +765,21 @@ useEffect(() => {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-8">
 
         {supabaseError && (
-          <div className="bg-rose-50 border border-rose-200 text-rose-700 rounded-2xl p-4 flex items-center gap-3">
-            <AlertCircle className="w-5 h-5 text-rose-600 shrink-0" />
-            <div className="text-xs font-medium whitespace-pre-line">{supabaseError}</div>
+          <div className="bg-rose-50 border border-rose-200 text-rose-700 rounded-2xl p-4 flex items-center justify-between gap-3 shadow-sm">
+            <div className="flex items-center gap-3">
+              <AlertCircle className="w-5 h-5 text-rose-600 shrink-0" />
+              <div className="text-xs font-medium whitespace-pre-line">{supabaseError}</div>
+            </div>
+            <button
+              onClick={fetchProducts}
+              className="bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs px-3 py-1.5 rounded-xl flex items-center gap-1 shrink-0 transition"
+            >
+              <RefreshCw className="w-3.5 h-3.5" /> ลองใหม่
+            </button>
           </div>
         )}
 
-        {/* ADMIN DASHBOARD UI WITH CATEGORY BREAKDOWN */}
+        {/* ADMIN DASHBOARD UI */}
         {isLoggedIn && (
           <div className="bg-white rounded-3xl border border-amber-900/10 p-6 shadow-sm space-y-5">
             <div className="flex items-center justify-between border-b border-slate-100 pb-4">
