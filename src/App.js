@@ -905,7 +905,7 @@ export default function App() {
                   BESPOKE LIVING SPACES
                 </span>
                 <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center justify-center md:justify-start gap-2">
-                  หมวดหมู่เฟอร์นิเจอร์หลัก <span className="text-xs font-normal text-slate-400 font-sans">(Product Categories)</span>
+                  หมวดหมู่เฟอร์นิเจอร์หลัก <span className="text-xs font-normal text-slate-400 font-sans"></span>
                 </h2>
               </div>
 
@@ -1007,27 +1007,6 @@ export default function App() {
                   </div>
                 );
               })}
-            </div>
-
-            <div className="bg-[#101726] rounded-3xl p-6 sm:p-8 text-white flex flex-col md:flex-row items-center justify-between gap-6 border border-[#252F45] shadow-xl">
-              <div className="space-y-1.5 text-center md:text-left">
-                <span className="text-[10px] font-bold tracking-widest text-[#E6C687] uppercase">
-                  CUSTOM MADE & INTERIOR CONSULTANT
-                </span>
-                <h3 className="text-lg sm:text-xl font-black">
-                  ต้องการเฟอร์นิเจอร์สั่งทำ หรือปรึกษาการจัดวางห้อง?
-                </h3>
-                <p className="text-xs text-slate-300 max-w-xl">
-                  เรามีทีมงานผู้เชี่ยวชาญพร้อมให้คำปรึกษา ออกแบบ 3D และจัดสรรเฟอร์นิเจอร์ให้เหมาะกับพื้นที่บ้านคุณโดยเฉพาะ
-                </p>
-              </div>
-
-              <a
-                href="tel:074244665"
-                className="bg-gradient-to-r from-[#E6C687] to-[#B89446] hover:from-[#F0D59E] hover:to-[#C5A049] text-slate-950 font-black px-6 py-3 rounded-2xl text-xs whitespace-nowrap shadow-lg flex items-center gap-2 transition active:scale-95"
-              >
-                <Phone className="w-4 h-4" /> ติดต่อทีมงานราชาเฟอร์นิเจอร์
-              </a>
             </div>
 
           </div>
