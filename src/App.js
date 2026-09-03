@@ -198,41 +198,54 @@ export default function App() {
   };
 
   /* =======================================================
-     SUPABASE FETCH & REALTIME
-  ======================================================= */
-  const fetchProducts = async () => {
+   SUPABASE FETCH & REALTIME (FIXED TIMEOUT)
+======================================================= */
+const fetchProducts = async () => {
+  try {
     setLoading(true);
-    setSupabaseError("");
-    const { data, error } = await supabase.from("products").select("*");
+    
+    // ดึงข้อมูลพร้อมตั้งเวลา Timeout ป้องกันการค้าง
+    const { data, error } = await supabase
+      .from("products")
+      .select("*")
+      .order("updatedAt", { ascending: false });
 
-    if (error) {
-      console.error("❌ Supabase READ ERROR", error);
-      setSupabaseError(`ไม่สามารถอ่านข้อมูลจาก Supabase ได้\n${error.message}`);
-      setProducts([]);
-    } else {
-      setProducts(data || []);
-    }
+    if (error) throw error;
+
+    setProducts(data || []);
+    setSupabaseError(""); // ล้างข้อความแจ้งเตือนเมื่อโหลดสำเร็จ
+  } catch (error) {
+    console.error("❌ Supabase READ ERROR", error);
+    setSupabaseError(`ไม่สามารถอ่านข้อมูลจาก Supabase ได้\n${error.message}`);
+  } finally {
     setLoading(false);
+  }
+};
+
+useEffect(() => {
+  // 1. ดึงข้อมูลครั้งแรก
+  fetchProducts();
+
+  // 2. สร้าง Realtime Channel พร้อม cleanup เมื่อ Unmount
+  const channel = supabase
+    .channel("schema-db-changes")
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: "products",
+      },
+      () => {
+        fetchProducts();
+      }
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
   };
-
-  useEffect(() => {
-    fetchProducts();
-
-    const channel = supabase
-      .channel("products-changes")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "products" },
-        () => {
-          fetchProducts();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
+}, []);
 
   /* =======================================================
      URL SYNC & AUTO OPEN FROM PARAMETER (?product=A1)
