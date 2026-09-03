@@ -31,9 +31,89 @@ import {
   SlidersHorizontal,
   Upload,
   Activity,
-  Crown,
-  Grid
+  Crown
 } from "lucide-react";
+
+/* =======================================================
+   CATEGORIES & PREFIX MAP (STATIC CONSTANTS OUTSIDE APP)
+======================================================= */
+const categoryPrefixMap = {
+  "ห้องนอน": "A",
+  "ห้องนั่งเล่น": "T",
+  "โซฟา & เก้าอี้พักผ่อน": "S",
+  "ห้องอาหาร & ห้องครัว": "E",
+  "ห้องสำนักงาน & ผู้บริหาร": "I",
+  "สินค้าคอลเลกชันพิเศษ": "P",
+  "ห้องทั่วไป & งานตกแต่งประดับบ้าน": "B",
+};
+
+const categories = [
+  { 
+    name: "ห้องนอน", 
+    englishName: "Bedroom Collection",
+    icon: Bed, 
+    prefix: "A", 
+    description: "เตียงนอนคุณภาพพรีเมียม, ตู้เสื้อผ้าขนาดใหญ่, ชุดโต๊ะเครื่องแป้ง และอุปกรณ์ห้องนอนครบวงจร",
+    tags: ["เตียงนอน", "ตู้เสื้อผ้า built-in", "โต๊ะเครื่องแป้ง"],
+    image: "https://images.unsplash.com/photo-1616594039964-ae9021a400a0?q=80&w=800&auto=format&fit=crop"
+  },
+  { 
+    name: "ห้องนั่งเล่น", 
+    englishName: "Living Room",
+    icon: Sofa, 
+    prefix: "T", 
+    description: "ชุดโซฟารับแขก, โต๊ะกลางหรูหรา, ตู้โชว์ทีวี และชั้นวางของดีไซน์ทันสมัย",
+    tags: ["โซฟารับแขก", "โต๊ะกลางลักชัวรี", "ตู้โชว์คอนโซล"],
+    image: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?q=80&w=800&auto=format&fit=crop"
+  },
+  { 
+    name: "โซฟา & เก้าอี้พักผ่อน", 
+    englishName: "Recliner & Lounge",
+    icon: Armchair, 
+    prefix: "S", 
+    description: "โซฟาปรับนอนระดับพรีเมียม, เก้าอี้อาร์มแชร์ดีไซน์โดดเด่น, เบาะนุ่มสบายเหมาะสำหรับการพักผ่อน",
+    tags: ["เก้าอี้อาร์มแชร์", "โซฟาปรับนอน/Recliner", "เบาะนั่งพักผ่อน Cozy Touch"],
+    image: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?q=80&w=800&auto=format&fit=crop"
+  },
+  { 
+    name: "ห้องอาหาร & ห้องครัว", 
+    englishName: "Dining & Kitchen",
+    icon: Utensils, 
+    prefix: "E", 
+    description: "ชุดโต๊ะอาหารหินอ่อน, เก้าอี้ทานอาหารสไตล์โมเดิร์น, เคาเตอร์บาร์ และตู้เก็บบอร์ดครัว",
+    tags: ["ชุดโต๊ะอาหารหินอ่อน", "เก้าอี้ทานอาหารสไตล์โมเดิร์น", "เคาเตอร์บาร์และตู้โชว์"],
+    image: "https://images.unsplash.com/photo-1617806118233-18e1de247200?q=80&w=800&auto=format&fit=crop"
+  },
+  { 
+    name: "ห้องสำนักงาน & ผู้บริหาร", 
+    englishName: "Executive & Office",
+    icon: Briefcase, 
+    prefix: "I", 
+    description: "โต๊ะทำงานระดับผู้บริหาร, เก้าอี้เพื่อสุขภาพ (Ergonomic), และตู้เก็บเอกสารสไตล์โฮมออฟฟิศ",
+    tags: ["โต๊ะทำงานผู้บริหาร", "เก้าอี้เพื่อสุขภาพ", "ตู้เอกสารหรูหรา"],
+    image: "https://images.unsplash.com/photo-1524758631624-e2822e304c36?q=80&w=800&auto=format&fit=crop"
+  },
+  { 
+    name: "สินค้าคอลเลกชันพิเศษ", 
+    englishName: "Signature Collection",
+    icon: Sparkles, 
+    prefix: "P", 
+    description: "เฟอร์นิเจอร์และของแต่งบ้านรุ่นลิมิเต็ด ผลิตจากวัสดุพิเศษ และชิ้นงานดีไซน์เอ็กซ์คลูซีฟ",
+    tags: ["ชิ้นงานแฮนด์เมดระดับไฮเอนด์", "เฟอร์นิเจอร์สินค้านำเข้า", "ของตกแต่งแนว Luxury Art"],
+    isNew: true,
+    image: "https://images.unsplash.com/photo-1567016432779-094069958ea5?q=80&w=800&auto=format&fit=crop"
+  },
+  { 
+    name: "ห้องทั่วไป & งานตกแต่งประดับบ้าน", 
+    englishName: "Decor & Accent Pieces",
+    icon: LayoutGrid, 
+    prefix: "B", 
+    description: "เรือนกระจกแสดงของสะสม, โคมไฟตั้งพื้น, กระจกแต่งบ้าน, ฉากกั้นห้อง, และของตกแต่งชิ้นเล็กอเนกประสงค์เพื่อเติมเต็มทุกมุมบ้านให้มีชีวิตชีวา",
+    tags: ["โคมไฟดีไซน์โมเดิร์นลักชัวรี", "กระจกเงาตั้งพื้น & งานไม้ตกแต่ง", "ตู้โชว์อเนกประสงค์อเนกประสงค์", "รูปภาพงานศิลปะแท้"],
+    isFullWidth: true,
+    image: "https://images.unsplash.com/photo-1595428774223-ef52624120d2?q=80&w=1200&auto=format&fit=crop"
+  },
+];
 
 export default function App() {
   /* =======================================================
@@ -80,71 +160,6 @@ export default function App() {
      TOAST
   ======================================================= */
   const [toast, setToast] = useState("");
-
-  /* =======================================================
-     CATEGORIES & PREFIX MAP & IMAGES
-  ======================================================= */
-  const categoryPrefixMap = {
-    "ห้องนอน": "A",
-    "ห้องนั่งเล่น": "T",
-    "โต๊ะ & เก้าอี้พักผ่อน": "S",
-    "ห้องอาหาร / ห้องครัว": "E",
-    "ห้องทำงาน": "I",
-    "สินค้าตกแต่ง": "P",
-    "ห้องจัดเก็บ": "B",
-  };
-
-  const categories = [
-    { 
-      name: "ห้องนอน", 
-      icon: Bed, 
-      prefix: "A", 
-      description: "เตียง, ตู้เสื้อผ้า, โต๊ะเครื่องแป้ง",
-      image: "https://images.unsplash.com/photo-1616594039964-ae9021a400a0?q=80&w=600&auto=format&fit=crop"
-    },
-    { 
-      name: "ห้องนั่งเล่น", 
-      icon: Sofa, 
-      prefix: "T", 
-      description: "ชุดโซฟา, โต๊ะกลาง, ชั้นวางทีวี",
-      image: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?q=80&w=600&auto=format&fit=crop"
-    },
-    { 
-      name: "โต๊ะ & เก้าอี้พักผ่อน", 
-      icon: Armchair, 
-      prefix: "S", 
-      description: "โต๊ะหน้าทีวี, เก้าอี้พักผ่อน",
-      image: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?q=80&w=600&auto=format&fit=crop"
-    },
-    { 
-      name: "ห้องอาหาร / ห้องครัว", 
-      icon: Utensils, 
-      prefix: "E", 
-      description: "ชุดโต๊ะอาหาร, เก้าอี้บาร์",
-      image: "https://images.unsplash.com/photo-1617806118233-18e1de247200?q=80&w=600&auto=format&fit=crop"
-    },
-    { 
-      name: "ห้องทำงาน", 
-      icon: Briefcase, 
-      prefix: "I", 
-      description: "โต๊ะทำงาน, เก้าอี้ผู้บริหาร",
-      image: "https://images.unsplash.com/photo-1524758631624-e2822e304c36?q=80&w=600&auto=format&fit=crop"
-    },
-    { 
-      name: "สินค้าตกแต่ง", 
-      icon: Sparkles, 
-      prefix: "P", 
-      description: "สินค้าตกแต่งบ้าน, ดีไซน์พรีเมียม",
-      image: "https://images.unsplash.com/photo-1567016432779-094069958ea5?q=80&w=600&auto=format&fit=crop"
-    },
-    { 
-      name: "ห้องจัดเก็บ", 
-      icon: LayoutGrid, 
-      prefix: "B", 
-      description: "ตู้โชว์, ตู้เก็บของอเนกประสงค์",
-      image: "https://images.unsplash.com/photo-1595428774223-ef52624120d2?q=80&w=600&auto=format&fit=crop"
-    },
-  ];
 
   /* =======================================================
      FORM & AUTO ID
@@ -525,16 +540,14 @@ export default function App() {
   };
 
   /* =======================================================
-     FILTER PRODUCTS & STATS (แก้ไขเงื่อนไขหมวดหมู่ตรงนี้)
+     FILTER PRODUCTS & STATS
   ======================================================= */
   const filteredProducts = useMemo(() => {
     return products
       .filter((product) => {
-        // หาหมวดหมู่ที่ถูกเลือกเพื่อดึงรหัส Prefix
         const currentCategoryObj = categories.find((c) => c.name === selectedCategory);
         const categoryPrefix = currentCategoryObj ? currentCategoryObj.prefix : "";
 
-        // เช็คทั้งชื่อหมวดหมู่ตรงๆ และการเริ่มต้นด้วย Prefix เดียวกัน
         const categoryMatch = selectedCategory
           ? (product.category === selectedCategory || (categoryPrefix && product.id?.startsWith(categoryPrefix)))
           : true;
@@ -560,7 +573,7 @@ export default function App() {
           } else if (subFilterSize === "6 ฟุต") {
             subFilterMatch = /6\s*ฟุต/.test(sizeStr);
           }
-        } else if (selectedCategory === "ห้องอาหาร / ห้องครัว" && subFilterSize !== "ทั้งหมด") {
+        } else if ((selectedCategory === "ห้องอาหาร & ห้องครัว" || selectedCategory === "ห้องอาหาร / ห้องครัว") && subFilterSize !== "ทั้งหมด") {
           const sizeStr = `${product.size || ""} ${product.name || ""} ${product.description || ""}`;
           subFilterMatch = sizeStr.includes(subFilterSize);
         }
@@ -592,7 +605,6 @@ export default function App() {
     maxPrice,
     subFilterSize,
     sortPrice,
-    categories,
   ]);
 
   const promotionCount = useMemo(
@@ -605,7 +617,7 @@ export default function App() {
   );
 
   return (
-    <div className="min-h-screen bg-[#FAF7F2] text-slate-800 font-sans">
+    <div className="min-h-screen bg-[#FAF9F6] text-slate-800 font-sans selection:bg-[#E6C687] selection:text-slate-900">
 
       {/* TOAST */}
       {toast && (
@@ -631,8 +643,13 @@ export default function App() {
             }}
           >
             <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-gradient-to-br from-[#E6C687] to-[#B89446] rounded-2xl shadow-lg shadow-[#B89446]/20 group-hover:scale-105 transition-transform duration-300">
-                <Crown className="w-6 h-6 text-[#1E1B18]" />
+              {/* 📍 รูปโลโก้ตรงมุมซ้ายบน Navbar */}
+              <div className="relative group-hover:scale-105 transition-transform duration-300">
+                <img 
+                  src="/logo.jpg" 
+                  alt="ราชาเฟอร์นิเจอร์" 
+                  className="w-10 h-10 sm:w-11 sm:h-11 object-cover rounded-xl border border-[#B89446]/40 shadow-md"
+                />
               </div>
 
               <div>
@@ -712,7 +729,7 @@ export default function App() {
       </header>
 
       {/* MAIN CONTAINER */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-8">
 
         {supabaseError && (
           <div className="bg-rose-50 border border-rose-200 text-rose-700 rounded-2xl p-4 flex items-center gap-3">
@@ -721,50 +738,29 @@ export default function App() {
           </div>
         )}
 
-        {/* HERO BANNER SECTION */}
-        {!selectedCategory && !searchTerm && (
-          <div className="relative w-full rounded-2xl overflow-hidden shadow-md bg-slate-900 text-white min-h-[180px] sm:min-h-[220px] flex items-center">
-            <div 
-              className="absolute inset-0 bg-cover bg-center" 
-              style={{ backgroundImage: `url('https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?q=80&w=1400&auto=format&fit=crop')` }}
-            />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent" />
-            
-            <div className="relative z-10 p-6 sm:p-10 max-w-xl space-y-2">
-              <h2 className="text-2xl sm:text-3xl font-black tracking-tight leading-tight text-[#E6C687] drop-shadow-md">
-                แต่งบ้านในสไตล์คุณ <br />
-                <span className="text-white">ด้วยเฟอร์นิเจอร์คุณภาพ</span>
-              </h2>
-              <p className="text-xs sm:text-sm text-slate-200 font-medium leading-relaxed drop-shadow-sm">
-                คัดสรรเฟอร์นิเจอร์คุณภาพดี ดีไซน์สวย ทนทาน เพื่อทุกพื้นที่ในบ้านของคุณ
-              </p>
-            </div>
-          </div>
-        )}
-
         {/* ADMIN DASHBOARD UI WITH CATEGORY BREAKDOWN */}
         {isLoggedIn && (
-          <div className="bg-white rounded-2xl border border-[#EAE3D2] p-5 shadow-sm space-y-5">
-            <div className="flex items-center justify-between border-b border-[#F5EFE6] pb-3">
+          <div className="bg-white rounded-3xl border border-amber-900/10 p-6 shadow-sm space-y-5">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
               <div className="flex items-center gap-2.5">
-                <div className="p-2 bg-[#F5E7C6] text-[#5C4D28] rounded-xl font-bold">
-                  <LayoutDashboard className="w-4 h-4" />
+                <div className="p-2 bg-[#F5E7C6] text-[#5C4D28] rounded-2xl font-bold">
+                  <LayoutDashboard className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="font-bold text-[#362D19] text-sm">แผงควบคุมระบบจัดการสินค้า</h2>
-                  <p className="text-[10px] text-slate-500">ภาพรวมคลังสินค้า สถิติโปรโมชั่น และจำนวนสินค้าแยกตามหมวดหมู่</p>
+                  <h2 className="font-bold text-slate-900 text-sm">แผงควบคุมระบบจัดการสินค้า</h2>
+                  <p className="text-[11px] text-slate-500">ภาพรวมคลังสินค้า สถิติโปรโมชั่น และจำนวนสินค้าแยกตามหมวดหมู่</p>
                 </div>
               </div>
-              <span className="text-[11px] text-emerald-700 font-mono bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full flex items-center gap-1.5">
+              <span className="text-[11px] text-emerald-700 font-mono bg-emerald-50 border border-emerald-200/60 px-3 py-1 rounded-full flex items-center gap-1.5">
                 <Activity className="w-3 h-3 text-emerald-600 animate-pulse" />
                 Realtime Connected
               </span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="bg-[#FAF8F5] border border-[#EAE3D2] rounded-xl p-4 flex items-center justify-between">
+              <div className="bg-[#FAF8F5] border border-[#EAE3D2] rounded-2xl p-4 flex items-center justify-between">
                 <div>
-                  <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
                     สินค้าทั้งหมดในระบบ
                   </span>
                   <div className="flex items-baseline gap-1">
@@ -777,9 +773,9 @@ export default function App() {
                 </div>
               </div>
 
-              <div className="bg-[#FAF8F5] border border-[#EAE3D2] rounded-xl p-4 flex items-center justify-between">
+              <div className="bg-[#FAF8F5] border border-[#EAE3D2] rounded-2xl p-4 flex items-center justify-between">
                 <div>
-                  <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
                     โปรโมชั่นพิเศษ
                   </span>
                   <div className="flex items-baseline gap-1">
@@ -792,9 +788,9 @@ export default function App() {
                 </div>
               </div>
 
-              <div className="bg-[#FAF8F5] border border-[#EAE3D2] rounded-xl p-4 flex items-center justify-between">
+              <div className="bg-[#FAF8F5] border border-[#EAE3D2] rounded-2xl p-4 flex items-center justify-between">
                 <div>
-                  <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
                     พร้อมจำหน่าย
                   </span>
                   <div className="flex items-baseline gap-1">
@@ -809,9 +805,9 @@ export default function App() {
             </div>
 
             {/* จำนวนสินค้าแยกตามแต่ละหมวดหมู่ */}
-            <div className="pt-2 border-t border-[#F5EFE6]">
+            <div className="pt-2 border-t border-slate-100">
               <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-bold text-[#4A3E25] flex items-center gap-1.5">
+                <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
                   <LayoutGrid className="w-3.5 h-3.5 text-[#B89446]" /> 
                   สรุปจำนวนสินค้าแยกตามหมวดหมู่
                 </span>
@@ -833,18 +829,18 @@ export default function App() {
                         setSelectedCategory(isSelected ? "" : cat.name);
                         setSubFilterSize("ทั้งหมด");
                       }}
-                      className={`p-2.5 rounded-xl border transition-all flex flex-col items-center text-center justify-between ${
+                      className={`p-2.5 rounded-2xl border transition-all flex flex-col items-center text-center justify-between ${
                         isSelected
-                          ? "bg-[#6B5528] text-white border-[#6B5528] shadow-sm scale-105"
+                          ? "bg-[#332A15] text-[#E6C687] border-[#332A15] shadow-md scale-105"
                           : "bg-[#FAF8F5] hover:bg-white text-slate-700 border-[#EAE3D2] hover:border-[#B89446]"
                       }`}
                     >
-                      <Icon className={`w-4 h-4 mb-1.5 ${isSelected ? "text-amber-200" : "text-[#B89446]"}`} />
+                      <Icon className={`w-4 h-4 mb-1.5 ${isSelected ? "text-[#E6C687]" : "text-[#B89446]"}`} />
                       <span className="text-[11px] font-bold line-clamp-1">{cat.name}</span>
                       <span
-                        className={`text-[10px] font-mono font-black mt-1 px-2 py-0.5 rounded-full ${
+                        className={`text-[10px] font-mono font-black mt-1.5 px-2 py-0.5 rounded-full ${
                           isSelected
-                            ? "bg-white/20 text-white"
+                            ? "bg-white/10 text-white"
                             : "bg-amber-100/70 text-[#5C4D28]"
                         }`}
                       >
@@ -859,19 +855,31 @@ export default function App() {
           </div>
         )}
 
-        {/* CATEGORY SECTION HEADER & CARDS GRID */}
+        {/* =======================================================
+            NEW LUXURY CATEGORY SECTION WITH LOGO
+        ======================================================= */}
         {!selectedCategory && !searchTerm && (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-base sm:text-lg font-black text-slate-800 flex items-center gap-2">
-                  <Crown className="w-5 h-5 text-amber-600" /> หมวดหมู่สินค้า
-                </h3>
-                <p className="text-xs text-slate-400">เลือกช้อปตามหมวดหมู่ที่คุณสนใจ</p>
+          <div className="space-y-6">
+            
+            {/* CATEGORY SECTION HEADER WITH LOGO IN THE CENTER */}
+            <div className="flex flex-col md:flex-row items-center justify-between border-b border-slate-200/80 pb-6 gap-4">
+              <div className="text-center md:text-left">
+                <span className="text-[10px] font-mono font-bold tracking-widest text-[#B89446] uppercase block mb-1">
+                  BESPOKE LIVING SPACES
+                </span>
+                <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center justify-center md:justify-start gap-2">
+                  หมวดหมู่เฟอร์นิเจอร์ <span className="text-xs font-normal text-slate-400 font-sans"></span>
+                </h2>
+               
+                 <p className="text-xs text-slate-400 flex items-center justify-center md:justify-end gap-1.5">
+                <MapPin className="w-3.5 h-3.5 text-[#B89446]" /> โชว์รูมสาขาหาดใหญ่มีสินค้าแสดงครบทุกหมวด
+              </p>
               </div>
+    
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {/* CATEGORY CARDS GRID */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {categories.map((category) => {
                 const Icon = category.icon;
                 const count = products.filter(
@@ -885,49 +893,95 @@ export default function App() {
                       setSelectedCategory(category.name);
                       setSubFilterSize("ทั้งหมด");
                     }}
-                    className="group bg-white rounded-2xl border border-slate-100 hover:border-amber-400/80 shadow-[0_2px_10px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_25px_rgba(0,0,0,0.08)] transition-all duration-300 cursor-pointer overflow-hidden flex min-h-[125px] relative"
+                    className={`group bg-white rounded-3xl border border-slate-200/70 hover:border-[#B89446]/80 shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_30px_rgba(184,148,70,0.12)] transition-all duration-300 cursor-pointer overflow-hidden flex flex-col justify-between relative ${
+                      category.isFullWidth ? "md:col-span-2 lg:col-span-3 flex-col lg:flex-row" : ""
+                    }`}
                   >
-                    <div className="flex-1 p-4 flex flex-col justify-between z-10 bg-gradient-to-r from-white via-white/95 to-transparent pr-1">
+                    {/* TOP TEXT CONTENT & TAGS */}
+                    <div className="p-6 sm:p-7 z-10 bg-white flex flex-col justify-between flex-1">
                       <div>
-                        <div className="flex items-center gap-2.5 mb-1">
-                          <div className="w-8 h-8 rounded-full bg-[#FFF7ED] border border-[#FFEDD5] flex items-center justify-center text-amber-700 shrink-0">
-                            <Icon className="w-4 h-4" />
+                        {/* Header Badge */}
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="w-9 h-9 rounded-2xl bg-[#FAF6EE] border border-[#EFE5D3] flex items-center justify-center text-[#B89446] shadow-sm">
+                            <Icon className="w-5 h-5" />
                           </div>
-                          <h4 className="text-sm font-bold text-slate-800 group-hover:text-amber-700 transition-colors line-clamp-1">
-                            {category.name}
-                          </h4>
+
+                          <div className="flex items-center gap-2">
+                            {category.isNew && (
+                              <span className="bg-amber-800 text-amber-100 font-bold text-[9px] px-2.5 py-0.5 rounded-full tracking-wider uppercase shadow-sm">
+                                NEW IN
+                              </span>
+                            )}
+                            <span className="text-[10px] font-mono font-bold bg-[#FAF6EE] text-[#7A5F26] border border-[#EFE5D3] px-2.5 py-1 rounded-full">
+                              {count} รายการ
+                            </span>
+                          </div>
                         </div>
-                        <p className="text-[11px] text-slate-400 pl-10">
-                          {count} รายการ
-                        </p>
+
+                        {/* Title & Description */}
+                        <div className="mb-4">
+                          <h3 className="text-lg sm:text-xl font-black text-slate-900 group-hover:text-[#B89446] transition-colors leading-snug">
+                            {category.name}
+                          </h3>
+                          <span className="text-[11px] font-medium text-slate-400 block mb-2 font-mono">
+                            {category.englishName}
+                          </span>
+                          <p className="text-xs text-slate-500 leading-relaxed font-normal line-clamp-2">
+                            {category.description}
+                          </p>
+                        </div>
+
+                        {/* Sub Category Tags */}
+                        {category.tags && (
+                          <div className="flex flex-wrap gap-1.5 mb-5">
+                            {category.tags.map((tag, idx) => (
+                              <span
+                                key={idx}
+                                className="text-[10px] font-medium bg-[#F7F5F0] text-slate-600 border border-slate-200/60 px-2.5 py-1 rounded-md"
+                              >
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                        )}
                       </div>
 
-                      <div className="flex items-center gap-1 text-[11px] text-slate-400 group-hover:text-amber-600 font-medium transition-colors pt-2 pl-10">
-                        <span>เลือกชมสินค้า</span>
-                        <ChevronRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+                      {/* Bottom Link CTA */}
+                      <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-[#B89446] group-hover:text-[#91712E] transition-colors">
+                        <span className="flex items-center gap-1.5">
+                          เลือกชมสินค้าในหมวดนี้
+                          <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                        </span>
                       </div>
                     </div>
 
-                    <div className="w-5/12 relative overflow-hidden flex items-center justify-end">
+                    {/* BOTTOM IMAGE WITH WHITE FADE GRADIENT */}
+                    <div className={`relative overflow-hidden ${category.isFullWidth ? "lg:w-1/2 min-h-[220px]" : "h-48 sm:h-52"}`}>
                       <img
                         src={category.image}
                         alt={category.name}
-                        className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
+                        className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 ease-out"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-r from-white via-white/30 to-transparent pointer-events-none" />
+                      <div className="absolute inset-0 bg-gradient-to-b from-white via-white/20 to-transparent h-20 pointer-events-none" />
+                      {category.isFullWidth && (
+                        <div className="hidden lg:block absolute inset-0 bg-gradient-to-r from-white via-white/20 to-transparent w-20 pointer-events-none" />
+                      )}
                     </div>
                   </div>
                 );
               })}
             </div>
+
           </div>
         )}
 
-        {/* PRODUCT LIST SECTION */}
-        <div className="space-y-4">
-          
-          {(selectedCategory || searchTerm !== "") && (
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-3.5 rounded-xl border border-[#EAE3D2] shadow-sm">
+        {/* =======================================================
+            PRODUCT LIST SECTION (แสดงผลเฉพาะเมื่อเลือกหมวดหมู่หรือค้นหา)
+        ======================================================= */}
+        {(selectedCategory || searchTerm !== "") && (
+          <div className="space-y-5">
+            
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm">
               <button
                 onClick={() => {
                   setSelectedCategory("");
@@ -935,268 +989,268 @@ export default function App() {
                   setSubFilterSize("ทั้งหมด");
                   window.history.pushState({}, "", window.location.pathname);
                 }}
-                className="bg-[#FAF8F5] hover:bg-[#F3EDE2] text-[#4A3E25] border border-[#E6DFD3] px-3.5 py-1.5 rounded-lg flex items-center gap-2 text-xs font-bold transition w-fit"
+                className="bg-[#FAF8F5] hover:bg-[#F3EDE2] text-[#4A3E25] border border-[#E6DFD3] px-4 py-2 rounded-xl flex items-center gap-2 text-xs font-bold transition w-fit"
               >
-                <ArrowLeft className="w-4 h-4 text-[#B89446]" /> ดูหมวดหมู่ทั้งหมด
+                <ArrowLeft className="w-4 h-4 text-[#B89446]" /> กลับไปดูหมวดหมู่ทั้งหมด
               </button>
 
               <div className="flex items-center gap-2">
                 {selectedCategory && (
-                  <span className="text-xs font-bold text-[#6B5528] bg-[#F8F4EC] border border-[#EADFCA] px-3 py-1 rounded-lg">
+                  <span className="text-xs font-bold text-[#6B5528] bg-[#F8F4EC] border border-[#EADFCA] px-3.5 py-1.5 rounded-xl">
                     หมวด: {selectedCategory} {isLoggedIn && `(${categoryPrefixMap[selectedCategory]})`}
                   </span>
                 )}
                 {searchTerm && (
-                  <span className="text-xs font-bold text-slate-700 bg-slate-100 px-3 py-1 rounded-lg border border-slate-200">
+                  <span className="text-xs font-bold text-slate-700 bg-slate-100 px-3.5 py-1.5 rounded-xl border border-slate-200">
                     ผลการค้นหา: "{searchTerm.trim() || 'ทั้งหมด'}"
                   </span>
                 )}
               </div>
             </div>
-          )}
 
-          {selectedCategory === "ห้องนอน" && (
-            <div className="bg-white border border-[#EAE3D2] rounded-xl p-3 flex flex-wrap items-center gap-2 shadow-sm">
-              <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5 mr-2">
-                <Bed className="w-4 h-4 text-[#B89446]" /> ขนาดเตียง:
-              </span>
-              {["ทั้งหมด", "3.5 ฟุต", "5 ฟุต", "6 ฟุต"].map((sizeOption) => (
+            {selectedCategory === "ห้องนอน" && (
+              <div className="bg-white border border-[#EAE3D2] rounded-2xl p-3.5 flex flex-wrap items-center gap-2 shadow-sm">
+                <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5 mr-2">
+                  <Bed className="w-4 h-4 text-[#B89446]" /> ขนาดเตียง:
+                </span>
+                {["ทั้งหมด", "3.5 ฟุต", "5 ฟุต", "6 ฟุต"].map((sizeOption) => (
+                  <button
+                    key={sizeOption}
+                    onClick={() => setSubFilterSize(sizeOption)}
+                    className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition ${
+                      subFilterSize === sizeOption
+                        ? "bg-[#6B5528] text-white shadow-sm"
+                        : "bg-[#FAF8F5] text-slate-700 border border-[#E6DFD3] hover:bg-[#F3EDE2]"
+                    }`}
+                  >
+                    {sizeOption}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {(selectedCategory === "ห้องอาหาร & ห้องครัว" || selectedCategory === "ห้องอาหาร / ห้องครัว") && (
+              <div className="bg-white border border-[#EAE3D2] rounded-2xl p-3.5 flex flex-wrap items-center gap-2 shadow-sm">
+                <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5 mr-2">
+                  <Utensils className="w-4 h-4 text-[#B89446]" /> จำนวนที่นั่ง:
+                </span>
+                {["ทั้งหมด", "2 ที่นั่ง", "4 ที่นั่ง", "6 ที่นั่ง"].map((seatOption) => (
+                  <button
+                    key={seatOption}
+                    onClick={() => setSubFilterSize(seatOption)}
+                    className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition ${
+                      subFilterSize === seatOption
+                        ? "bg-[#6B5528] text-white shadow-sm"
+                        : "bg-[#FAF8F5] text-slate-700 border border-[#E6DFD3] hover:bg-[#F3EDE2]"
+                    }`}
+                  >
+                    {seatOption}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* CONTROL BAR */}
+            <div className="bg-white border border-slate-200/80 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3 shadow-sm">
+              <div className="flex flex-wrap items-center gap-2">
                 <button
-                  key={sizeOption}
-                  onClick={() => setSubFilterSize(sizeOption)}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
-                    subFilterSize === sizeOption
-                      ? "bg-[#6B5528] text-white shadow-sm"
-                      : "bg-[#FAF8F5] text-slate-700 border border-[#E6DFD3] hover:bg-[#F3EDE2]"
+                  onClick={() => setPromoOnly(!promoOnly)}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition ${
+                    promoOnly
+                      ? "bg-rose-600 text-white shadow-sm"
+                      : "bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100"
                   }`}
                 >
-                  {sizeOption}
+                  <Flame className="w-3.5 h-3.5" /> 
+                  ลดพิเศษ
                 </button>
-              ))}
-            </div>
-          )}
 
-          {selectedCategory === "ห้องอาหาร / ห้องครัว" && (
-            <div className="bg-white border border-[#EAE3D2] rounded-xl p-3 flex flex-wrap items-center gap-2 shadow-sm">
-              <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5 mr-2">
-                <Utensils className="w-4 h-4 text-[#B89446]" /> จำนวนที่นั่ง:
-              </span>
-              {["ทั้งหมด", "2 ที่นั่ง", "4 ที่นั่ง", "6 ที่นั่ง"].map((seatOption) => (
                 <button
-                  key={seatOption}
-                  onClick={() => setSubFilterSize(seatOption)}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
-                    subFilterSize === seatOption
-                      ? "bg-[#6B5528] text-white shadow-sm"
-                      : "bg-[#FAF8F5] text-slate-700 border border-[#E6DFD3] hover:bg-[#F3EDE2]"
+                  onClick={() => setStockOnly(!stockOnly)}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition ${
+                    stockOnly
+                      ? "bg-emerald-600 text-white shadow-sm"
+                      : "bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100"
                   }`}
                 >
-                  {seatOption}
+                  <CheckCircle2 className="w-3.5 h-3.5" /> 
+                  พร้อมส่ง
                 </button>
-              ))}
-            </div>
-          )}
-
-          {/* CONTROL BAR */}
-          <div className="bg-white border border-[#EAE3D2] rounded-xl p-3.5 flex flex-wrap items-center justify-between gap-3 shadow-sm">
-            <div className="flex flex-wrap items-center gap-2">
-              <button
-                onClick={() => setPromoOnly(!promoOnly)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition ${
-                  promoOnly
-                    ? "bg-rose-600 text-white shadow-sm"
-                    : "bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100"
-                }`}
-              >
-                <Flame className="w-3.5 h-3.5" /> 
-                ลดพิเศษ
-              </button>
-
-              <button
-                onClick={() => setStockOnly(!stockOnly)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition ${
-                  stockOnly
-                    ? "bg-emerald-600 text-white shadow-sm"
-                    : "bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100"
-                }`}
-              >
-                <CheckCircle2 className="w-3.5 h-3.5" /> 
-                พร้อมส่ง
-              </button>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="flex items-center gap-1.5 text-xs">
-                <SlidersHorizontal className="w-3.5 h-3.5 text-slate-400" />
-                <span className="text-slate-600 font-bold">ราคา:</span>
-                <input
-                  type="number"
-                  placeholder="ต่ำสุด"
-                  value={minPrice}
-                  onChange={(e) => setMinPrice(e.target.value)}
-                  className="w-16 bg-[#FAF8F5] border border-[#E6DFD3] text-slate-800 rounded-lg px-2 py-1 text-xs outline-none focus:border-[#B89446]"
-                />
-                <span className="text-slate-400">-</span>
-                <input
-                  type="number"
-                  placeholder="สูงสุด"
-                  value={maxPrice}
-                  onChange={(e) => setMaxPrice(e.target.value)}
-                  className="w-16 bg-[#FAF8F5] border border-[#E6DFD3] text-slate-800 rounded-lg px-2 py-1 text-xs outline-none focus:border-[#B89446]"
-                />
               </div>
 
-              <select
-                value={sortPrice}
-                onChange={(e) => setSortPrice(e.target.value)}
-                className="bg-[#FAF8F5] border border-[#E6DFD3] text-xs font-bold text-slate-700 rounded-lg px-2.5 py-1 outline-none focus:border-[#B89446]"
-              >
-                <option value="none">เรียงลำดับราคา</option>
-                <option value="low">ราคา: น้อย ➔ มาก</option>
-                <option value="high">ราคา: มาก ➔ น้อย</option>
-              </select>
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="flex items-center gap-1.5 text-xs">
+                  <SlidersHorizontal className="w-3.5 h-3.5 text-slate-400" />
+                  <span className="text-slate-600 font-bold">ราคา:</span>
+                  <input
+                    type="number"
+                    placeholder="ต่ำสุด"
+                    value={minPrice}
+                    onChange={(e) => setMinPrice(e.target.value)}
+                    className="w-16 bg-[#FAF8F5] border border-[#E6DFD3] text-slate-800 rounded-lg px-2 py-1 text-xs outline-none focus:border-[#B89446]"
+                  />
+                  <span className="text-slate-400">-</span>
+                  <input
+                    type="number"
+                    placeholder="สูงสุด"
+                    value={maxPrice}
+                    onChange={(e) => setMaxPrice(e.target.value)}
+                    className="w-16 bg-[#FAF8F5] border border-[#E6DFD3] text-slate-800 rounded-lg px-2 py-1 text-xs outline-none focus:border-[#B89446]"
+                  />
+                </div>
+
+                <select
+                  value={sortPrice}
+                  onChange={(e) => setSortPrice(e.target.value)}
+                  className="bg-[#FAF8F5] border border-[#E6DFD3] text-xs font-bold text-slate-700 rounded-xl px-3 py-1.5 outline-none focus:border-[#B89446]"
+                >
+                  <option value="none">เรียงลำดับราคา</option>
+                  <option value="low">ราคา: น้อย ➔ มาก</option>
+                  <option value="high">ราคา: มาก ➔ น้อย</option>
+                </select>
+              </div>
             </div>
-          </div>
 
-          {/* PRODUCT CARDS GRID */}
-          {loading ? (
-            <div className="text-center py-16 bg-white rounded-2xl border border-[#EAE3D2]">
-              <div className="inline-block animate-spin rounded-full h-7 w-7 border-3 border-[#B89446] border-t-transparent"></div>
-              <p className="text-xs text-slate-500 mt-2 font-medium">กำลังโหลดรายการสินค้า...</p>
-            </div>
-          ) : filteredProducts.length === 0 ? (
-            <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-[#EAE3D2]">
-              <Package className="w-10 h-10 text-slate-300 mx-auto mb-2" />
-              <p className="text-sm font-bold text-slate-700">ไม่พบรายการสินค้าที่คุณค้นหา</p>
-              <p className="text-xs text-slate-400 mt-1">ลองเปลี่ยนคำค้นหาหรือตัวกรองใหม่อีกครั้ง</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {filteredProducts.map((product) => {
-                return (
-                  <div
-                    key={product.id}
-                    onClick={() => setViewingProduct(product)}
-                    className="group bg-white rounded-xl border border-[#EAE3D2] hover:border-[#D4AF37] shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between overflow-hidden"
-                  >
-                    <div>
-                      <div className="relative aspect-4/3 bg-slate-100 overflow-hidden">
-                        {product.image ? (
-                          <img
-                            src={product.image}
-                            alt={product.name}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 bg-slate-50">
-                            <ImageIcon className="w-8 h-8 mb-1" />
-                            <span className="text-[10px]">ไม่มีรูปภาพ</span>
-                          </div>
-                        )}
-
-                        <div className="absolute top-2 left-2 flex flex-col gap-1">
-                          {renderImageBadge(product.status)}
-                        </div>
-
-                        {product.promoPrice && (
-                          <div className="absolute bottom-2 right-2 bg-rose-600 text-white font-bold text-[9px] px-2 py-0.5 rounded-md shadow-sm">
-                            PROMO
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="p-3.5">
-                        <div className="flex items-center justify-between gap-2 mb-1">
-                          <span className="font-mono text-[10px] font-bold text-slate-400">
-                            ID: {product.id}
-                          </span>
-                          {product.size && (
-                            <span className="text-[10px] bg-[#F8F4EC] text-[#6B5528] px-2 py-0.5 rounded font-bold border border-[#EADFCA]">
-                              {product.size}
-                            </span>
-                          )}
-                        </div>
-
-                        <h3 className="font-bold text-slate-800 text-xs line-clamp-1 group-hover:text-[#8C733E] transition-colors">
-                          {product.name}
-                        </h3>
-
-                        {product.location && (
-                          <p className="text-[11px] text-slate-500 mt-1 flex items-center gap-1">
-                            <MapPin className="w-3 h-3 text-[#B89446] shrink-0" />
-                            โซน: {product.location}
-                          </p>
-                        )}
-
-                        <div className="mt-2.5 flex items-baseline gap-2">
-                          {product.promoPrice ? (
-                            <>
-                              <span className="text-lg font-black text-rose-600">
-                                ฿{Number(product.promoPrice).toLocaleString()}
-                              </span>
-                              {product.price && product.price !== product.promoPrice && (
-                                <span className="text-xs text-slate-400 line-through">
-                                  ฿{Number(product.price).toLocaleString()}
-                                </span>
-                              )}
-                            </>
+            {/* PRODUCT CARDS GRID */}
+            {loading ? (
+              <div className="text-center py-20 bg-white rounded-3xl border border-slate-200/70">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-3 border-[#B89446] border-t-transparent"></div>
+                <p className="text-xs text-slate-500 mt-3 font-medium">กำลังโหลดรายการสินค้า...</p>
+              </div>
+            ) : filteredProducts.length === 0 ? (
+              <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-slate-300">
+                <Package className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                <p className="text-sm font-bold text-slate-700">ไม่พบรายการสินค้าที่คุณค้นหา</p>
+                <p className="text-xs text-slate-400 mt-1">ลองเปลี่ยนคำค้นหาหรือตัวกรองใหม่อีกครั้ง</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                {filteredProducts.map((product) => {
+                  return (
+                    <div
+                      key={product.id}
+                      onClick={() => setViewingProduct(product)}
+                      className="group bg-white rounded-2xl border border-slate-200/80 hover:border-[#D4AF37] shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col justify-between overflow-hidden"
+                    >
+                      <div>
+                        <div className="relative aspect-4/3 bg-slate-100 overflow-hidden">
+                          {product.image ? (
+                            <img
+                              src={product.image}
+                              alt={product.name}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            />
                           ) : (
-                            <span className="text-lg font-black text-slate-900">
-                              ฿{Number(product.price).toLocaleString()}
+                            <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 bg-slate-50">
+                              <ImageIcon className="w-8 h-8 mb-1" />
+                              <span className="text-[10px]">ไม่มีรูปภาพ</span>
+                            </div>
+                          )}
+
+                          <div className="absolute top-2.5 left-2.5 flex flex-col gap-1">
+                            {renderImageBadge(product.status)}
+                          </div>
+
+                          {product.promoPrice && (
+                            <div className="absolute bottom-2.5 right-2.5 bg-rose-600 text-white font-bold text-[9px] px-2 py-0.5 rounded-md shadow-sm">
+                              PROMO
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="p-4">
+                          <div className="flex items-center justify-between gap-2 mb-1.5">
+                            <span className="font-mono text-[10px] font-bold text-slate-400">
+                              ID: {product.id}
                             </span>
+                            {product.size && (
+                              <span className="text-[10px] bg-[#F8F4EC] text-[#6B5528] px-2 py-0.5 rounded font-bold border border-[#EADFCA]">
+                                {product.size}
+                              </span>
+                            )}
+                          </div>
+
+                          <h3 className="font-bold text-slate-900 text-sm line-clamp-1 group-hover:text-[#8C733E] transition-colors">
+                            {product.name}
+                          </h3>
+
+                          {product.location && (
+                            <p className="text-[11px] text-slate-500 mt-1 flex items-center gap-1">
+                              <MapPin className="w-3 h-3 text-[#B89446] shrink-0" />
+                              โซน: {product.location}
+                            </p>
+                          )}
+
+                          <div className="mt-3 flex items-baseline gap-2">
+                            {product.promoPrice ? (
+                              <>
+                                <span className="text-xl font-black text-rose-600">
+                                  ฿{Number(product.promoPrice).toLocaleString()}
+                                </span>
+                                {product.price && product.price !== product.promoPrice && (
+                                  <span className="text-xs text-slate-400 line-through">
+                                    ฿{Number(product.price).toLocaleString()}
+                                  </span>
+                                )}
+                              </>
+                            ) : (
+                              <span className="text-xl font-black text-slate-900">
+                                ฿{Number(product.price).toLocaleString()}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="p-4 pt-0">
+                        <div className="border-t border-slate-100 pt-3 flex items-center justify-between gap-2">
+                          <button
+                            onClick={(e) => handleShare(product, e)}
+                            className="flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1 border border-emerald-200 transition"
+                          >
+                            <Share2 className="w-3.5 h-3.5" /> แชร์ลง LINE
+                          </button>
+
+                          {isLoggedIn && (
+                            <div className="flex items-center gap-1">
+                              <button
+                                onClick={(e) => openEditProduct(product, e)}
+                                className="p-2 rounded-xl bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200 transition"
+                                title="แก้ไขสินค้า"
+                              >
+                                <Edit className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                onClick={(e) => handleDeleteProduct(product, e)}
+                                className="p-2 rounded-xl bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 transition"
+                                title="ลบสินค้า"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
                           )}
                         </div>
                       </div>
+
                     </div>
+                  );
+                })}
+              </div>
+            )}
 
-                    <div className="p-3.5 pt-0">
-                      <div className="border-t border-slate-100 pt-2.5 flex items-center justify-between gap-2">
-                        <button
-                          onClick={(e) => handleShare(product, e)}
-                          className="flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 py-1.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1 border border-emerald-200 transition"
-                        >
-                          <Share2 className="w-3.5 h-3.5" /> แชร์ลง LINE
-                        </button>
-
-                        {isLoggedIn && (
-                          <div className="flex items-center gap-1">
-                            <button
-                              onClick={(e) => openEditProduct(product, e)}
-                              className="p-1.5 rounded-lg bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200 transition"
-                              title="แก้ไขสินค้า"
-                            >
-                              <Edit className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              onClick={(e) => handleDeleteProduct(product, e)}
-                              className="p-1.5 rounded-lg bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 transition"
-                              title="ลบสินค้า"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-        </div>
+          </div>
+        )}
 
       </main>
 
       {/* VIEW PRODUCT MODAL */}
       {viewingProduct && (
-        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-xl relative border border-[#EAE3D2]">
+        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl relative border border-slate-200">
             
             <button
               onClick={() => setViewingProduct(null)}
-              className="absolute top-3 right-3 z-10 bg-white/80 hover:bg-white text-slate-600 p-1.5 rounded-full shadow-md transition border border-slate-200"
+              className="absolute top-3 right-3 z-10 bg-white/80 hover:bg-white text-slate-600 p-2 rounded-full shadow-md transition border border-slate-200"
             >
               <X className="w-4 h-4" />
             </button>
@@ -1215,12 +1269,12 @@ export default function App() {
               )}
             </div>
 
-            <div className="p-5">
+            <div className="p-6">
               <div className="flex items-center justify-between gap-2 mb-2">
                 <span className="font-mono text-xs font-bold text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded border border-slate-200">
                   ID: {viewingProduct.id}
                 </span>
-                <span className="text-xs font-bold text-[#6B5528] bg-[#F8F4EC] border border-[#EADFCA] px-2.5 py-0.5 rounded-full">
+                <span className="text-xs font-bold text-[#6B5528] bg-[#F8F4EC] border border-[#EADFCA] px-3 py-1 rounded-full">
                   {viewingProduct.category}
                 </span>
               </div>
@@ -1246,7 +1300,7 @@ export default function App() {
                 )}
               </div>
 
-              <div className="space-y-2 border-t border-b border-slate-100 py-3 my-3 text-xs text-slate-700">
+              <div className="space-y-2 border-t border-b border-slate-100 py-3.5 my-4 text-xs text-slate-700">
                 {viewingProduct.size && (
                   <p className="flex justify-between">
                     <span className="font-bold text-slate-400">ขนาด:</span>
@@ -1273,7 +1327,7 @@ export default function App() {
 
               <button
                 onClick={(e) => handleShare(viewingProduct, e)}
-                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 shadow-md transition active:scale-98 text-xs"
+                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 rounded-2xl flex items-center justify-center gap-2 shadow-lg transition active:scale-98 text-xs"
               >
                 <Share2 className="w-4 h-4" /> แชร์รายละเอียดลง LINE
               </button>
@@ -1285,12 +1339,12 @@ export default function App() {
 
       {/* ADD / EDIT PRODUCT MODAL */}
       {showProductModal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white border border-[#EAE3D2] rounded-2xl w-full max-w-xl overflow-hidden shadow-xl flex flex-col max-h-[90vh]">
+        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
             
-            <div className="px-5 py-3.5 border-b border-slate-100 flex justify-between items-center bg-[#FAF8F5]">
+            <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-[#FAF8F5]">
               <h2 className="text-sm font-bold text-slate-800 flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-[#B89446]"></span>
+                <span className="w-2.5 h-2.5 rounded-full bg-[#B89446]"></span>
                 {editingProduct ? "แก้ไขข้อมูลสินค้า" : "เพิ่มสินค้าใหม่"}
               </h2>
               <button
@@ -1303,8 +1357,8 @@ export default function App() {
             </div>
 
             <form onSubmit={handleSaveProduct} className="flex flex-col flex-1 overflow-hidden">
-              <div className="p-5 overflow-y-auto space-y-3.5 text-xs text-slate-700">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="p-6 overflow-y-auto space-y-4 text-xs text-slate-700">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
                   <div className="md:col-span-2">
                     <label className="block font-bold text-slate-600 mb-1">หมวดหมู่สินค้า *</label>
                     <select
@@ -1314,7 +1368,7 @@ export default function App() {
                         const nextId = editingProduct ? formData.id : generateNextId(cat, products);
                         setFormData({ ...formData, category: cat, id: nextId });
                       }}
-                      className="w-full bg-[#FAF8F5] border border-[#E6DFD3] rounded-lg px-3 py-2 text-xs text-slate-800 outline-none focus:border-[#B89446] transition"
+                      className="w-full bg-[#FAF8F5] border border-[#E6DFD3] rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-[#B89446] transition"
                     >
                       {categories.map((c) => (
                         <option key={c.name} value={c.name}>
@@ -1330,7 +1384,7 @@ export default function App() {
                       type="text"
                       value={formData.id}
                       onChange={(e) => setFormData({ ...formData, id: e.target.value })}
-                      className="w-full bg-[#FAF8F5] border border-[#E6DFD3] rounded-lg px-3 py-2 font-mono text-xs text-slate-800 outline-none focus:border-[#B89446] transition"
+                      className="w-full bg-[#FAF8F5] border border-[#E6DFD3] rounded-xl px-3 py-2 font-mono text-xs text-slate-800 outline-none focus:border-[#B89446] transition"
                     />
                   </div>
 
@@ -1341,7 +1395,7 @@ export default function App() {
                       placeholder="เช่น 5 ฟุต"
                       value={formData.size}
                       onChange={(e) => setFormData({ ...formData, size: e.target.value })}
-                      className="w-full bg-[#FAF8F5] border border-[#E6DFD3] rounded-lg px-3 py-2 text-xs text-slate-800 outline-none focus:border-[#B89446] transition"
+                      className="w-full bg-[#FAF8F5] border border-[#E6DFD3] rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-[#B89446] transition"
                     />
                   </div>
 
@@ -1353,7 +1407,7 @@ export default function App() {
                       placeholder="ระบุชื่อสินค้า..."
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full bg-[#FAF8F5] border border-[#E6DFD3] rounded-lg px-3 py-2 text-xs text-slate-800 outline-none focus:border-[#B89446] transition"
+                      className="w-full bg-[#FAF8F5] border border-[#E6DFD3] rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-[#B89446] transition"
                     />
                   </div>
 
@@ -1365,7 +1419,7 @@ export default function App() {
                       value={formData.price}
                       onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                       required={!formData.promoPrice}
-                      className="w-full bg-[#FAF8F5] border border-[#E6DFD3] rounded-lg px-3 py-2 text-xs text-slate-800 outline-none focus:border-[#B89446] transition"
+                      className="w-full bg-[#FAF8F5] border border-[#E6DFD3] rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-[#B89446] transition"
                     />
                   </div>
 
@@ -1377,7 +1431,7 @@ export default function App() {
                       value={formData.promoPrice}
                       onChange={(e) => setFormData({ ...formData, promoPrice: e.target.value })}
                       required={!formData.price}
-                      className="w-full bg-[#FAF8F5] border border-[#E6DFD3] rounded-lg px-3 py-2 text-xs text-slate-800 outline-none focus:border-[#B89446] transition"
+                      className="w-full bg-[#FAF8F5] border border-[#E6DFD3] rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-[#B89446] transition"
                     />
                   </div>
 
@@ -1386,7 +1440,7 @@ export default function App() {
                     <select
                       value={formData.status}
                       onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                      className="w-full bg-[#FAF8F5] border border-[#E6DFD3] rounded-lg px-3 py-2 text-xs text-slate-800 outline-none focus:border-[#B89446] transition"
+                      className="w-full bg-[#FAF8F5] border border-[#E6DFD3] rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-[#B89446] transition"
                     >
                       <option value="มีสินค้าพร้อมส่ง">มีสินค้าพร้อมส่ง</option>
                       <option value="สินค้าตัวโชว์หน้าร้าน">สินค้าตัวโชว์หน้าร้าน</option>
@@ -1402,7 +1456,7 @@ export default function App() {
                       placeholder="เช่น โซน A2"
                       value={formData.location}
                       onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                      className="w-full bg-[#FAF8F5] border border-[#E6DFD3] rounded-lg px-3 py-2 text-xs text-slate-800 outline-none focus:border-[#B89446] transition"
+                      className="w-full bg-[#FAF8F5] border border-[#E6DFD3] rounded-xl px-3 py-2 text-xs text-slate-800 outline-none focus:border-[#B89446] transition"
                     />
                   </div>
                 </div>
@@ -1428,7 +1482,7 @@ export default function App() {
                       <p className="text-[11px] text-slate-500">รูปภาพถูกเตรียมพร้อมบันทึกแล้ว</p>
                     </div>
                   ) : (
-                    <label className="border-2 border-dashed border-[#E6DFD3] hover:border-[#B89446] rounded-xl p-4 text-center cursor-pointer transition bg-[#FAF8F5] flex flex-col items-center justify-center group">
+                    <label className="border-2 border-dashed border-[#E6DFD3] hover:border-[#B89446] rounded-2xl p-4 text-center cursor-pointer transition bg-[#FAF8F5] flex flex-col items-center justify-center group">
                       <Upload className="w-6 h-6 text-slate-400 group-hover:text-[#B89446] transition mb-1" />
                       <p className="text-xs font-bold text-slate-700">คลิกเพื่อเลือกรูปภาพสินค้า</p>
                       <p className="text-[10px] text-slate-400 mt-0.5">รองรับไฟล์ PNG, JPG หรือ WEBP</p>
@@ -1449,22 +1503,22 @@ export default function App() {
                     placeholder="กรอกรายละเอียดสินค้าเพิ่มเติม..."
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    className="w-full bg-[#FAF8F5] border border-[#E6DFD3] rounded-lg p-2.5 text-xs text-slate-800 outline-none focus:border-[#B89446] transition resize-none"
+                    className="w-full bg-[#FAF8F5] border border-[#E6DFD3] rounded-xl p-3 text-xs text-slate-800 outline-none focus:border-[#B89446] transition resize-none"
                   ></textarea>
                 </div>
               </div>
 
-              <div className="px-5 py-3 border-t border-slate-100 bg-[#FAF8F5] flex justify-end gap-2">
+              <div className="px-6 py-4 border-t border-slate-100 bg-[#FAF8F5] flex justify-end gap-2">
                 <button
                   type="button"
                   onClick={closeProductModal}
-                  className="px-4 py-2 rounded-lg text-slate-600 hover:bg-slate-200/60 transition font-bold text-xs"
+                  className="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-200/60 transition font-bold text-xs"
                 >
                   ยกเลิก
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-lg bg-[#B89446] hover:bg-[#A3813B] text-white font-bold transition shadow-sm text-xs"
+                  className="px-5 py-2 rounded-xl bg-[#B89446] hover:bg-[#A3813B] text-white font-bold transition shadow-sm text-xs"
                 >
                   บันทึกสินค้า
                 </button>
@@ -1476,8 +1530,8 @@ export default function App() {
 
       {/* LOGIN MODAL */}
       {showLoginModal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-xs w-full p-5 shadow-xl relative border border-[#EAE3D2]">
+        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-xs w-full p-6 shadow-2xl relative border border-slate-200">
             <button
               onClick={() => setShowLoginModal(false)}
               className="absolute top-3 right-3 text-slate-400 hover:text-slate-600"
@@ -1486,7 +1540,7 @@ export default function App() {
             </button>
 
             <div className="text-center mb-4">
-              <div className="w-10 h-10 bg-[#161B26] text-[#E6C687] rounded-xl flex items-center justify-center mx-auto mb-2 border border-slate-700">
+              <div className="w-12 h-12 bg-[#161B26] text-[#E6C687] rounded-2xl flex items-center justify-center mx-auto mb-2 border border-slate-700 shadow-md">
                 <Lock className="w-5 h-5 text-[#E6C687]" />
               </div>
               <h2 className="text-sm font-bold text-slate-800">เข้าสู่ระบบพนักงาน</h2>
@@ -1500,7 +1554,7 @@ export default function App() {
                   placeholder="รหัสผ่านพนักงาน"
                   value={passwordInput}
                   onChange={(e) => setPasswordInput(e.target.value)}
-                  className="w-full bg-[#FAF8F5] border border-[#E6DFD3] rounded-lg p-2 text-center font-mono text-xs text-slate-800 outline-none focus:border-[#B89446]"
+                  className="w-full bg-[#FAF8F5] border border-[#E6DFD3] rounded-xl p-2.5 text-center font-mono text-xs text-slate-800 outline-none focus:border-[#B89446]"
                 />
                 {loginError && (
                   <p className="text-[11px] text-rose-600 font-bold mt-1 text-center">{loginError}</p>
@@ -1509,7 +1563,7 @@ export default function App() {
 
               <button
                 type="submit"
-                className="w-full bg-[#B89446] hover:bg-[#A3813B] text-white font-bold py-2 rounded-lg text-xs shadow-sm transition"
+                className="w-full bg-[#B89446] hover:bg-[#A3813B] text-white font-bold py-2.5 rounded-xl text-xs shadow-md transition"
               >
                 เข้าสู่ระบบ
               </button>
